@@ -3,3 +3,5 @@ name = "nove_core"
 version.workspace = true
 edition.workspace = true
 
+[dependencies]
+thiserror = "1.0.56"
