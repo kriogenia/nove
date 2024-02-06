@@ -80,7 +80,7 @@ impl NoveCore {
             ABS => self.next_word(),
             ABX => self.next_word().wrapping_add(self.x as u16),
             ABY => self.next_word().wrapping_add(self.y as u16),
-            IDX => self.memory.read_u16(self.next_byte().wrapping_add(self.x) as u16),
+            IDX => self.memory.read_u16(dbg!(self.next_byte()).wrapping_add(self.x) as u16),
             IDY => self.memory.read_u16(self.next_byte().wrapping_add(self.y) as u16),
             IMP => unreachable!("addressing mode {mode:?} should not access address"),
         }
@@ -142,8 +142,8 @@ mod test {
     }
 
     macro_rules! loaded_x {
-        ($val:literal, $opcode:tt) => {
-            vec![0xA9, $val, 0xAA, $opcode, 0x00]
+        ($val:literal, ...$($opcode:tt),+) => {
+            vec![0xA9, $val, 0xAA, $($opcode),+, 0x00]
         };
     }
 
@@ -152,15 +152,15 @@ mod test {
         let opcode = 0xE8;
 
         let mut cpu = NoveCore::default();
-        cpu.load_and_run(loaded_x!(0x05, opcode));
+        cpu.load_and_run(loaded_x!(0x05, ...opcode));
         assert_eq!(cpu.x, 0x06);
         assert!(cpu.ps.is_lowered(Flag::Zero));
         assert!(cpu.ps.is_lowered(Flag::Negative));
 
-        cpu.load_and_run(loaded_x!(0xFF, opcode));
+        cpu.load_and_run(loaded_x!(0xFF, ...opcode));
         assert!(cpu.ps.is_raised(Flag::Zero));
 
-        cpu.load_and_run(loaded_x!(0xFE, opcode));
+        cpu.load_and_run(loaded_x!(0xFE, ...opcode));
         assert!(cpu.ps.is_raised(Flag::Negative));
     }
 
@@ -184,20 +184,46 @@ mod test {
 
     #[test]
     fn lda_zp() {
-        // todo zpg
-        // todo zpx
+        let mut cpu = NoveCore::new();
+
+        cpu.memory.write(0x05, 0x10);
+        cpu.load_and_run(vec![0xA5, 0x05, BREAK]);
+        assert_eq!(cpu.a, 0x10);
+        assert_eq!(cpu.pc, PC_START + 3);
+
+        cpu.memory.write(0x07, 0x12);
+        cpu.load_and_run(loaded_x!(0x02, ...0xB5, 0x05));
+        assert_eq!(cpu.a, 0x12);
+        assert_eq!(cpu.pc, PC_START + 3 + 3);
     }
 
     #[test]
     fn lda_abs() {
-        // todo abs
-        // todo abx
+        let mut cpu = NoveCore::new();
+
+        cpu.memory.write_u16(0x3412, 0x10);
+        cpu.load_and_run(vec![0xAD, 0x12, 0x34, BREAK]);
+        assert_eq!(cpu.a, 0x10);
+        assert_eq!(cpu.pc, PC_START + 4);
+
+        cpu.memory.write(0x1234, 0x12);
+        cpu.load_and_run(loaded_x!(0x02, ...0xBD, 0x32, 0x12));
+        assert_eq!(cpu.a, 0x12);
+        assert_eq!(cpu.pc, PC_START + 3 + 4);
+
         // todo aby
     }
 
     #[test]
     fn lda_id() {
-        // todo idx
+        let mut cpu = NoveCore::new();
+
+        cpu.memory.write_u16(0x05, 0x1234);
+        cpu.memory.write(0x1234, 0x12);
+        cpu.load_and_run(loaded_x!(0x02, ...0xA1, 0x03));
+        assert_eq!(cpu.a, 0x12);
+        assert_eq!(cpu.pc, PC_START + 3 + 3);
+
         // todo idy
     }
 
