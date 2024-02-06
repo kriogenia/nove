@@ -9,7 +9,8 @@ use crate::OP_CODE_SLICE_SIZE;
 #[derive(Default, Debug)]
 pub struct CPU {
     program_counter: u16,
-    register_a: u8,
+    reg_a: u8,
+    reg_x: u8,
     /// N V _ B D I Z C
     processor_status: ProcessorStatus,
 }
@@ -34,27 +35,38 @@ impl CPU {
                 BRK => break 'game_loop,
                 LDA(param) => {
                     self.program_counter += 1;
-                    self.register_a = param;
-
-                    // raise/low zero flag if the loaded value is zero
-                    if self.register_a == 0 {
-                        self.processor_status.raise(Flag::Zero);
-                    } else {
-                        self.processor_status.low(Flag::Zero);
-                    }
-
-                    // raise/lower neg flag if the load value is zero
-                    if self.register_a & 0b1000_0000 != 0 {
-                        self.processor_status.raise(Flag::Negative)
-                    } else {
-                        self.processor_status.low(Flag::Negative);
-                    }
+                    self.reg_a = param;
+                    self.set_z(self.reg_a);
+                    self.set_n(self.reg_a);
+                },
+                TAX => {
+                    self.reg_x = self.reg_a;
+                    self.set_z(self.reg_x);
+                    self.set_n(self.reg_x);
                 }
             }
 
         }
 
         Ok(())
+    }
+
+    #[inline]
+    fn set_z(&mut self, value: u8) {
+        if value == 0 {
+            self.processor_status.raise(Flag::Zero);
+        } else {
+            self.processor_status.low(Flag::Zero);
+        }
+    }
+
+    #[inline]
+    fn set_n(&mut self, value: u8) {
+        if value & 0b1000_0000 != 0 {
+            self.processor_status.raise(Flag::Negative)
+        } else {
+            self.processor_status.low(Flag::Negative);
+        }
     }
 
 }
@@ -77,8 +89,7 @@ mod test {
     fn lda() {
         let mut cpu = CPU::new();
         cpu.run(vec![0xa9, 0x05, 0x00]).unwrap();
-        assert_eq!(cpu.register_a, 0x05);
-        dbg!(&cpu);
+        assert_eq!(cpu.reg_a, 0x05);
         assert!(cpu.processor_status.is_lowered(Flag::Zero));
         assert!(cpu.processor_status.is_lowered(Flag::Negative));
         assert_eq!(cpu.program_counter, 3);
@@ -87,6 +98,22 @@ mod test {
         assert!(cpu.processor_status.is_raised(Flag::Zero));
 
         cpu.run(vec![0xa9, 0xF0, 0x00]).unwrap();
+        assert!(cpu.processor_status.is_raised(Flag::Negative));
+    }
+
+    #[test]
+    fn tax() {
+        let mut cpu = CPU::new();
+        cpu.run(vec![0xa9, 0x05, 0xaa, 0x00]).unwrap();
+        assert_eq!(cpu.reg_x, 0x05);
+        assert!(cpu.processor_status.is_lowered(Flag::Zero));
+        assert!(cpu.processor_status.is_lowered(Flag::Negative));
+        assert_eq!(cpu.program_counter, 4);
+
+        cpu.run(vec![0xa9, 0x00, 0xaa, 0x00]).unwrap();
+        assert!(cpu.processor_status.is_raised(Flag::Zero));
+
+        cpu.run(vec![0xa9, 0xF0, 0xaa, 0x00]).unwrap();
         assert!(cpu.processor_status.is_raised(Flag::Negative));
     }
 
