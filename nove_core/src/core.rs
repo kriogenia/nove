@@ -1,14 +1,15 @@
 mod processor_status;
+mod memory;
 
+use std::fmt::{Debug, Formatter};
+use crate::core::memory::Memory;
 use crate::core::processor_status::{Flag, ProcessorStatus};
 use crate::instruction::{Mnemonic, OPCODES_MAP};
-use crate::Program;
+use crate::Rom;
 use crate::exception::Exception;
 
-const MEMORY_SIZE: usize = 0xFFFF;  // 64 KiB
-const PRG_ROM_ADDR: usize = 0x8000;
 
-#[derive(Debug)]
+#[derive(Default)]
 pub struct NoveCore {
     /// Program Counter
     pc: u16,
@@ -18,9 +19,8 @@ pub struct NoveCore {
     x: u8,
     /// Processor Status
     ps: ProcessorStatus,
-    // map to a new struct?
     /// Memory Map
-    memory: [u8; MEMORY_SIZE],
+    memory: Memory,
 }
 
 impl NoveCore {
@@ -28,14 +28,20 @@ impl NoveCore {
         Self::default()
     }
 
-    pub fn load(&mut self, program: Program) {
-        self.memory[PRG_ROM_ADDR .. (PRG_ROM_ADDR + program.len())].copy_from_slice(&program[..]);
-        self.pc = PRG_ROM_ADDR as u16;
+    pub fn reset(&mut self) {
+        self.pc = self.memory.read_u16(memory::PC_START_ADDR);
+        self.a = 0;
+        self.x = 0;
+        self.ps = Default::default();
+    }
+
+    pub fn load(&mut self, rom: Rom) {
+        self.memory.load_rom(rom);
     }
 
     pub fn run(&mut self) -> Result<(), Exception> {
         'game_loop: loop {
-            let byte = self.mem_read(self.pc);
+            let byte = self.memory.read(self.pc);
             self.pc += 1;
 
             use Mnemonic::*;
@@ -47,7 +53,7 @@ impl NoveCore {
                     self.update_z_and_n(self.x);
                 },
                 LDA => {
-                    self.a = self.mem_read(self.pc);
+                    self.a = self.memory.read(self.pc);
                     self.pc += 1;
                     self.update_z_and_n(self.a);
                 },
@@ -62,13 +68,10 @@ impl NoveCore {
     }
 
     #[cfg(test)]
-    fn load_and_run(&mut self, program: Program) {
-        self.load(program);
+    fn load_and_run(&mut self, rom: Rom) {
+        self.load(rom);
+        self.reset();
         self.run().expect("Error while running the program")
-    }
-
-    fn mem_read(&self, addr: u16) -> u8 {
-        self.memory[addr as usize]
     }
 
     #[inline]
@@ -87,15 +90,14 @@ impl NoveCore {
 
 }
 
-impl Default for NoveCore {
-    fn default() -> Self {
-        Self {
-            pc: Default::default(),
-            a: Default::default(),
-            x: Default::default(),
-            ps: Default::default(),
-            memory: [0; MEMORY_SIZE],
-        }
+impl Debug for NoveCore {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "NovaCode {{ ")?;
+        writeln!(f, "\tpc: {:?}", self.pc)?;
+        writeln!(f, "\t a: {:?}", self.a)?;
+        writeln!(f, "\t x: {:?}", self.x)?;
+        writeln!(f, "\tps: {:?}", self.ps)?;
+        writeln!(f, "}}")
     }
 }
 
@@ -104,65 +106,69 @@ mod test {
     use super::*;
 
     const BREAK: u8 = 0x00;
+    const PC_START: u16 = memory::PRG_ROM_ADDR as u16;
 
-    const ZERO: u8 = 0;
-    const NEG: u8 = 0xFF;
+    macro_rules! loaded_acc {
+        ($val:literal, $opcode:tt) => {
+            vec![0xA9, $val, $opcode, 0x00]
+        };
+    }
 
-    const PC_START: u16 = PRG_ROM_ADDR as u16;
+    macro_rules! loaded_x {
+        ($val:literal, $opcode:tt) => {
+            vec![0xA9, $val, 0xAA, $opcode, 0x00]
+        };
+    }
 
     #[test]
     fn inx() {
-        let opcode = 0xe8;
+        let opcode = 0xE8;
 
-        let mut cpu = NoveCore { x: 0x05, ..Default::default() };
-        cpu.load_and_run(vec![opcode, BREAK]);
+        let mut cpu = NoveCore::default();
+        cpu.load_and_run(loaded_x!(0x05, opcode));
         assert_eq!(cpu.x, 0x06);
         assert!(cpu.ps.is_lowered(Flag::Zero));
         assert!(cpu.ps.is_lowered(Flag::Negative));
-        assert_eq!(cpu.pc, PC_START+ 2);
 
-        cpu = NoveCore { x: NEG, ..Default::default() };
-        cpu.load_and_run(vec![opcode, BREAK]);
+        cpu.load_and_run(loaded_x!(0xFF, opcode));
         assert!(cpu.ps.is_raised(Flag::Zero));
 
-        let mut cpu = NoveCore { x: NEG - 1, ..Default::default() };
-        cpu.load_and_run(vec![opcode, BREAK]);
+        cpu.load_and_run(loaded_x!(0xFE, opcode));
         assert!(cpu.ps.is_raised(Flag::Negative));
     }
 
     #[test]
     fn lda() {
-        let opcode = 0xa9;
         let mut cpu = NoveCore::new();
+        let opcode = 0xA9;
+
         cpu.load_and_run(vec![opcode, 0x05, BREAK]);
         assert_eq!(cpu.a, 0x05);
         assert!(cpu.ps.is_lowered(Flag::Zero));
         assert!(cpu.ps.is_lowered(Flag::Negative));
         assert_eq!(cpu.pc, PC_START + 3);
 
-        cpu.load_and_run(vec![opcode, ZERO, BREAK]);
+        cpu.load_and_run(vec![opcode, 0x00, BREAK]);
         assert!(cpu.ps.is_raised(Flag::Zero));
 
-        cpu.load_and_run(vec![opcode, NEG, BREAK]);
+        cpu.load_and_run(vec![opcode, 0xFF, BREAK]);
         assert!(cpu.ps.is_raised(Flag::Negative));
     }
 
     #[test]
     fn tax() {
-        let opcode = 0xaa;
-        let mut cpu = NoveCore { a: 0x05, ..Default::default() };
-        cpu.load_and_run(vec![0xaa, BREAK]);
+        let mut cpu = NoveCore::new();
+        let opcode = 0xAA;
+
+        cpu.load_and_run(loaded_acc!(0x05, opcode));
         assert_eq!(cpu.x, 0x05);
         assert!(cpu.ps.is_lowered(Flag::Zero));
         assert!(cpu.ps.is_lowered(Flag::Negative));
-        assert_eq!(cpu.pc, PC_START + 2);
 
-        cpu = NoveCore { a: ZERO, ..Default::default() };
-        cpu.load_and_run(vec![opcode, BREAK]);
+        cpu.load_and_run(loaded_acc!(0x00, opcode));
         assert!(cpu.ps.is_raised(Flag::Zero));
 
-        let mut cpu = NoveCore { a: NEG, ..Default::default() };
-        cpu.load_and_run(vec![opcode, BREAK]);
+        cpu.load_and_run(loaded_acc!(0xFF, opcode));
         assert!(cpu.ps.is_raised(Flag::Negative));
     }
 
