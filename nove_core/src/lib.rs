@@ -1,4 +1,4 @@
-mod cpu;
+pub mod cpu;
 mod instruction;
 mod exception;
 
