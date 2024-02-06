@@ -31,7 +31,7 @@ impl TryFrom<OpCodeSlice<'_>> for Instruction {
         use Instruction::*;
 
         match value {
-            [0x00] => Ok(BRK),
+            [0x00, _] => Ok(BRK),
             [0xAA, _] => Ok(TAX),
             [0xA9, param] => Ok(LDA(*param)),
             [0xE8, _] => Ok(INX),

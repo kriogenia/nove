@@ -1,5 +1,6 @@
 use std::ops::Not;
 
+/// N V _ B D I Z C
 #[derive(Default, Debug)]
 pub(super) struct ProcessorStatus(u8);
 
