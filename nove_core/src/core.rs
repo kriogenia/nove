@@ -4,9 +4,10 @@ mod memory;
 use std::fmt::{Debug, Formatter};
 use crate::core::memory::Memory;
 use crate::core::processor_status::{Flag, ProcessorStatus};
-use crate::instruction::{mnemomic::Mnemonic, OPCODES_MAP};
+use crate::instruction::{mnemonic::Mnemonic, OPCODES_MAP};
 use crate::Rom;
 use crate::exception::Exception;
+use crate::instruction::addressing_mode::AddressingMode;
 
 
 #[derive(Default)]
@@ -17,6 +18,8 @@ pub struct NoveCore {
     a: u8,
     /// Index Register X
     x: u8,
+    /// Index Register Y
+    y: u8,
     /// Processor Status
     ps: ProcessorStatus,
     /// Memory Map
@@ -53,9 +56,10 @@ impl NoveCore {
                     self.update_z_and_n(self.x);
                 },
                 LDA => {
-                    self.a = self.memory.read(self.pc);
-                    self.pc += 1;
+                    let addr = self.get_addr(&opcode.addressing_mode);
+                    self.a = self.memory.read(addr);
                     self.update_z_and_n(self.a);
+                    self.pc += opcode.bytes as u16 - 1;
                 },
                 TAX => {
                     self.x = self.a;
@@ -67,11 +71,34 @@ impl NoveCore {
         Ok(())
     }
 
+    fn get_addr(&self, mode: &AddressingMode) -> u16 {
+        use AddressingMode::*;
+        match mode {
+            IMM => self.pc,
+            ZPG => self.next_byte() as u16,
+            ZPX => self.next_byte().wrapping_add(self.x) as u16,
+            ABS => self.next_word(),
+            ABX => self.next_word().wrapping_add(self.x as u16),
+            ABY => self.next_word().wrapping_add(self.y as u16),
+            IDX => self.memory.read_u16(self.next_byte().wrapping_add(self.x) as u16),
+            IDY => self.memory.read_u16(self.next_byte().wrapping_add(self.y) as u16),
+            IMP => unreachable!("addressing mode {mode:?} should not access address"),
+        }
+    }
+
+    fn next_byte(&self) -> u8 {
+        self.memory.read(self.pc)
+    }
+
+    fn next_word(&self) -> u16 {
+        self.memory.read_u16(self.pc)
+    }
+
     #[cfg(test)]
     fn load_and_run(&mut self, rom: Rom) {
         self.load(rom);
         self.reset();
-        self.run().expect("Error while running the program")
+        self.run().expect("error while running the program")
     }
 
     #[inline]
@@ -138,7 +165,7 @@ mod test {
     }
 
     #[test]
-    fn lda() {
+    fn lda_imm() {
         let mut cpu = NoveCore::new();
         let opcode = 0xA9;
 
@@ -153,6 +180,25 @@ mod test {
 
         cpu.load_and_run(vec![opcode, 0xFF, BREAK]);
         assert!(cpu.ps.is_raised(Flag::Negative));
+    }
+
+    #[test]
+    fn lda_zp() {
+        // todo zpg
+        // todo zpx
+    }
+
+    #[test]
+    fn lda_abs() {
+        // todo abs
+        // todo abx
+        // todo aby
+    }
+
+    #[test]
+    fn lda_id() {
+        // todo idx
+        // todo idy
     }
 
     #[test]

@@ -1,4 +1,5 @@
 #[allow(clippy::upper_case_acronyms)]
+#[derive(Debug)]
 pub enum AddressingMode {
     /// Implied
     /// https://www.nesdev.org/obelisk-6502-guide/addressing.html#IMP

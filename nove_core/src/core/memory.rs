@@ -30,14 +30,14 @@ impl Memory {
 
     pub fn read_u16(&self, addr: u16) -> u16 {
         let lo = self.read(addr);
-        let hi = self.read(addr + 1);
+        let hi = self.read(addr.wrapping_add(1));
         u16::from_le_bytes([lo, hi])
     }
 
     pub fn write_u16(&mut self, addr: u16, value: u16) {
         let [lo, hi] = value.to_le_bytes();
         self.write(addr, lo);
-        self.write(addr + 1, hi)
+        self.write(addr.wrapping_add(1), hi)
     }
 }
 

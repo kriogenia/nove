@@ -1,12 +1,12 @@
-pub mod mnemomic;
-mod addressing_mode;
+pub mod mnemonic;
+pub mod addressing_mode;
 
 use std::collections::HashMap;
 use lazy_static::lazy_static;
 use crate::instruction::addressing_mode::AddressingMode;
 use crate::instruction::addressing_mode::AddressingMode::*;
-use crate::instruction::mnemomic::Mnemonic;
-use crate::instruction::mnemomic::Mnemonic::*;
+use crate::instruction::mnemonic::Mnemonic;
+use crate::instruction::mnemonic::Mnemonic::*;
 
 pub struct OpCode {
     pub mnemonic: Mnemonic,
@@ -25,8 +25,15 @@ impl OpCode {
 lazy_static! {
     pub static ref CPU_OPCODES: Vec<OpCode> = vec![
         OpCode::new(BRK, 0x00, 1, 7, IMP),
-        OpCode::new(TAX, 0xAA, 1, 2, IMP),
+        OpCode::new(LDA, 0xA1, 2, 6, IDX),
+        OpCode::new(LDA, 0xA5, 2, 3, ZPG),
         OpCode::new(LDA, 0xA9, 2, 2, IMM),
+        OpCode::new(TAX, 0xAA, 1, 2, IMP),
+        OpCode::new(LDA, 0xAD, 3, 4, ABS),
+        OpCode::new(LDA, 0xB1, 2, 5, IDY), // +1 cycle if page crossed
+        OpCode::new(LDA, 0xB5, 2, 4, ZPX),
+        OpCode::new(LDA, 0xB9, 3, 4, ABY), // +1 cycle if page crossed
+        OpCode::new(LDA, 0xBD, 3, 4, ABX), // +1 cycle if page crossed
         OpCode::new(INX, 0xE8, 1, 2, IMP),
     ];
 
