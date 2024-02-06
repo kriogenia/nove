@@ -1,9 +1,9 @@
 mod processor_status;
 
-use std::ops::Range;
 use crate::core::processor_status::{Flag, ProcessorStatus};
-use crate::instruction::Instruction;
-use crate::{OP_CODE_SLICE_SIZE, Program};
+use crate::instruction::{Mnemonic, OPCODES_MAP};
+use crate::Program;
+use crate::exception::Exception;
 
 const MEMORY_SIZE: usize = 0xFFFF;  // 64 KiB
 const PRG_ROM_ADDR: usize = 0x8000;
@@ -33,22 +33,22 @@ impl NoveCore {
         self.pc = PRG_ROM_ADDR as u16;
     }
 
-    pub fn run(&mut self) {
+    pub fn run(&mut self) -> Result<(), Exception> {
         'game_loop: loop {
-            let range = next_slice_range(self.pc as usize);
-            let opcodes = &self.memory[range];
+            let byte = self.mem_read(self.pc);
             self.pc += 1;
 
-            use Instruction::*;
-            match Instruction::try_from(opcodes).unwrap() {
+            use Mnemonic::*;
+            let opcode = OPCODES_MAP.get(&byte).ok_or_else(|| Exception::WrongOpCode(byte))?;
+            match opcode.mnemonic {
                 BRK => break 'game_loop,
                 INX => {
                     self.x = self.x.wrapping_add(1);
                     self.update_z_and_n(self.x);
                 },
-                LDA(param) => {
+                LDA => {
+                    self.a = self.mem_read(self.pc);
                     self.pc += 1;
-                    self.a = param;
                     self.update_z_and_n(self.a);
                 },
                 TAX => {
@@ -56,13 +56,15 @@ impl NoveCore {
                     self.update_z_and_n(self.x);
                 }
             }
-
         }
+
+        Ok(())
     }
 
+    #[cfg(test)]
     fn load_and_run(&mut self, program: Program) {
         self.load(program);
-        self.run()
+        self.run().expect("Error while running the program")
     }
 
     fn mem_read(&self, addr: u16) -> u8 {
@@ -96,16 +98,6 @@ impl Default for NoveCore {
         }
     }
 }
-
-
-fn next_slice_range(start: usize) -> Range<usize> {
-    if start + OP_CODE_SLICE_SIZE > MEMORY_SIZE {
-        start..MEMORY_SIZE
-    } else {
-        start..start + OP_CODE_SLICE_SIZE
-    }
-}
-
 
 #[cfg(test)]
 mod test {

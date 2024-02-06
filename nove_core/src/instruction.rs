@@ -1,8 +1,35 @@
-use crate::exception::Exception;
-use crate::OpCodeSlice;
+use std::collections::HashMap;
+use lazy_static::lazy_static;
+use crate::instruction::Mnemonic::{BRK, INX, LDA, TAX};
+
+pub struct OpCode {
+    pub mnemonic: Mnemonic,
+    pub code: u8,
+}
+
+impl OpCode {
+    fn new(mnemonic: Mnemonic, code: u8) -> Self {
+        Self { mnemonic, code }
+    }
+}
+
+lazy_static! {
+    pub static ref CPU_OPCODES: Vec<OpCode> = vec![
+        OpCode::new(BRK, 0x00),
+        OpCode::new(TAX, 0xAA),
+        OpCode::new(LDA, 0xA9),
+        OpCode::new(INX, 0xE8),
+    ];
+
+
+    pub static ref OPCODES_MAP: HashMap<u8, &'static OpCode> = {
+        CPU_OPCODES.iter().map(|c| (c.code, c)).collect()
+    };
+}
+
 
 #[allow(clippy::upper_case_acronyms)]
-pub enum Instruction {
+pub enum Mnemonic {
     /// Force Interrupt
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#BRK
     BRK,
@@ -16,7 +43,7 @@ pub enum Instruction {
     /// Loads a byte of memory into the accumulator.
     /// Flags: N Z
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#LDA
-    LDA(u8),
+    LDA,
     /// Transfer Accumulator to X
     /// X,Z,N = A
     /// Copies the current contents of the accumulator into the X register.
@@ -24,19 +51,3 @@ pub enum Instruction {
     TAX,
 }
 
-impl TryFrom<OpCodeSlice<'_>> for Instruction {
-    type Error = Exception;
-
-    fn try_from(value: OpCodeSlice) -> Result<Self, Self::Error> {
-        use Instruction::*;
-
-        match value {
-            [0x00, _] => Ok(BRK),
-            [0xAA, _] => Ok(TAX),
-            [0xA9, param] => Ok(LDA(*param)),
-            [0xE8, _] => Ok(INX),
-            _ => Err(Exception::WrongOpCode(value[0])),
-        }
-
-    }
-}

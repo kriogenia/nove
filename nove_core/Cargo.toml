@@ -5,3 +5,4 @@ edition.workspace = true
 
 [dependencies]
 thiserror = "1.0.56"
+lazy_static = "1.4.0"
