@@ -5,20 +5,22 @@ use crate::instruction::Mnemonic::{BRK, INX, LDA, TAX};
 pub struct OpCode {
     pub mnemonic: Mnemonic,
     pub code: u8,
+    pub bytes: u8,
+    pub cycles: u8,
 }
 
 impl OpCode {
-    fn new(mnemonic: Mnemonic, code: u8) -> Self {
-        Self { mnemonic, code }
+    fn new(mnemonic: Mnemonic, code: u8, bytes: u8, cycles: u8) -> Self {
+        Self { mnemonic, code, bytes, cycles }
     }
 }
 
 lazy_static! {
     pub static ref CPU_OPCODES: Vec<OpCode> = vec![
-        OpCode::new(BRK, 0x00),
-        OpCode::new(TAX, 0xAA),
-        OpCode::new(LDA, 0xA9),
-        OpCode::new(INX, 0xE8),
+        OpCode::new(BRK, 0x00, 1, 7),
+        OpCode::new(TAX, 0xAA, 1, 2),
+        OpCode::new(LDA, 0xA9, 2, 2),
+        OpCode::new(INX, 0xE8, 1, 2),
     ];
 
 
