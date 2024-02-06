@@ -4,7 +4,7 @@ mod memory;
 use std::fmt::{Debug, Formatter};
 use crate::core::memory::Memory;
 use crate::core::processor_status::{Flag, ProcessorStatus};
-use crate::instruction::{Mnemonic, OPCODES_MAP};
+use crate::instruction::{mnemomic::Mnemonic, OPCODES_MAP};
 use crate::Rom;
 use crate::exception::Exception;
 
@@ -45,7 +45,7 @@ impl NoveCore {
             self.pc += 1;
 
             use Mnemonic::*;
-            let opcode = OPCODES_MAP.get(&byte).ok_or_else(|| Exception::WrongOpCode(byte))?;
+            let opcode = OPCODES_MAP.get(&byte).ok_or(Exception::WrongOpCode(byte))?;
             match opcode.mnemonic {
                 BRK => break 'game_loop,
                 INX => {
