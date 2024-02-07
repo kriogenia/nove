@@ -18,6 +18,11 @@ pub enum Mnemonic {
     /// Loads a byte of memory into the X register.
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#LDX
     LDX,
+    /// LoaD Y register
+    /// Y,Z,N = M
+    /// Loads a byte of memory into the Y register.
+    /// https://www.nesdev.org/obelisk-6502-guide/reference.html#LDY
+    LDY,
     /// STore Accumulator
     /// M = A
     /// Stores the contents of the accumulator into memory.

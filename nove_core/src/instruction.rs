@@ -39,6 +39,11 @@ lazy_static! {
         OpCode::new(LDX, 0xA2, 2, 2, IMM),
         OpCode::new(LDX, 0xA6, 2, 3, ZPG),
         OpCode::new(LDX, 0xB6, 2, 4, ZPY),
+        OpCode::new(LDY, 0xAC, 3, 4, ABS),
+        OpCode::new(LDY, 0xBC, 3, 4, ABX), // +1 cycle if page crossed
+        OpCode::new(LDY, 0xA0, 2, 2, IMM),
+        OpCode::new(LDY, 0xA4, 2, 3, ZPG),
+        OpCode::new(LDY, 0xB4, 2, 4, ZPX),
         OpCode::new(STA, 0x8D, 3, 4, ABS),
         OpCode::new(STA, 0x9D, 3, 5, ABX),
         OpCode::new(STA, 0x99, 3, 5, ABY),
