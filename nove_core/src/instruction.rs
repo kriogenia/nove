@@ -25,23 +25,23 @@ impl OpCode {
 lazy_static! {
     pub static ref CPU_OPCODES: Vec<OpCode> = vec![
         OpCode::new(BRK, 0x00, 1, 7, IMP),
-        OpCode::new(STA, 0x81, 2, 6, ABX),
-        OpCode::new(STA, 0x85, 2, 3, ZPG),
-        OpCode::new(STA, 0x8D, 3, 4, ABS),
-        OpCode::new(STA, 0x91, 2, 6, ABY),
-        OpCode::new(STA, 0x95, 2, 4, ZPX),
-        OpCode::new(STA, 0x99, 3, 5, ABY),
-        OpCode::new(STA, 0x9D, 3, 5, ABX),
-        OpCode::new(LDA, 0xA1, 2, 6, IDX),
-        OpCode::new(LDA, 0xA5, 2, 3, ZPG),
-        OpCode::new(LDA, 0xA9, 2, 2, IMM),
-        OpCode::new(TAX, 0xAA, 1, 2, IMP),
-        OpCode::new(LDA, 0xAD, 3, 4, ABS),
-        OpCode::new(LDA, 0xB1, 2, 5, IDY), // +1 cycle if page crossed
-        OpCode::new(LDA, 0xB5, 2, 4, ZPX),
-        OpCode::new(LDA, 0xB9, 3, 4, ABY), // +1 cycle if page crossed
-        OpCode::new(LDA, 0xBD, 3, 4, ABX), // +1 cycle if page crossed
         OpCode::new(INX, 0xE8, 1, 2, IMP),
+        OpCode::new(LDA, 0xAD, 3, 4, ABS),
+        OpCode::new(LDA, 0xBD, 3, 4, ABX), // +1 cycle if page crossed
+        OpCode::new(LDA, 0xB9, 3, 4, ABY), // +1 cycle if page crossed
+        OpCode::new(LDA, 0xA1, 2, 6, IDX),
+        OpCode::new(LDA, 0xB1, 2, 5, IDY), // +1 cycle if page crossed
+        OpCode::new(LDA, 0xA9, 2, 2, IMM),
+        OpCode::new(LDA, 0xA5, 2, 3, ZPG),
+        OpCode::new(LDA, 0xB5, 2, 4, ZPX),
+        OpCode::new(STA, 0x8D, 3, 4, ABS),
+        OpCode::new(STA, 0x9D, 3, 5, ABX),
+        OpCode::new(STA, 0x99, 3, 5, ABY),
+        OpCode::new(STA, 0x81, 2, 6, IDX),
+        OpCode::new(STA, 0x91, 2, 6, IDY),
+        OpCode::new(STA, 0x85, 2, 3, ZPG),
+        OpCode::new(STA, 0x95, 2, 4, ZPX),
+        OpCode::new(TAX, 0xAA, 1, 2, IMP),
     ];
 
 

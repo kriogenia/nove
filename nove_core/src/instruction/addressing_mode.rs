@@ -1,18 +1,6 @@
 #[allow(clippy::upper_case_acronyms)]
 #[derive(Debug)]
 pub enum AddressingMode {
-    /// Implied
-    /// https://www.nesdev.org/obelisk-6502-guide/addressing.html#IMP
-    IMP,
-    /// Immediate
-    /// https://www.nesdev.org/obelisk-6502-guide/addressing.html#IMM
-    IMM,
-    /// Zero Page
-    /// https://www.nesdev.org/obelisk-6502-guide/addressing.html#ZPG
-    ZPG,
-    /// Zero Page,X
-    /// https://www.nesdev.org/obelisk-6502-guide/addressing.html#ZPX
-    ZPX,
     /// Absolute
     /// https://www.nesdev.org/obelisk-6502-guide/addressing.html#ABS
     ABS,
@@ -28,4 +16,19 @@ pub enum AddressingMode {
     /// Indirect Indexed
     /// https://www.nesdev.org/obelisk-6502-guide/addressing.html#IDY
     IDY,
+    /// Immediate
+    /// https://www.nesdev.org/obelisk-6502-guide/addressing.html#IMM
+    IMM,
+    /// Implied
+    /// https://www.nesdev.org/obelisk-6502-guide/addressing.html#IMP
+    IMP,
+    /// Zero Page
+    /// https://www.nesdev.org/obelisk-6502-guide/addressing.html#ZPG
+    ZPG,
+    /// Zero Page,X
+    /// https://www.nesdev.org/obelisk-6502-guide/addressing.html#ZPX
+    ZPX,
+    /// Zero Page,Y
+    /// https://www.nesdev.org/obelisk-6502-guide/addressing.html#ZPY
+    ZPY,
 }

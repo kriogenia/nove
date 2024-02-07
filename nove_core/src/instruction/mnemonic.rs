@@ -11,7 +11,6 @@ pub enum Mnemonic {
     /// LoaD Accumulator
     /// A,Z,N = M
     /// Loads a byte of memory into the accumulator.
-    /// Flags: N Z
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#LDA
     LDA,
     /// STore Accumulator

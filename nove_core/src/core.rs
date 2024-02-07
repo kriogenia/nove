@@ -82,6 +82,7 @@ impl NoveCore {
             IMM => self.pc,
             ZPG => self.next_byte() as u16,
             ZPX => self.next_byte().wrapping_add(self.x) as u16,
+            ZPY => self.next_byte().wrapping_add(self.y) as u16,
             ABS => self.next_word(),
             ABX => self.next_word().wrapping_add(self.x as u16),
             ABY => self.next_word().wrapping_add(self.y as u16),
@@ -263,9 +264,9 @@ mod test {
     fn sta_id() {
         let mut cpu = NoveCore::new();
 
-        cpu.memory.write_u16(0x1234, 0x12);
+        cpu.memory.write_u16(0x12, 0x1234);
         cpu.load_and_run(rom!(a:0x05, x:0x02, run:0x81, 0x10));
-        assert_eq!(cpu.memory.read_u16(0x12), 0x05);
+        assert_eq!(cpu.memory.read_u16(0x1234), 0x05);
         assert_eq!(cpu.pc, PC_START + 6 + 2);
 
         // todo idy
