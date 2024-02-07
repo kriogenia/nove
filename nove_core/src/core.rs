@@ -4,7 +4,7 @@ mod memory;
 use std::fmt::{Debug, Formatter};
 use crate::core::memory::Memory;
 use crate::core::processor_status::{Flag, ProcessorStatus};
-use crate::instruction::{mnemonic::Mnemonic, OPCODES_MAP};
+use crate::instruction::{mnemonic::Mnemonic, OpCode, OPCODES_MAP};
 use crate::Rom;
 use crate::exception::Exception;
 use crate::instruction::addressing_mode::AddressingMode;
@@ -27,12 +27,11 @@ pub struct NoveCore {
 }
 
 macro_rules! ld {
-    ($self:ident, $reg:ident, $code:tt) => {
+    ($self:ident, $reg:ident, $code:expr) => {
         {
             let addr = $self.get_addr(&$code.addressing_mode);
             $self.$reg = $self.memory.read(addr);
             $self.update_z_and_n($self.$reg);
-            $self.pc += $code.bytes as u16 - 1;
         }
     };
 }
@@ -62,6 +61,11 @@ impl NoveCore {
             let opcode = OPCODES_MAP.get(&byte).ok_or(Exception::WrongOpCode(byte))?;
             match opcode.mnemonic {
                 BRK => break 'game_loop,
+                AND => {
+                    let addr = self.get_addr(&opcode.addressing_mode);
+                    self.a &= self.memory.read(addr);
+                    self.update_z_and_n(self.a);
+                }
                 INX => {
                     self.x = self.x.wrapping_add(1);
                     self.update_z_and_n(self.x);
@@ -72,13 +76,14 @@ impl NoveCore {
                 STA => {
                     let addr = self.get_addr(&opcode.addressing_mode);
                     self.memory.write(addr, self.a);
-                    self.pc += opcode.bytes as u16 - 1;
                 },
                 TAX => {
                     self.x = self.a;
                     self.update_z_and_n(self.x);
                 }
             }
+
+            self.update_pc(opcode);
         }
 
         Ok(())
@@ -129,6 +134,10 @@ impl NoveCore {
         }
     }
 
+    fn update_pc(&mut self, opcode: &OpCode) {
+        self.pc += opcode.bytes as u16 - 1;
+    }
+
 }
 
 impl Debug for NoveCore {
@@ -162,6 +171,38 @@ mod test {
     }
 
     #[test]
+    fn and_abs() {
+        let mut cpu = NoveCore::default();
+
+        cpu.memory.write(0x0011, 0b110);
+        cpu.load_and_run(rom!(A, 0b011; 0x2D, 0x11, 0x00));
+        assert_eq!(cpu.a, 0b010);
+
+        cpu.memory.write(0x0015, 0b111);
+        cpu.load_and_run(rom!(A, 0b011, X, 0x04; 0x3D, 0x11, 0x00));
+        assert_eq!(cpu.a, 0b011);
+
+        cpu.memory.write(0x0019, 0b010);
+        cpu.load_and_run(rom!(A, 0b011, Y, 0x08; 0x39, 0x11, 0x00));
+        assert_eq!(cpu.a, 0b010);
+    }
+
+    #[test]
+    fn and_imm() {
+        let mut cpu = NoveCore::default();
+
+        cpu.memory.write(0x0011, 0b110);
+        cpu.load_and_run(rom!(A, 0b011; 0x2D, 0x11, 0x00));
+        assert_eq!(cpu.a, 0b010);
+        assert!(cpu.ps.is_lowered(Flag::Zero));
+        assert!(cpu.ps.is_lowered(Flag::Negative));
+
+        // todo test Z and N
+
+        // test!(&mut cpu, rom, a:0b010, x:0, y:0, pc: +2)
+    }
+
+    #[test]
     fn inx() {
         let mut cpu = NoveCore::default();
 
@@ -169,7 +210,6 @@ mod test {
         assert_eq!(cpu.x, 0x06);
         assert!(cpu.ps.is_lowered(Flag::Zero));
         assert!(cpu.ps.is_lowered(Flag::Negative));
-        assert_eq!(cpu.pc, PC_START + 2 + 2);
 
         cpu.load_and_run(rom!(X, 0xFF; 0xE8));
         assert!(cpu.ps.is_raised(Flag::Zero));

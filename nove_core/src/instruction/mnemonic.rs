@@ -1,5 +1,10 @@
 #[allow(clippy::upper_case_acronyms)]
 pub enum Mnemonic {
+    /// Logical AND
+    /// A,Z,N = A&M
+    /// A logical AND is performed, bit by bit, on the a using the contents of a byte of memory.
+    /// https://www.nesdev.org/obelisk-6502-guide/reference.html#AND
+    AND,
     /// Force Interrupt
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#BRK
     BRK,
