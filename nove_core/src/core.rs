@@ -61,6 +61,11 @@ impl NoveCore {
                     self.update_z_and_n(self.a);
                     self.pc += opcode.bytes as u16 - 1;
                 },
+                STA => {
+                    let addr = self.get_addr(&opcode.addressing_mode);
+                    self.memory.write(addr, self.a);
+                    self.pc += opcode.bytes as u16 - 1;
+                },
                 TAX => {
                     self.x = self.a;
                     self.update_z_and_n(self.x);
@@ -80,7 +85,7 @@ impl NoveCore {
             ABS => self.next_word(),
             ABX => self.next_word().wrapping_add(self.x as u16),
             ABY => self.next_word().wrapping_add(self.y as u16),
-            IDX => self.memory.read_u16(dbg!(self.next_byte()).wrapping_add(self.x) as u16),
+            IDX => self.memory.read_u16(self.next_byte().wrapping_add(self.x) as u16),
             IDY => self.memory.read_u16(self.next_byte().wrapping_add(self.y) as u16),
             IMP => unreachable!("addressing mode {mode:?} should not access address"),
         }
@@ -135,15 +140,15 @@ mod test {
     const BREAK: u8 = 0x00;
     const PC_START: u16 = memory::PRG_ROM_ADDR as u16;
 
-    macro_rules! loaded_acc {
-        ($val:literal, $opcode:tt) => {
-            vec![0xA9, $val, $opcode, 0x00]
+    macro_rules! rom {
+        (a:$val:literal, run:$($opcode:tt),+) => {
+            vec![0xA9, $val, $($opcode),+, 0x00]
         };
-    }
-
-    macro_rules! loaded_x {
-        ($val:literal, ...$($opcode:tt),+) => {
+        (x:$val:literal, run:$($opcode:tt),+) => {
             vec![0xA9, $val, 0xAA, $($opcode),+, 0x00]
+        };
+        (a:$acc:literal, x:$x:literal, run:$($opcode:tt),+) => {
+            vec![0xA9, $x, 0xAA, 0xA9, $acc, $($opcode),+, 0x00]
         };
     }
 
@@ -152,15 +157,15 @@ mod test {
         let opcode = 0xE8;
 
         let mut cpu = NoveCore::default();
-        cpu.load_and_run(loaded_x!(0x05, ...opcode));
+        cpu.load_and_run(rom!(x:0x05, run:opcode));
         assert_eq!(cpu.x, 0x06);
         assert!(cpu.ps.is_lowered(Flag::Zero));
         assert!(cpu.ps.is_lowered(Flag::Negative));
 
-        cpu.load_and_run(loaded_x!(0xFF, ...opcode));
+        cpu.load_and_run(rom!(x:0xFF, run:opcode));
         assert!(cpu.ps.is_raised(Flag::Zero));
 
-        cpu.load_and_run(loaded_x!(0xFE, ...opcode));
+        cpu.load_and_run(rom!(x:0xFE, run:opcode));
         assert!(cpu.ps.is_raised(Flag::Negative));
     }
 
@@ -192,7 +197,7 @@ mod test {
         assert_eq!(cpu.pc, PC_START + 3);
 
         cpu.memory.write(0x07, 0x12);
-        cpu.load_and_run(loaded_x!(0x02, ...0xB5, 0x05));
+        cpu.load_and_run(rom!(x:0x02, run:0xB5, 0x05));
         assert_eq!(cpu.a, 0x12);
         assert_eq!(cpu.pc, PC_START + 3 + 3);
     }
@@ -207,7 +212,7 @@ mod test {
         assert_eq!(cpu.pc, PC_START + 4);
 
         cpu.memory.write(0x1234, 0x12);
-        cpu.load_and_run(loaded_x!(0x02, ...0xBD, 0x32, 0x12));
+        cpu.load_and_run(rom!(x:0x02, run:0xBD, 0x32, 0x12));
         assert_eq!(cpu.a, 0x12);
         assert_eq!(cpu.pc, PC_START + 3 + 4);
 
@@ -220,9 +225,48 @@ mod test {
 
         cpu.memory.write_u16(0x05, 0x1234);
         cpu.memory.write(0x1234, 0x12);
-        cpu.load_and_run(loaded_x!(0x02, ...0xA1, 0x03));
+        cpu.load_and_run(rom!(x:0x02, run:0xA1, 0x03));
         assert_eq!(cpu.a, 0x12);
         assert_eq!(cpu.pc, PC_START + 3 + 3);
+
+        // todo idy
+    }
+
+    #[test]
+    fn sta_zp() {
+        let mut cpu = NoveCore::new();
+
+        cpu.load_and_run(rom!(a:0x05, run:0x85, 0x15));
+        assert_eq!(cpu.memory.read(0x15), 0x05);
+        assert_eq!(cpu.pc, PC_START + 3 + 2);
+
+        cpu.load_and_run(rom!(a:0x05, x:0x10, run:0x95, 0x15));
+        assert_eq!(cpu.memory.read(0x25), 0x05);
+        assert_eq!(cpu.pc, PC_START + 6 + 2);
+    }
+
+    #[test]
+    fn sta_ab() {
+        let mut cpu = NoveCore::new();
+
+        cpu.load_and_run(rom!(a:0x05, run:0x8D, 0x34, 0x12));
+        assert_eq!(cpu.memory.read_u16(0x1234), 0x05);
+        assert_eq!(cpu.pc, PC_START + 3 + 3);
+
+        cpu.load_and_run(rom!(a:0x05, x:0x10, run:0x9D, 0x11, 0x11));
+        assert_eq!(cpu.memory.read(0x1121), 0x05);
+        assert_eq!(cpu.pc, PC_START + 6 + 3);
+        // todo aby 99
+    }
+
+    #[test]
+    fn sta_id() {
+        let mut cpu = NoveCore::new();
+
+        cpu.memory.write_u16(0x1234, 0x12);
+        cpu.load_and_run(rom!(a:0x05, x:0x02, run:0x81, 0x10));
+        assert_eq!(cpu.memory.read_u16(0x12), 0x05);
+        assert_eq!(cpu.pc, PC_START + 6 + 2);
 
         // todo idy
     }
@@ -232,15 +276,15 @@ mod test {
         let mut cpu = NoveCore::new();
         let opcode = 0xAA;
 
-        cpu.load_and_run(loaded_acc!(0x05, opcode));
+        cpu.load_and_run(rom!(a:0x05, run:opcode));
         assert_eq!(cpu.x, 0x05);
         assert!(cpu.ps.is_lowered(Flag::Zero));
         assert!(cpu.ps.is_lowered(Flag::Negative));
 
-        cpu.load_and_run(loaded_acc!(0x00, opcode));
+        cpu.load_and_run(rom!(a:0x00, run:opcode));
         assert!(cpu.ps.is_raised(Flag::Zero));
 
-        cpu.load_and_run(loaded_acc!(0xFF, opcode));
+        cpu.load_and_run(rom!(a:0xFF, run:opcode));
         assert!(cpu.ps.is_raised(Flag::Negative));
     }
 

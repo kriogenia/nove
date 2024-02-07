@@ -25,6 +25,13 @@ impl OpCode {
 lazy_static! {
     pub static ref CPU_OPCODES: Vec<OpCode> = vec![
         OpCode::new(BRK, 0x00, 1, 7, IMP),
+        OpCode::new(STA, 0x81, 2, 6, ABX),
+        OpCode::new(STA, 0x85, 2, 3, ZPG),
+        OpCode::new(STA, 0x8D, 3, 4, ABS),
+        OpCode::new(STA, 0x91, 2, 6, ABY),
+        OpCode::new(STA, 0x95, 2, 4, ZPX),
+        OpCode::new(STA, 0x99, 3, 5, ABY),
+        OpCode::new(STA, 0x9D, 3, 5, ABX),
         OpCode::new(LDA, 0xA1, 2, 6, IDX),
         OpCode::new(LDA, 0xA5, 2, 3, ZPG),
         OpCode::new(LDA, 0xA9, 2, 2, IMM),

@@ -14,6 +14,11 @@ pub enum Mnemonic {
     /// Flags: N Z
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#LDA
     LDA,
+    /// STore Accumulator
+    /// M = A
+    /// Stores the contents of the accumulator into memory.
+    /// https://www.nesdev.org/obelisk-6502-guide/reference.html#STA
+    STA,
     /// Transfer Accumulator to X
     /// X,Z,N = A
     /// Copies the current contents of the accumulator into the X register.
