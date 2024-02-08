@@ -39,7 +39,7 @@ impl ProcessorStatus {
 
 impl Debug for ProcessorStatus {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "\n  NV BDIZC")?;
-        writeln!(f, "{:#8b}", self.0)
+        writeln!(f, "\n\t\t  NV BDIZC")?;
+        writeln!(f, "\t\t{:#010b}", self.0)
     }
 }

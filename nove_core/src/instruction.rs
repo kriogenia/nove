@@ -24,16 +24,16 @@ impl OpCode {
 
 lazy_static! {
     pub static ref CPU_OPCODES: Vec<OpCode> = vec![
-        OpCode::new(ADC, 0x6D, 3, 4, ABS),
-        OpCode::new(ADC, 0x7D, 3, 4, ABX), // +1 cycle if page crossed
+        OpCode::new(ADC, 0x6d, 3, 4, ABS),
+        OpCode::new(ADC, 0x7d, 3, 4, ABX), // +1 cycle if page crossed
         OpCode::new(ADC, 0x79, 3, 4, ABY), // +1 cycle if page crossed
         OpCode::new(ADC, 0x69, 2, 2, IMM),
         OpCode::new(ADC, 0x61, 2, 6, IDX),
         OpCode::new(ADC, 0x71, 2, 5, IDY), // +1 cycle if page crossed
         OpCode::new(ADC, 0x65, 2, 3, ZPG),
         OpCode::new(ADC, 0x75, 2, 4, ZPX),
-        OpCode::new(AND, 0x2D, 3, 4, ABS),
-        OpCode::new(AND, 0x3D, 3, 4, ABX), // +1 cycle if page crossed
+        OpCode::new(AND, 0x2d, 3, 4, ABS),
+        OpCode::new(AND, 0x3d, 3, 4, ABX), // +1 cycle if page crossed
         OpCode::new(AND, 0x39, 3, 4, ABY), // +1 cycle if page crossed
         OpCode::new(AND, 0x29, 2, 2, IMM),
         OpCode::new(AND, 0x21, 2, 6, IDX),
@@ -42,43 +42,46 @@ lazy_static! {
         OpCode::new(AND, 0x35, 2, 4, ZPX),
         OpCode::new(BRK, 0x00, 1, 7, IMP),
         OpCode::new(CLC, 0x18, 1, 2, IMP),
-        OpCode::new(CLV, 0xB8, 1, 2, IMP),
-        OpCode::new(CMP, 0xCD, 3, 4, ABS),
-        OpCode::new(CMP, 0xDD, 3, 4, ABX), // +1 cycle if page crossed
-        OpCode::new(CMP, 0xD9, 3, 4, ABY), // +1 cycle if page crossed
-        OpCode::new(CMP, 0xC9, 2, 2, IMM),
-        OpCode::new(CMP, 0xC1, 2, 6, IDX),
-        OpCode::new(CMP, 0xD1, 2, 5, IDY), // +1 cycle if page crossed
-        OpCode::new(CMP, 0xC5, 2, 3, ZPG),
-        OpCode::new(CMP, 0xD5, 2, 4, ZPX),
-        OpCode::new(DEX, 0xCA, 1, 2, IMP),
-        OpCode::new(INX, 0xE8, 1, 2, IMP),
-        OpCode::new(LDA, 0xAD, 3, 4, ABS),
-        OpCode::new(LDA, 0xBD, 3, 4, ABX), // +1 cycle if page crossed
-        OpCode::new(LDA, 0xB9, 3, 4, ABY), // +1 cycle if page crossed
-        OpCode::new(LDA, 0xA1, 2, 6, IDX),
-        OpCode::new(LDA, 0xB1, 2, 5, IDY), // +1 cycle if page crossed
-        OpCode::new(LDA, 0xA9, 2, 2, IMM),
-        OpCode::new(LDA, 0xA5, 2, 3, ZPG),
-        OpCode::new(LDA, 0xB5, 2, 4, ZPX),
-        OpCode::new(LDX, 0xAE, 3, 4, ABS),
-        OpCode::new(LDX, 0xBE, 3, 4, ABY), // +1 cycle if page crossed
-        OpCode::new(LDX, 0xA2, 2, 2, IMM),
-        OpCode::new(LDX, 0xA6, 2, 3, ZPG),
-        OpCode::new(LDX, 0xB6, 2, 4, ZPY),
-        OpCode::new(LDY, 0xAC, 3, 4, ABS),
-        OpCode::new(LDY, 0xBC, 3, 4, ABX), // +1 cycle if page crossed
-        OpCode::new(LDY, 0xA0, 2, 2, IMM),
-        OpCode::new(LDY, 0xA4, 2, 3, ZPG),
-        OpCode::new(LDY, 0xB4, 2, 4, ZPX),
-        OpCode::new(STA, 0x8D, 3, 4, ABS),
-        OpCode::new(STA, 0x9D, 3, 5, ABX),
+        OpCode::new(CLV, 0xb8, 1, 2, IMP),
+        OpCode::new(CMP, 0xcd, 3, 4, ABS),
+        OpCode::new(CMP, 0xdd, 3, 4, ABX), // +1 cycle if page crossed
+        OpCode::new(CMP, 0xd9, 3, 4, ABY), // +1 cycle if page crossed
+        OpCode::new(CMP, 0xc9, 2, 2, IMM),
+        OpCode::new(CMP, 0xc1, 2, 6, IDX),
+        OpCode::new(CMP, 0xd1, 2, 5, IDY), // +1 cycle if page crossed
+        OpCode::new(CMP, 0xc5, 2, 3, ZPG),
+        OpCode::new(CMP, 0xd5, 2, 4, ZPX),
+        OpCode::new(CPX, 0xec, 3, 4, ABS),
+        OpCode::new(CPX, 0xe0, 2, 2, IMM),
+        OpCode::new(CPX, 0xe4, 2, 3, ZPG),
+        OpCode::new(DEX, 0xca, 1, 2, IMP),
+        OpCode::new(INX, 0xe8, 1, 2, IMP),
+        OpCode::new(LDA, 0xad, 3, 4, ABS),
+        OpCode::new(LDA, 0xbd, 3, 4, ABX), // +1 cycle if page crossed
+        OpCode::new(LDA, 0xb9, 3, 4, ABY), // +1 cycle if page crossed
+        OpCode::new(LDA, 0xa1, 2, 6, IDX),
+        OpCode::new(LDA, 0xb1, 2, 5, IDY), // +1 cycle if page crossed
+        OpCode::new(LDA, 0xa9, 2, 2, IMM),
+        OpCode::new(LDA, 0xa5, 2, 3, ZPG),
+        OpCode::new(LDA, 0xb5, 2, 4, ZPX),
+        OpCode::new(LDX, 0xae, 3, 4, ABS),
+        OpCode::new(LDX, 0xbe, 3, 4, ABY), // +1 cycle if page crossed
+        OpCode::new(LDX, 0xa2, 2, 2, IMM),
+        OpCode::new(LDX, 0xa6, 2, 3, ZPG),
+        OpCode::new(LDX, 0xb6, 2, 4, ZPY),
+        OpCode::new(LDY, 0xac, 3, 4, ABS),
+        OpCode::new(LDY, 0xbc, 3, 4, ABX), // +1 cycle if page crossed
+        OpCode::new(LDY, 0xa0, 2, 2, IMM),
+        OpCode::new(LDY, 0xa4, 2, 3, ZPG),
+        OpCode::new(LDY, 0xb4, 2, 4, ZPX),
+        OpCode::new(STA, 0x8d, 3, 4, ABS),
+        OpCode::new(STA, 0x9d, 3, 5, ABX),
         OpCode::new(STA, 0x99, 3, 5, ABY),
         OpCode::new(STA, 0x81, 2, 6, IDX),
         OpCode::new(STA, 0x91, 2, 6, IDY),
         OpCode::new(STA, 0x85, 2, 3, ZPG),
         OpCode::new(STA, 0x95, 2, 4, ZPX),
-        OpCode::new(TAX, 0xAA, 1, 2, IMP),
+        OpCode::new(TAX, 0xaa, 1, 2, IMP),
     ];
 
 
