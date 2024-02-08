@@ -42,7 +42,15 @@ lazy_static! {
         OpCode::new(AND, 0x35, 2, 4, ZPX),
         OpCode::new(BRK, 0x00, 1, 7, IMP),
         OpCode::new(CLC, 0x18, 1, 2, IMP),
-        OpCode::new(CLV, 0xb8, 1, 2, IMP),
+        OpCode::new(CLV, 0xB8, 1, 2, IMP),
+        OpCode::new(CMP, 0xCD, 3, 4, ABS),
+        OpCode::new(CMP, 0xDD, 3, 4, ABX), // +1 cycle if page crossed
+        OpCode::new(CMP, 0xD9, 3, 4, ABY), // +1 cycle if page crossed
+        OpCode::new(CMP, 0xC9, 2, 2, IMM),
+        OpCode::new(CMP, 0xC1, 2, 6, IDX),
+        OpCode::new(CMP, 0xD1, 2, 5, IDY), // +1 cycle if page crossed
+        OpCode::new(CMP, 0xC5, 2, 3, ZPG),
+        OpCode::new(CMP, 0xD5, 2, 4, ZPX),
         OpCode::new(DEX, 0xCA, 1, 2, IMP),
         OpCode::new(INX, 0xE8, 1, 2, IMP),
         OpCode::new(LDA, 0xAD, 3, 4, ABS),

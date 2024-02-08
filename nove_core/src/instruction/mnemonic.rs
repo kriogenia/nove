@@ -24,6 +24,11 @@ pub enum Mnemonic {
     /// Set the overflow flag to zero.
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#CLV
     CLV,
+    /// CoMPare
+    /// Z,C,N = A-M
+    /// This instruction compares the contents of the accumulator with another memory held value
+    /// https://www.nesdev.org/obelisk-6502-guide/reference.html#CMP
+    CMP,
     /// DEcrement X register
     /// X,Z,N = X-1
     /// Subtracts one from the X register.

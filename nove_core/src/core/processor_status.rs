@@ -1,9 +1,10 @@
+use std::fmt::{Debug, Formatter};
 use std::ops::Not;
 
 pub(super) const OVERFLOW_MASK: u8 = 0b1000_0000;
 
 /// N V _ B D I Z C
-#[derive(Default, Debug)]
+#[derive(Default)]
 pub(super) struct ProcessorStatus(pub u8);
 
 pub(super) enum Flag {
@@ -34,4 +35,11 @@ impl ProcessorStatus {
         (self.0 & flag as u8) != 0
     }
 
+}
+
+impl Debug for ProcessorStatus {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "\n  NV BDIZC")?;
+        writeln!(f, "{:#8b}", self.0)
+    }
 }

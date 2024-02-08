@@ -18,6 +18,11 @@ impl Register {
     pub fn transfer(&mut self, other: &Register) {
         self.0 = other.0
     }
+
+    #[inline]
+    pub fn overflowing_sub(&self, rhs: u8) -> (u8, bool) {
+        self.0.overflowing_sub(rhs)
+    }
 }
 
 impl AddAssign<u8> for Register {

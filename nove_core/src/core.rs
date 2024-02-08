@@ -83,6 +83,11 @@ impl NoveCore {
                 AND => op_and_assign!(self, a.bitand_assign, self.memory.read(addr)),
                 CLC => self.ps.set_bit(Flag::Carry, false),
                 CLV => self.ps.set_bit(Flag::Overflow, false),
+                CMP => {
+                    let (result, carry) = self.a.overflowing_sub(self.memory.read(addr));
+                    self.ps.set_bit(Flag::Carry, carry);
+                    self.update_zn(result);
+                }
                 DEX => op_and_assign!(self, x.sub_assign, 1),
                 INX => op_and_assign!(self, x.add_assign, 1),
                 LDA => op_and_assign!(self, a.assign, self.memory.read(addr)),
@@ -166,8 +171,8 @@ impl Debug for NoveCore {
         writeln!(f, "NovaCode {{ ")?;
         writeln!(f, "\tpc: {:?}", self.pc)?;
         writeln!(f, "\t a: {:x?}", self.a.get())?;
-        writeln!(f, "\t x: {:x?}", self.x)?;
-        writeln!(f, "\t y: {:x?}", self.y)?;
+        writeln!(f, "\t x: {:x?}", self.x.get())?;
+        writeln!(f, "\t y: {:x?}", self.y.get())?;
         writeln!(f, "\tps: {:?}", self.ps)?;
         writeln!(f, "}}")
     }
@@ -260,6 +265,23 @@ mod test {
         let mut core = NoveCore::default();
         core.ps.set_bit(Flag::Overflow, true);
         test!("clc", &mut core, rom!(A, 1, X, 1, Y, 1, 0xB8), a:1; pc: +1, ps:0);
+    }
+
+    #[test]
+    fn cmp() {
+        let mut core = preloaded_core();
+
+        test!("imm", &mut core, rom!(A, 0x20, X, 0x00, Y, 0x00; 0xC9, 0x10), a:0x20; pc: +2, ps: 0);
+        test!("zer", &mut core, rom!(A, 0x20, X, 0x00, Y, 0x00; 0xC9, 0x20), a:0x20; pc: +2, ps: Z);
+        test!("neg", &mut core, rom!(A, 0xFF, X, 0x00, Y, 0x00; 0xC9, 0x0F), a:0xFF; pc: +2, ps: N);
+        test!("car", &mut core, rom!(A, 0x00, X, 0x00, Y, 0x00; 0xC9, 0xFF), a:0x00; pc: +2, ps: C);
+        test!("abs", &mut core, rom!(A, 0x0A, X, 0x00, Y, 0x00; 0xCD, 0x05, 0x00), a:0x0A; pc: +3, ps: Z);
+        test!("abx", &mut core, rom!(A, 0x0A, X, 0x02, Y, 0x00; 0xDD, 0x03, 0x00), a:0x0A; pc: +3, ps: Z);
+        test!("aby", &mut core, rom!(A, 0x0A, X, 0x00, Y, 0x01; 0xD9, 0x04, 0x00), a:0x0A; pc: +3, ps: Z);
+        test!("idx", &mut core, rom!(A, 0x0A, X, 0x20, Y, 0x00; 0xC1, 0x30), a:0x0A; pc: +2, ps: Z);
+        test!("idy", &mut core, rom!(A, 0x0A, X, 0x00, Y, 0x10; 0xD1, 0x40), a:0x0A; pc: +2, ps: Z);
+        test!("zpg", &mut core, rom!(A, 0x0A, X, 0x00, Y, 0x00; 0xC5, 0x05), a:0x0A; pc: +2, ps: Z);
+        test!("zpx", &mut core, rom!(A, 0x0A, X, 0x02, Y, 0x00; 0xD5, 0x03), a:0x0A; pc: +2, ps: Z);
     }
 
     #[test]
