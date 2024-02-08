@@ -82,6 +82,7 @@ impl NoveCore {
                 },
                 AND => op_and_assign!(self, a.bitand_assign, self.memory.read(addr)),
                 CLC => self.ps.set_bit(Flag::Carry, false),
+                CLV => self.ps.set_bit(Flag::Overflow, false),
                 DEX => op_and_assign!(self, x.sub_assign, 1),
                 INX => op_and_assign!(self, x.add_assign, 1),
                 LDA => op_and_assign!(self, a.assign, self.memory.read(addr)),
@@ -252,6 +253,13 @@ mod test {
         let mut core = NoveCore::default();
         core.ps.set_bit(Flag::Carry, true);
         test!("clc", &mut core, rom!(A, 1, X, 1, Y, 1, 0x18), a:1; pc: +1, ps:0);
+    }
+
+    #[test]
+    fn clv() {
+        let mut core = NoveCore::default();
+        core.ps.set_bit(Flag::Overflow, true);
+        test!("clc", &mut core, rom!(A, 1, X, 1, Y, 1, 0xB8), a:1; pc: +1, ps:0);
     }
 
     #[test]

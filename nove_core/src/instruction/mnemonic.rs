@@ -19,6 +19,11 @@ pub enum Mnemonic {
     /// Set the carry flag to zero.
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#CCF
     CLC,
+    /// CLear oVerflow flag
+    /// V = 0
+    /// Set the overflow flag to zero.
+    /// https://www.nesdev.org/obelisk-6502-guide/reference.html#CLV
+    CLV,
     /// DEcrement X register
     /// X,Z,N = X-1
     /// Subtracts one from the X register.
