@@ -24,6 +24,14 @@ impl OpCode {
 
 lazy_static! {
     pub static ref CPU_OPCODES: Vec<OpCode> = vec![
+        OpCode::new(ADC, 0x6D, 3, 4, ABS),
+        OpCode::new(ADC, 0x7D, 3, 4, ABX), // +1 cycle if page crossed
+        OpCode::new(ADC, 0x79, 3, 4, ABY), // +1 cycle if page crossed
+        OpCode::new(ADC, 0x69, 2, 2, IMM),
+        OpCode::new(ADC, 0x61, 2, 6, IDX),
+        OpCode::new(ADC, 0x71, 2, 5, IDY), // +1 cycle if page crossed
+        OpCode::new(ADC, 0x65, 2, 3, ZPG),
+        OpCode::new(ADC, 0x75, 2, 4, ZPX),
         OpCode::new(AND, 0x2D, 3, 4, ABS),
         OpCode::new(AND, 0x3D, 3, 4, ABX), // +1 cycle if page crossed
         OpCode::new(AND, 0x39, 3, 4, ABY), // +1 cycle if page crossed
@@ -33,6 +41,7 @@ lazy_static! {
         OpCode::new(AND, 0x25, 2, 3, ZPG),
         OpCode::new(AND, 0x35, 2, 4, ZPX),
         OpCode::new(BRK, 0x00, 1, 7, IMP),
+        OpCode::new(DEX, 0xCA, 1, 2, IMP),
         OpCode::new(INX, 0xE8, 1, 2, IMP),
         OpCode::new(LDA, 0xAD, 3, 4, ABS),
         OpCode::new(LDA, 0xBD, 3, 4, ABX), // +1 cycle if page crossed

@@ -1,4 +1,4 @@
-use std::ops::{AddAssign, BitAndAssign};
+use std::ops::{AddAssign, BitAndAssign, SubAssign};
 
 #[derive(Debug, Default)]
 pub(super) struct Register(u8);
@@ -23,6 +23,12 @@ impl Register {
 impl AddAssign<u8> for Register {
     fn add_assign(&mut self, rhs: u8) {
         self.0 = self.0.wrapping_add(rhs)
+    }
+}
+
+impl SubAssign<u8> for Register {
+    fn sub_assign(&mut self, rhs: u8) {
+        self.0 = self.0.wrapping_sub(rhs)
     }
 }
 
