@@ -3,7 +3,7 @@ mod memory;
 mod register;
 
 use std::fmt::{Debug, Formatter};
-use std::ops::AddAssign;
+use std::ops::{AddAssign, BitAndAssign};
 use crate::core::memory::Memory;
 use crate::core::processor_status::{Flag, ProcessorStatus};
 use crate::core::register::Register;
@@ -37,6 +37,16 @@ macro_rules! hexprint {
     };
 }
 
+macro_rules! op_and_assign {
+    ($core:expr, $reg:ident.$op:ident, $val:expr) => {
+        {
+            $core.$reg.$op($val);
+            $core.update_zn($core.$reg.get());
+
+        }
+    };
+}
+
 impl NoveCore {
     pub fn new() -> Self {
         Self::default()
@@ -65,34 +75,13 @@ impl NoveCore {
             use Mnemonic::*;
             match opcode.mnemonic {
                 BRK => break 'game_loop,
-                AND => {
-                    self.a &= self.memory.read(addr);
-                    self.update_zn(self.a.get());
-                }
-                INX => {
-                    self.x.add_assign(1);
-                    self.update_zn(self.x.get());
-                },
-                LDA => {
-                    self.a.assign(self.memory.read(addr));
-                    self.update_zn(self.a.get());
-                },
-                LDX => {
-                    self.x.assign(self.memory.read(addr));
-                    self.update_zn(self.x.get());
-                },
-                LDY => {
-                    self.y.assign(self.memory.read(addr));
-                    self.update_zn(self.y.get());
-                },
-                STA => {
-                    let addr = self.get_addr(&opcode.addressing_mode);
-                    self.memory.write(addr, self.a.get());
-                },
-                TAX => {
-                    self.x.transfer(&self.a);
-                    self.update_zn(self.x.get());
-                }
+                AND => op_and_assign!(self, a.bitand_assign, self.memory.read(addr)),
+                INX => op_and_assign!(self, x.add_assign, 1),
+                LDA => op_and_assign!(self, a.assign, self.memory.read(addr)),
+                LDX => op_and_assign!(self, x.assign, self.memory.read(addr)),
+                LDY => op_and_assign!(self, y.assign, self.memory.read(addr)),
+                STA => self.memory.write(addr, self.a.get()),
+                TAX => op_and_assign!(self, x.transfer, &self.a),
             }
 
             self.update_pc(opcode);
