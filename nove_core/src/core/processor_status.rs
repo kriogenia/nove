@@ -2,7 +2,7 @@ use std::ops::Not;
 
 /// N V _ B D I Z C
 #[derive(Default, Debug)]
-pub(super) struct ProcessorStatus(u8);
+pub(super) struct ProcessorStatus(pub u8);
 
 pub(super) enum Flag {
     Zero = 0b0000_0010,
