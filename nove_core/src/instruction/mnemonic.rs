@@ -14,6 +14,11 @@ pub enum Mnemonic {
     /// Force Interrupt
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#BRK
     BRK,
+    /// CLear Carry flag
+    /// C = 0
+    /// Set the carry flag to zero.
+    /// https://www.nesdev.org/obelisk-6502-guide/reference.html#CCF
+    CLC,
     /// DEcrement X register
     /// X,Z,N = X-1
     /// Subtracts one from the X register.

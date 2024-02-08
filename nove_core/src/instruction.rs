@@ -41,6 +41,7 @@ lazy_static! {
         OpCode::new(AND, 0x25, 2, 3, ZPG),
         OpCode::new(AND, 0x35, 2, 4, ZPX),
         OpCode::new(BRK, 0x00, 1, 7, IMP),
+        OpCode::new(CLC, 0x18, 1, 2, IMP),
         OpCode::new(DEX, 0xCA, 1, 2, IMP),
         OpCode::new(INX, 0xE8, 1, 2, IMP),
         OpCode::new(LDA, 0xAD, 3, 4, ABS),

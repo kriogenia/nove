@@ -81,6 +81,7 @@ impl NoveCore {
                     op_and_assign!(self, a.assign, sum);
                 },
                 AND => op_and_assign!(self, a.bitand_assign, self.memory.read(addr)),
+                CLC => self.ps.set_bit(Flag::Carry, false),
                 DEX => op_and_assign!(self, x.sub_assign, 1),
                 INX => op_and_assign!(self, x.add_assign, 1),
                 LDA => op_and_assign!(self, a.assign, self.memory.read(addr)),
@@ -195,7 +196,7 @@ mod test {
 
     /// Runs a tests with the given core and rom checking the list of registers or addresses and the pc addition
     macro_rules! test {
-        ($id:expr, $core:expr, $rom:expr, $($reg:ident: $val:literal),*; pc: +$pc:literal $(, ps: $ps:expr)*) => {
+        ($id:expr, $core:expr, $rom:expr, $($reg:ident: $val:literal),+; pc: +$pc:literal $(, ps: $ps:expr)*) => {
             println!($id);
             $core.load_and_run($rom);
             $(assert_eq!($core.$reg, $val);)+
@@ -244,6 +245,13 @@ mod test {
         test!("idy", &mut core, rom!(A, 0b0110, X, 0x00, Y, 0x10; 0x31, 0x40), a:0b0010; pc: +2);
         test!("zpg", &mut core, rom!(A, 0b0110, X, 0x00, Y, 0x00; 0x25, 0x05), a:0b0010; pc: +2);
         test!("zpx", &mut core, rom!(A, 0b0110, X, 0x02, Y, 0x00; 0x35, 0x03), a:0b0010; pc: +2);
+    }
+
+    #[test]
+    fn clc() {
+        let mut core = NoveCore::default();
+        core.ps.set_bit(Flag::Carry, true);
+        test!("clc", &mut core, rom!(A, 1, X, 1, Y, 1, 0x18), a:1; pc: +1, ps:0);
     }
 
     #[test]
