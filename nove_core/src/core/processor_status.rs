@@ -18,13 +18,4 @@ impl ProcessorStatus {
         self.0 &= (flag as u8).not()
     }
 
-    #[cfg(test)]
-    pub fn is_raised(&self, flag: Flag) -> bool {
-        (self.0 & flag as u8) != 0
-    }
-
-    #[cfg(test)]
-    pub fn is_lowered(&self, flag: Flag) -> bool {
-        (self.0 & flag as u8) == 0
-    }
 }

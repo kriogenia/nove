@@ -1,9 +1,12 @@
 mod processor_status;
 mod memory;
+mod register;
 
 use std::fmt::{Debug, Formatter};
+use std::ops::AddAssign;
 use crate::core::memory::Memory;
 use crate::core::processor_status::{Flag, ProcessorStatus};
+use crate::core::register::Register;
 use crate::instruction::{mnemonic::Mnemonic, OpCode, OPCODES_MAP};
 use crate::Rom;
 use crate::exception::Exception;
@@ -15,26 +18,15 @@ pub struct NoveCore {
     /// Program Counter
     pc: u16,
     /// Accumulator
-    a: u8,
+    a: Register,
     /// Index Register X
-    x: u8,
+    x: Register,
     /// Index Register Y
-    y: u8,
+    y: Register,
     /// Processor Status
     ps: ProcessorStatus,
     /// Memory Map
     memory: Memory,
-}
-
-macro_rules! ld {
-    ($self:ident, $reg:ident, $code:expr) => {
-        {
-            let addr = $self.get_addr(&$code.addressing_mode);
-            //println!("{addr:x?}");
-            $self.$reg = $self.memory.read(addr);
-            $self.update_z_and_n($self.$reg);
-        }
-    };
 }
 
 /// Helper macro for debugging, easies the printing of hex values
@@ -52,8 +44,9 @@ impl NoveCore {
 
     pub fn reset(&mut self) {
         self.pc = self.memory.read_u16(memory::PC_START_ADDR);
-        self.a = 0;
-        self.x = 0;
+        self.a = Default::default();
+        self.x = Default::default();
+        self.y = Default::default();
         self.ps = Default::default();
     }
 
@@ -66,29 +59,39 @@ impl NoveCore {
             let byte = self.memory.read(self.pc);
             self.pc += 1;
 
-            use Mnemonic::*;
             let opcode = OPCODES_MAP.get(&byte).ok_or(Exception::WrongOpCode(byte))?;
+            let addr = self.get_addr(&opcode.addressing_mode);
+
+            use Mnemonic::*;
             match opcode.mnemonic {
                 BRK => break 'game_loop,
                 AND => {
-                    let addr = self.get_addr(&opcode.addressing_mode);
                     self.a &= self.memory.read(addr);
-                    self.update_z_and_n(self.a);
+                    self.update_zn(self.a.get());
                 }
                 INX => {
-                    self.x = self.x.wrapping_add(1);
-                    self.update_z_and_n(self.x);
+                    self.x.add_assign(1);
+                    self.update_zn(self.x.get());
                 },
-                LDA => ld!(self, a, opcode),
-                LDX => ld!(self, x, opcode),
-                LDY => ld!(self, y, opcode),
+                LDA => {
+                    self.a.assign(self.memory.read(addr));
+                    self.update_zn(self.a.get());
+                },
+                LDX => {
+                    self.x.assign(self.memory.read(addr));
+                    self.update_zn(self.x.get());
+                },
+                LDY => {
+                    self.y.assign(self.memory.read(addr));
+                    self.update_zn(self.y.get());
+                },
                 STA => {
                     let addr = self.get_addr(&opcode.addressing_mode);
-                    self.memory.write(addr, self.a);
+                    self.memory.write(addr, self.a.get());
                 },
                 TAX => {
-                    self.x = self.a;
-                    self.update_z_and_n(self.x);
+                    self.x.transfer(&self.a);
+                    self.update_zn(self.x.get());
                 }
             }
 
@@ -103,14 +106,14 @@ impl NoveCore {
         match mode {
             IMM => self.pc,
             ZPG => self.next_byte() as u16,
-            ZPX => self.next_byte().wrapping_add(self.x) as u16,
-            ZPY => self.next_byte().wrapping_add(self.y) as u16,
+            ZPX => self.next_byte().wrapping_add(self.x.get()) as u16,
+            ZPY => self.next_byte().wrapping_add(self.y.get()) as u16,
             ABS => self.next_word(),
-            ABX => self.next_word().wrapping_add(self.x as u16),
-            ABY => self.next_word().wrapping_add(self.y as u16),
-            IDX => self.memory.read_u16(self.next_byte().wrapping_add(self.x) as u16),
-            IDY => self.memory.read_u16(self.next_byte().wrapping_add(self.y) as u16),
-            IMP => unreachable!("addressing mode {mode:?} should not access address"),
+            ABX => self.next_word().wrapping_add(self.x.get() as u16),
+            ABY => self.next_word().wrapping_add(self.y.get() as u16),
+            IDX => self.memory.read_u16(self.next_byte().wrapping_add(self.x.get()) as u16),
+            IDY => self.memory.read_u16(self.next_byte().wrapping_add(self.y.get()) as u16),
+            IMP => Default::default(),
         }
     }
 
@@ -130,7 +133,7 @@ impl NoveCore {
     }
 
     #[inline]
-    fn update_z_and_n(&mut self, value: u8) {
+    fn update_zn(&mut self, value: u8) {
         if value == 0 {
             self.ps.raise(Flag::Zero);
         } else {
@@ -153,8 +156,9 @@ impl Debug for NoveCore {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "NovaCode {{ ")?;
         writeln!(f, "\tpc: {:?}", self.pc)?;
-        writeln!(f, "\t a: {:?}", self.a)?;
-        writeln!(f, "\t x: {:?}", self.x)?;
+        writeln!(f, "\t a: {:x?}", self.a.get())?;
+        writeln!(f, "\t x: {:x?}", self.x)?;
+        writeln!(f, "\t y: {:x?}", self.y)?;
         writeln!(f, "\tps: {:?}", self.ps)?;
         writeln!(f, "}}")
     }
