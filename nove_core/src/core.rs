@@ -94,6 +94,7 @@ impl NoveCore {
                 CLV => self.ps.set_bit(Flag::Overflow, false),
                 CMP => compare!(self, a, addr),
                 CPX => compare!(self, x, addr),
+                CPY => compare!(self, y, addr),
                 DEX => op_and_assign!(self, x.sub_assign, 1),
                 INX => op_and_assign!(self, x.add_assign, 1),
                 LDA => op_and_assign!(self, a.assign, self.memory.read(addr)),
@@ -300,6 +301,18 @@ mod test {
         test!("car", &mut core, rom!(A, 0x00, X, 0x00, Y, 0x00; 0xe0, 0xff), a:0x00; pc: +2, ps: C);
         test!("abs", &mut core, rom!(A, 0x0a, X, 0x0a, Y, 0x00; 0xec, 0x05, 0x00), a:0x0a; pc: +3, ps: Z);
         test!("zpg", &mut core, rom!(A, 0x0a, X, 0x0a, Y, 0x00; 0xe4, 0x05), a:0x0a; pc: +2, ps: Z);
+    }
+
+    #[test]
+    fn cpy() {
+        let mut core = preloaded_core();
+
+        test!("imm", &mut core, rom!(A, 0x20, X, 0x20, Y, 0x20; 0xc0, 0x10), a:0x20; pc: +2, ps: 0);
+        test!("zer", &mut core, rom!(A, 0x20, X, 0x20, Y, 0x20; 0xc0, 0x20), a:0x20; pc: +2, ps: Z);
+        test!("neg", &mut core, rom!(A, 0xff, X, 0xff, Y, 0xff; 0xc0, 0x0f), a:0xff; pc: +2, ps: N);
+        test!("car", &mut core, rom!(A, 0x00, X, 0x00, Y, 0x00; 0xc0, 0xff), a:0x00; pc: +2, ps: C);
+        test!("abs", &mut core, rom!(A, 0x0a, X, 0x0a, Y, 0x0a; 0xcc, 0x05, 0x00), a:0x0a; pc: +3, ps: Z);
+        test!("zpg", &mut core, rom!(A, 0x0a, X, 0x0a, Y, 0x0a; 0xc4, 0x05), a:0x0a; pc: +2, ps: Z);
     }
 
     #[test]

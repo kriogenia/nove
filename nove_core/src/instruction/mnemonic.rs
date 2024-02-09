@@ -34,6 +34,11 @@ pub enum Mnemonic {
     /// This instruction compares the contents of the X register with another memory held value
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#CMP
     CPX,
+    /// ComPare Y register
+    /// Z,C,N = Y-M
+    /// This instruction compares the contents of the Y register with another memory held value
+    /// https://www.nesdev.org/obelisk-6502-guide/reference.html#CPY
+    CPY,
     /// DEcrement X register
     /// X,Z,N = X-1
     /// Subtracts one from the X register.
