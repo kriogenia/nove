@@ -3,7 +3,7 @@ mod memory;
 mod register;
 
 use std::fmt::{Debug, Formatter};
-use std::ops::{AddAssign, BitAndAssign, SubAssign};
+use std::ops::{AddAssign, BitAndAssign, BitXorAssign, SubAssign};
 use crate::core::memory::Memory;
 use crate::core::processor_status::{Flag, OVERFLOW_MASK, ProcessorStatus};
 use crate::core::register::Register;
@@ -96,6 +96,7 @@ impl NoveCore {
                 CPX => compare!(self, x, addr),
                 CPY => compare!(self, y, addr),
                 DEX => op_and_assign!(self, x.sub_assign, 1),
+                EOR => op_and_assign!(self, a.bitxor_assign, self.memory.read(addr)),
                 INX => op_and_assign!(self, x.add_assign, 1),
                 LDA => op_and_assign!(self, a.assign, self.memory.read(addr)),
                 LDX => op_and_assign!(self, x.assign, self.memory.read(addr)),
@@ -322,6 +323,22 @@ mod test {
         test!("dex", &mut core, rom!(A, 0, X, 5, Y, 0; 0xca), x:0x04; pc: +1, ps: 0);
         test!("zer", &mut core, rom!(A, 0, X, 1, Y, 0; 0xca), x:0x00; pc: +1, ps: Z);
         test!("neg", &mut core, rom!(A, 0, X, 0, Y, 0; 0xca), x:0xff; pc: +1, ps: N);
+    }
+
+    #[test]
+    fn eor() {
+        let mut core = preloaded_core(); // 0x0005:0b1010
+
+        test!("imm", &mut core, rom!(A, 0b00001010, X, 0x00, Y, 0x00; 0x49, 0b1100), a:0b0110; pc: +2, ps: 0);
+        test!("zer", &mut core, rom!(A, 0b00001010, X, 0x00, Y, 0x00; 0x49, 0b1010), a:0b0000; pc: +2, ps: Z);
+        test!("neg", &mut core, rom!(A, 0b11110000, X, 0x00, Y, 0x00; 0x49, 0b00101010), a:0b11011010; pc: +2, ps: N);
+        test!("abs", &mut core, rom!(A, 0b00000110, X, 0x00, Y, 0x00; 0x4d, 0x05, 0x00), a:0b1100; pc: +3);
+        test!("abx", &mut core, rom!(A, 0b00000110, X, 0x02, Y, 0x00; 0x5d, 0x03, 0x00), a:0b1100; pc: +3);
+        test!("aby", &mut core, rom!(A, 0b00000110, X, 0x00, Y, 0x01; 0x59, 0x04, 0x00), a:0b1100; pc: +3);
+        test!("idx", &mut core, rom!(A, 0b00000110, X, 0x20, Y, 0x00; 0x41, 0x30), a:0b1100; pc: +2);
+        test!("idy", &mut core, rom!(A, 0b00000110, X, 0x00, Y, 0x10; 0x51, 0x40), a:0b1100; pc: +2);
+        test!("zpg", &mut core, rom!(A, 0b00000110, X, 0x00, Y, 0x00; 0x45, 0x05), a:0b1100; pc: +2);
+        test!("zpx", &mut core, rom!(A, 0b00000110, X, 0x02, Y, 0x00; 0x55, 0x03), a:0b1100; pc: +2);
     }
 
     #[test]

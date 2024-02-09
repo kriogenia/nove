@@ -1,4 +1,4 @@
-use std::ops::{AddAssign, BitAndAssign, SubAssign};
+use std::ops::{AddAssign, BitAndAssign, BitXorAssign, SubAssign};
 
 #[derive(Debug, Default)]
 pub(super) struct Register(u8);
@@ -40,6 +40,12 @@ impl SubAssign<u8> for Register {
 impl BitAndAssign<u8> for Register {
     fn bitand_assign(&mut self, rhs: u8) {
         self.0 &= rhs
+    }
+}
+
+impl BitXorAssign<u8> for Register {
+    fn bitxor_assign(&mut self, rhs: u8) {
+        self.0 ^= rhs
     }
 }
 

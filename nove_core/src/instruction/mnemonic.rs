@@ -44,6 +44,11 @@ pub enum Mnemonic {
     /// Subtracts one from the X register.
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#DEX
     DEX,
+    /// Exclusive OR
+    /// A,Z,N = A^M
+    /// An exclusive OR is performed, bit by bit, on the accumulator contents using the contents of a byte of memory
+    /// https://www.nesdev.org/obelisk-6502-guide/reference.html#EOR
+    EOR,
     /// INcrement X register
     /// X,Z,N = X+1
     /// Adds one to the X register.
