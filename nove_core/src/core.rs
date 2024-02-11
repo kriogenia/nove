@@ -97,6 +97,10 @@ impl NoveCore {
                 CPY => compare!(self, y, addr),
                 DEX => op_and_assign!(self, x.sub_assign, 1),
                 EOR => op_and_assign!(self, a.bitxor_assign, self.memory.read(addr)),
+                INC => {
+                    self.memory.update(addr, |prev| prev.wrapping_add(1));
+                    self.update_zn(self.memory.read(addr))
+                }
                 INX => op_and_assign!(self, x.add_assign, 1),
                 LDA => op_and_assign!(self, a.assign, self.memory.read(addr)),
                 LDX => op_and_assign!(self, x.assign, self.memory.read(addr)),
@@ -217,13 +221,14 @@ mod test {
             assert_eq!($core.pc, memory::PRG_ROM_ADDR as u16 + $pc + 7);
             $(assert_eq!($core.ps.0, $ps);)*
         };
-        ($id:expr, $core:expr, $rom:expr, $($addr:literal: $val:literal),*; pc: +$pc:literal) => {
+        ($id:expr, $core:expr, $rom:expr, $($addr:literal: $val:literal),*; pc: +$pc:literal $(, ps: $ps:expr)*) => {
             println!($id);
             $core.load_and_run($rom);
             $({
                 assert_eq!($core.memory.read_u16($addr), $val);
             })+
             assert_eq!($core.pc, memory::PRG_ROM_ADDR as u16 + $pc + 7);
+            $(assert_eq!($core.ps.0, $ps);)*
         };
     }
 
@@ -339,6 +344,21 @@ mod test {
         test!("idy", &mut core, rom!(A, 0b00000110, X, 0x00, Y, 0x10; 0x51, 0x40), a:0b1100; pc: +2);
         test!("zpg", &mut core, rom!(A, 0b00000110, X, 0x00, Y, 0x00; 0x45, 0x05), a:0b1100; pc: +2);
         test!("zpx", &mut core, rom!(A, 0b00000110, X, 0x02, Y, 0x00; 0x55, 0x03), a:0b1100; pc: +2);
+    }
+
+    #[test]
+    fn inc() {
+        let mut core = preloaded_core();
+
+        test!("abs", &mut core, rom!(A, 0, X, 0x00, Y, 0; 0xee, 0x05, 0x00), 0x0005:11; pc: +3);
+        test!("abx", &mut core, rom!(A, 0, X, 0x02, Y, 0; 0xfe, 0x03, 0x00), 0x0005:12; pc: +3);
+        test!("zpg", &mut core, rom!(A, 0, X, 0x00, Y, 0; 0xe6, 0x05, 0x00), 0x0005:13; pc: +2);
+        test!("zpx", &mut core, rom!(A, 0, X, 0x02, Y, 0; 0xf6, 0x03, 0x00), 0x0005:14; pc: +2);
+
+        core.memory.write(0x10, 0xfe);
+        test!("neg", &mut core, rom!(A, 0, X, 0x00, Y, 0; 0xee, 0x10, 0x00), 0x0010:0xff; pc: +3, ps: N);
+        test!("zer", &mut core, rom!(A, 0, X, 0x00, Y, 0; 0xee, 0x10, 0x00), 0x0010:0x00; pc: +3, ps: Z);
+
     }
 
     #[test]

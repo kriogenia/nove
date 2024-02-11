@@ -49,6 +49,11 @@ pub enum Mnemonic {
     /// An exclusive OR is performed, bit by bit, on the accumulator contents using the contents of a byte of memory
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#EOR
     EOR,
+    /// Increment memory
+    /// M,Z,N = M+1
+    /// Adds one to the value held at a specified memory location setting the zero and negative flags as appropriate.
+    /// https://www.nesdev.org/obelisk-6502-guide/reference.html#INC
+    INC,
     /// INcrement X register
     /// X,Z,N = X+1
     /// Adds one to the X register.

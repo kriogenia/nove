@@ -15,7 +15,7 @@ details what the current state:
 | BVS     | ~~CLC~~ | CLD     | CLI     |
 | ~~CLV~~ | ~~CMP~~ | ~~CPX~~ | ~~CPY~~ |
 | DEC     | ~~DEX~~ | DEY     | EOR     |
-| INC     | ~~INX~~ | INY     | JMP     |
+| ~~INC~~ | ~~INX~~ | INY     | JMP     |
 | JSR     | ~~LDA~~ | ~~LDX~~ | ~~LDY~~ |
 | LSR     | NOP     | ORA     | PHA     |
 | PHP     | PLA     | PLP     | ROL     |
@@ -24,4 +24,4 @@ details what the current state:
 | STX     | STY     | ~~TAX~~ | TAY     |
 | TSX     | TXA     | TXS     | TYA     |
 
-**Current state**: 16/56 (~ 28%)
+**Current state**: 17/56 (> 28%)

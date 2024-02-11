@@ -28,6 +28,11 @@ impl Memory {
         self.0[addr as usize] = value
     }
 
+    pub fn update(&mut self, addr: u16, update_fn: fn(u8) -> u8) {
+        let val = self.read(addr);
+        self.write(addr, update_fn(val));
+    }
+
     pub fn read_u16(&self, addr: u16) -> u16 {
         let lo = self.read(addr);
         let hi = self.read(addr.wrapping_add(1));
@@ -46,12 +51,21 @@ mod test {
     use super::*;
 
     #[test]
+    fn update() {
+        let mut mem = Memory::default();
+        mem.write(0, 1);
+        mem.update(0, |prev| prev + 1);
+
+        assert_eq!(mem.read(0), 2)
+    }
+
+    #[test]
     fn read_little_endian() {
         let mut mem = Memory::default();
         mem.write(0, 0x01);
         mem.write(1, 0x23);
 
-        assert_eq!(0x2301, mem.read_u16(0))
+        assert_eq!(mem.read_u16(0), 0x2301)
     }
 
     #[test]
@@ -59,7 +73,7 @@ mod test {
         let mut mem = Memory::default();
         mem.write_u16(0, 0x0123);
 
-        assert_eq!(0x0123, mem.read_u16(0))
+        assert_eq!(mem.read_u16(0), 0x0123)
     }
 
 }

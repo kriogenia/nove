@@ -66,6 +66,10 @@ lazy_static! {
         OpCode::new(EOR, 0x51, 2, 5, IDY), // +1 cycle if page crossed
         OpCode::new(EOR, 0x45, 2, 3, ZPG),
         OpCode::new(EOR, 0x55, 2, 4, ZPX),
+        OpCode::new(INC, 0xee, 3, 6, ABS),
+        OpCode::new(INC, 0xfe, 3, 7, ABX),
+        OpCode::new(INC, 0xe6, 2, 5, ZPG),
+        OpCode::new(INC, 0xf6, 2, 6, ZPX),
         OpCode::new(INX, 0xe8, 1, 2, IMP),
         OpCode::new(LDA, 0xad, 3, 4, ABS),
         OpCode::new(LDA, 0xbd, 3, 4, ABX), // +1 cycle if page crossed
