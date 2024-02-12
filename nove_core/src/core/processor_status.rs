@@ -21,6 +21,8 @@ impl ProcessorStatus {
         if self.is_raised(flag) { 1 } else { 0 }
     }
 
+    /// Returns the status of the CPU as a byte with the B flag up.
+    /// https://www.nesdev.org/wiki/Status_flags#The_B_flag
     pub fn get_for_push(&self) -> u8 {
         self.0 | Flag::One as u8 | Flag::Break as u8
     }
