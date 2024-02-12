@@ -1,22 +1,25 @@
 mod processor_status;
 mod memory;
 mod register;
+mod stack_pointer;
 
 use std::fmt::{Debug, Formatter};
 use std::ops::{AddAssign, BitAndAssign, BitOrAssign, BitXorAssign, SubAssign};
 use crate::core::memory::Memory;
 use crate::core::processor_status::{Flag, OVERFLOW_MASK, ProcessorStatus};
 use crate::core::register::Register;
+use crate::core::stack_pointer::StackPointer;
 use crate::instruction::{mnemonic::Mnemonic, OpCode, OPCODES_MAP};
 use crate::Rom;
 use crate::exception::Exception;
 use crate::instruction::addressing_mode::AddressingMode;
 
-
 #[derive(Default)]
 pub struct NoveCore {
     /// Program Counter
     pc: u16,
+    /// Stack Pointer
+    sp: StackPointer,
     /// Accumulator
     a: Register,
     /// Index Register X
@@ -64,6 +67,7 @@ impl NoveCore {
 
     pub fn reset(&mut self) {
         self.pc = self.memory.read_u16(memory::PC_START_ADDR);
+        self.sp = Default::default();
         self.a = Default::default();
         self.x = Default::default();
         self.y = Default::default();
@@ -152,6 +156,16 @@ impl NoveCore {
 
     fn next_word(&self) -> u16 {
         self.memory.read_u16(self.pc)
+    }
+
+    fn stack_push(&mut self, content: u8) {
+        self.memory.write(self.sp.get(), content);
+        self.sp.next()
+    }
+
+    fn stack_pull(&mut self) -> u8 {
+        self.sp.prev();
+        self.memory.read(self.sp.get())
     }
 
     fn adc(&mut self, m: u8) -> u8 {
