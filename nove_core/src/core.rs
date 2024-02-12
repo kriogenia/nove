@@ -103,6 +103,7 @@ impl NoveCore {
                 }
                 INX => op_and_assign!(self, x.add_assign, 1),
                 JMP => self.pc = addr,
+                NOP => {},
                 LDA => op_and_assign!(self, a.assign, self.memory.read(addr)),
                 LDX => op_and_assign!(self, x.assign, self.memory.read(addr)),
                 LDY => op_and_assign!(self, y.assign, self.memory.read(addr)),
@@ -437,6 +438,13 @@ mod test {
         test!("abx", &mut core, rom!(A, 0, X, 0x01, Y, 0; 0xbc, 0x04, 0x00), y:10; pc: +3);
         test!("zpg", &mut core, rom!(A, 0, X, 0x00, Y, 0; 0xa4, 0x05), y:10; pc: +2);
         test!("zpx", &mut core, rom!(A, 0, X, 0x01, Y, 0; 0xb4, 0x04), y:10; pc: +2);
+    }
+
+    #[test]
+    fn nop() {
+        let mut core = NoveCore::new();
+
+        test!("imp", &mut core, rom!(A, 0, X, 0, Y, 0; 0xea),; pc: +1);
     }
 
     #[test]

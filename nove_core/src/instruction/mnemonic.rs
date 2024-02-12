@@ -63,6 +63,10 @@ pub enum Mnemonic {
     /// Sets the program counter to the address specified by the operand.
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#JMP
     JMP,
+    /// No OPeration
+    /// The NOP instruction causes no changes to the processor other than incrementing the PC.
+    /// https://www.nesdev.org/obelisk-6502-guide/reference.html#NOP
+    NOP,
     /// LoaD Accumulator
     /// A,Z,N = M
     /// Loads a byte of memory into the accumulator.
