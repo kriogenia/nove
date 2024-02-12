@@ -148,6 +148,12 @@ pub enum Mnemonic {
     ///
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#PLA
     PLA,
+    /// Pull Processor Status
+    ///
+    /// Pulls an 8 bit value from the stack and into the processor flags.
+    ///
+    /// https://www.nesdev.org/obelisk-6502-guide/reference.html#PLP
+    PLP,
     /// Store Accumulator
     ///
     /// M = A

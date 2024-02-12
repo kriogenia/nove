@@ -114,6 +114,10 @@ impl NoveCore {
                     let val = self.stack_pull();
                     op_and_assign!(self, a.assign, val)
                 },
+                PLP => {
+                    let val = self.stack_pull();
+                    self.ps.set_from_pull(val)
+                }
                 STA => self.memory.write(addr, self.a.get()),
                 TAX => op_and_assign!(self, x.transfer, &self.a),
             }
@@ -502,6 +506,13 @@ mod test {
         let mut core = NoveCore::default();
 
         test!("imp", &mut core, rom!(A, 2, X, 0, Y, 0; 0x08, 0x68), a:0b0011_0010; pc: +2);
+    }
+
+    #[test]
+    fn plp() {
+        let mut core = NoveCore::default();
+
+        test!("imp", &mut core, rom!(A, 0b1011_0000, X, 0, Y, 0; 0x48, 0x28),; pc: +2, ps: N);
     }
 
     #[test]

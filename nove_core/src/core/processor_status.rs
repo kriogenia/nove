@@ -31,6 +31,10 @@ impl ProcessorStatus {
         self.0 | Flag::One as u8 | Flag::Break as u8
     }
 
+    pub fn set_from_pull(&mut self, val: u8) {
+        self.0 = val ^ Flag::One as u8 ^ Flag::Break as u8
+    }
+
     pub fn set_bit(&mut self, flag: Flag, value: bool) {
         if value {
             self.raise(flag)
@@ -70,5 +74,8 @@ mod test {
         ps.set_bit(Flag::Overflow, true);
         assert_eq!(ps.0, 0b0100_0001);
         assert_eq!(ps.get_for_push(), 0b0111_0001);
+        ps.set_from_pull(0b0011_0001);
+        assert_eq!(ps.0, 0b0000_0001);
+
     }
 }
