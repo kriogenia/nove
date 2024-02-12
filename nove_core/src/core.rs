@@ -102,6 +102,7 @@ impl NoveCore {
                     self.update_zn(self.memory.read(addr))
                 }
                 INX => op_and_assign!(self, x.add_assign, 1),
+                JMP => self.pc = addr,
                 LDA => op_and_assign!(self, a.assign, self.memory.read(addr)),
                 LDX => op_and_assign!(self, x.assign, self.memory.read(addr)),
                 LDY => op_and_assign!(self, y.assign, self.memory.read(addr)),
@@ -120,7 +121,7 @@ impl NoveCore {
         match mode {
             IMM => self.pc,
             ZPG => self.next_byte() as u16,
-            ZPX => dbg!(self.next_byte().wrapping_add(self.x.get()) as u16),
+            ZPX => self.next_byte().wrapping_add(self.x.get()) as u16,
             ZPY => self.next_byte().wrapping_add(self.y.get()) as u16,
             ABS => self.next_word(),
             ABX => self.next_word().wrapping_add(self.x.get() as u16),
@@ -134,7 +135,7 @@ impl NoveCore {
                     let hi = self.memory.read(address & 0xFF00);
                     u16::from_le_bytes([lo, hi])
                 } else {
-                    self.memory.read_u16(address)
+                    dbg!(self.memory.read_u16(dbg!(address)))
                 }
             }
             IDX => self.memory.read_u16(self.next_byte().wrapping_add(self.x.get()) as u16),
@@ -211,18 +212,9 @@ mod test {
     const Y: u8 = 0xA0;
 
     const C: u8 = Flag::Carry as u8;
+    const N: u8 = Flag::Negative as u8;
     const Z: u8 = Flag::Zero as u8;
     const VN: u8 = Flag::Overflow as u8 + N;
-    const N: u8 = Flag::Negative as u8;
-
-    macro_rules! rom {
-        ($($opcode:expr),+) => {
-            vec![$($opcode),+, 0x00]
-        };
-        ($($ld:expr),+; $($opcode:expr),+) => {
-            vec![$($ld),+, $($opcode),+, 0x00]
-        };
-    }
 
     /// Runs a tests with the given core and rom checking the list of registers or addresses and the pc addition
     macro_rules! test {
@@ -238,9 +230,23 @@ mod test {
             $core.load_and_run($rom);
             $({
                 assert_eq!($core.memory.read_u16($addr), $val);
-            })+
+            })*
             assert_eq!($core.pc, memory::PRG_ROM_ADDR as u16 + $pc + 7);
             $(assert_eq!($core.ps.0, $ps);)*
+        };
+        ($id:expr, $core:expr, $rom:expr; pc: $pc:literal) => {
+            println!($id);
+            $core.load_and_run($rom);
+            assert_eq!($core.pc, $pc);
+        };
+    }
+
+    macro_rules! rom {
+        ($($opcode:expr),+) => {
+            vec![$($opcode),+, 0x00]
+        };
+        ($($ld:expr),+; $($opcode:expr),+) => {
+            vec![$($ld),+, $($opcode),+, 0x00]
         };
     }
 
@@ -380,6 +386,15 @@ mod test {
         test!("inx", &mut core, rom!(A, 0, X, 0x05, Y, 0; 0xe8), x:0x06; pc: +1, ps: 0);
         test!("zer", &mut core, rom!(A, 0, X, 0xff, Y, 0; 0xe8), x:0x00; pc: +1, ps: Z);
         test!("neg", &mut core, rom!(A, 0, X, 0xf0, Y, 0; 0xe8), x:0xF1; pc: +1, ps: N);
+    }
+
+    #[test]
+    fn jmp() {
+        let mut core = NoveCore::default();
+        core.memory.write_u16(0x0050, 0x0100);
+
+        test!("abs", &mut core, rom!(0x4c, 0x05, 0x00); pc: 0x0006);
+        test!("ind", &mut core, rom!(0x6c, 0x50, 0x00); pc: 0x0101);
     }
 
     #[test]

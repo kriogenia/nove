@@ -59,6 +59,10 @@ pub enum Mnemonic {
     /// Adds one to the X register.
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#INX
     INX,
+    /// JuMP
+    /// Sets the program counter to the address specified by the operand.
+    /// https://www.nesdev.org/obelisk-6502-guide/reference.html#JMP
+    JMP,
     /// LoaD Accumulator
     /// A,Z,N = M
     /// Loads a byte of memory into the accumulator.
