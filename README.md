@@ -24,4 +24,4 @@ details what the current state:
 | STX     | STY     | ~~TAX~~ | TAY     |
 | TSX     | TXA     | TXS     | TYA     |
 
-**Current state**: 18/56 (> 30%)
+**Current state**: 19/56 (> 30%)
