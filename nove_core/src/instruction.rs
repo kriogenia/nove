@@ -74,6 +74,14 @@ lazy_static! {
         OpCode::new(JMP, 0x4c, 1, 3, ABS), // setting 1 byte to evade JMP to advance the pc
         OpCode::new(JMP, 0x6c, 1, 5, IND),
         OpCode::new(NOP, 0xea, 1, 2, IMP),
+        OpCode::new(ORA, 0x0d, 3, 4, ABS),
+        OpCode::new(ORA, 0x1d, 3, 4, ABX), // +1 cycle if page crossed
+        OpCode::new(ORA, 0x19, 3, 4, ABY), // +1 cycle if page crossed
+        OpCode::new(ORA, 0x09, 2, 2, IMM),
+        OpCode::new(ORA, 0x01, 2, 6, IDX),
+        OpCode::new(ORA, 0x11, 2, 5, IDY), // +1 cycle if page crossed
+        OpCode::new(ORA, 0x05, 2, 3, ZPG),
+        OpCode::new(ORA, 0x15, 2, 4, ZPX),
         OpCode::new(LDA, 0xad, 3, 4, ABS),
         OpCode::new(LDA, 0xbd, 3, 4, ABX), // +1 cycle if page crossed
         OpCode::new(LDA, 0xb9, 3, 4, ABY), // +1 cycle if page crossed

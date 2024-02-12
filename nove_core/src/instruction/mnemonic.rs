@@ -82,6 +82,10 @@ pub enum Mnemonic {
     /// The NOP instruction causes no changes to the processor other than incrementing the PC.
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#NOP
     NOP,
+    /// Logical Inclusive OR
+    /// A,Z,N = A|M
+    /// An inclusive OR is performed on the acc contents using the contents of a byte of memory.
+    ORA,
     /// Store Accumulator
     /// M = A
     /// Stores the contents of the accumulator into memory.
