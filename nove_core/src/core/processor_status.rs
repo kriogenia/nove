@@ -10,6 +10,8 @@ pub(super) struct ProcessorStatus(pub u8);
 pub(super) enum Flag {
     Carry = 0b0000_0001,
     Zero = 0b0000_0010,
+    Break = 0b0001_0000,
+    One = 0b0010_0000,
     Overflow = 0b0100_0000,
     Negative = 0b1000_0000,
 }
@@ -17,6 +19,10 @@ pub(super) enum Flag {
 impl ProcessorStatus {
     pub fn get_bit(&self, flag: Flag) -> u8 {
         if self.is_raised(flag) { 1 } else { 0 }
+    }
+
+    pub fn get_for_push(&self) -> u8 {
+        self.0 | Flag::One as u8 | Flag::Break as u8
     }
 
     pub fn set_bit(&mut self, flag: Flag, value: bool) {
@@ -42,4 +48,19 @@ impl Debug for ProcessorStatus {
         writeln!(f, "\n\t\t  NV BDIZC")?;
         writeln!(f, "\t\t{:#010b}", self.0)
     }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::core::processor_status::{Flag, ProcessorStatus};
+
+    #[test]
+    fn processor_status() {
+        let mut ps = ProcessorStatus::default();
+        ps.set_bit(Flag::Carry, true);
+        ps.set_bit(Flag::Overflow, true);
+        assert_eq!(ps.0, 0b0100_0001);
+        assert_eq!(ps.get_for_push(), 0b0111_0001);
+    }
+
 }

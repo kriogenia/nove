@@ -120,6 +120,8 @@ lazy_static! {
 
         OpCode::new(PHA, 0x48, 1, 3, IMP),
 
+        OpCode::new(PHP, 0x08, 1, 3, IMP),
+
         OpCode::new(STA, 0x8d, 3, 4, ABS),
         OpCode::new(STA, 0x9d, 3, 5, ABX),
         OpCode::new(STA, 0x99, 3, 5, ABY),

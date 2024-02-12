@@ -91,6 +91,10 @@ pub enum Mnemonic {
     /// Pushes a copy of the accumulator on to the stack.
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#PHA
     PHA,
+    /// Push Processor Status
+    /// Pushes a copy of the status flags on to the stack.
+    /// https://www.nesdev.org/obelisk-6502-guide/reference.html#PHP
+    PHP,
     /// Store Accumulator
     /// M = A
     /// Stores the contents of the accumulator into memory.

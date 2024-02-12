@@ -113,6 +113,7 @@ impl NoveCore {
                 LDY => op_and_assign!(self, y.assign, self.memory.read(addr)),
                 ORA => op_and_assign!(self, a.bitor_assign, self.memory.read(addr)),
                 PHA => self.stack_push(self.a.get()),
+                PHP => self.stack_push(self.ps.get_for_push()),
                 STA => self.memory.write(addr, self.a.get()),
                 TAX => op_and_assign!(self, x.transfer, &self.a),
             }
@@ -142,7 +143,7 @@ impl NoveCore {
                     let hi = self.memory.read(address & 0xFF00);
                     u16::from_le_bytes([lo, hi])
                 } else {
-                    dbg!(self.memory.read_u16(dbg!(address)))
+                    self.memory.read_u16(address)
                 }
             }
             IDX => self.memory.read_u16(self.next_byte().wrapping_add(self.x.get()) as u16),
@@ -484,6 +485,13 @@ mod test {
         let mut core = NoveCore::new();
 
         test!("imp", &mut core, rom!(A, 0x12, X, 0, Y, 0; 0x48), 0x01ff:0x12; pc: +1);
+    }
+
+    #[test]
+    fn phs() {
+        let mut core = NoveCore::new();
+
+        test!("imp", &mut core, rom!(A, 0, X, 0, Y, 0; 0xa9, 0x00, 0x08), 0x01ff:0b0011_0010; pc: +3);
     }
 
     #[test]
