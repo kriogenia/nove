@@ -1,6 +1,6 @@
 #[allow(clippy::upper_case_acronyms)]
 pub enum Mnemonic {
-    /// ADd with Carry
+    /// Add with Carry
     /// A,Z,C,N = A+M+C
     /// This instruction adds the contents of a memory location to the accumulator together with the carry bit.
     /// If overflow occurs the carry bit is set, this enables multiple byte addition to be performed.
@@ -14,37 +14,37 @@ pub enum Mnemonic {
     /// Force Interrupt
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#BRK
     BRK,
-    /// CLear Carry flag
+    /// Clear Carry flag
     /// C = 0
     /// Set the carry flag to zero.
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#CCF
     CLC,
-    /// CLear oVerflow flag
+    /// Clear Overflow flag
     /// V = 0
     /// Set the overflow flag to zero.
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#CLV
     CLV,
-    /// CoMPare
+    /// Compare
     /// Z,C,N = A-M
     /// This instruction compares the contents of the accumulator with another memory held value
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#CMP
     CMP,
-    /// ComPare X register
+    /// Compare X register
     /// Z,C,N = X-M
     /// This instruction compares the contents of the X register with another memory held value
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#CMP
     CPX,
-    /// ComPare Y register
+    /// Compare Y register
     /// Z,C,N = Y-M
     /// This instruction compares the contents of the Y register with another memory held value
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#CPY
     CPY,
-    /// DEcrement X register
+    /// Decrement X register
     /// X,Z,N = X-1
     /// Subtracts one from the X register.
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#DEX
     DEX,
-    /// Exclusive OR
+    /// Logical Exclusive OR
     /// A,Z,N = A^M
     /// An exclusive OR is performed, bit by bit, on the accumulator contents using the contents of a byte of memory
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#EOR
@@ -54,35 +54,35 @@ pub enum Mnemonic {
     /// Adds one to the value held at a specified memory location setting the zero and negative flags as appropriate.
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#INC
     INC,
-    /// INcrement X register
+    /// Increment X register
     /// X,Z,N = X+1
     /// Adds one to the X register.
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#INX
     INX,
-    /// JuMP
+    /// Jump
     /// Sets the program counter to the address specified by the operand.
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#JMP
     JMP,
-    /// No OPeration
-    /// The NOP instruction causes no changes to the processor other than incrementing the PC.
-    /// https://www.nesdev.org/obelisk-6502-guide/reference.html#NOP
-    NOP,
-    /// LoaD Accumulator
+    /// Load Accumulator
     /// A,Z,N = M
     /// Loads a byte of memory into the accumulator.
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#LDA
     LDA,
-    /// LoaD X register
+    /// Load X register
     /// X,Z,N = M
     /// Loads a byte of memory into the X register.
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#LDX
     LDX,
-    /// LoaD Y register
+    /// Load Y register
     /// Y,Z,N = M
     /// Loads a byte of memory into the Y register.
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#LDY
     LDY,
-    /// STore Accumulator
+    /// No Operation
+    /// The NOP instruction causes no changes to the processor other than incrementing the PC.
+    /// https://www.nesdev.org/obelisk-6502-guide/reference.html#NOP
+    NOP,
+    /// Store Accumulator
     /// M = A
     /// Stores the contents of the accumulator into memory.
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#STA
