@@ -10,6 +10,9 @@ pub enum AddressingMode {
     /// Absolute,Y
     /// https://www.nesdev.org/obelisk-6502-guide/addressing.html#ABY
     ABY,
+    /// Indirect
+    /// https://www.nesdev.org/obelisk-6502-guide/addressing.html#IND
+    IND,
     /// Indexed Indirect
     /// https://www.nesdev.org/obelisk-6502-guide/addressing.html#IDX
     IDX,

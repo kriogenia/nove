@@ -120,11 +120,23 @@ impl NoveCore {
         match mode {
             IMM => self.pc,
             ZPG => self.next_byte() as u16,
-            ZPX => self.next_byte().wrapping_add(self.x.get()) as u16,
+            ZPX => dbg!(self.next_byte().wrapping_add(self.x.get()) as u16),
             ZPY => self.next_byte().wrapping_add(self.y.get()) as u16,
             ABS => self.next_word(),
             ABX => self.next_word().wrapping_add(self.x.get() as u16),
             ABY => self.next_word().wrapping_add(self.y.get() as u16),
+            IND => {
+                // 6502 was bugged when reading end-of-page addresses like $03FF, in those cases
+                // instead of reading from $03FF and $0400 it took the values from $03FF and $0300
+                let address = self.next_word();
+                if address & 0x00FF == 0x00FF {
+                    let lo = self.memory.read(address);
+                    let hi = self.memory.read(address & 0xFF00);
+                    u16::from_le_bytes([lo, hi])
+                } else {
+                    self.memory.read_u16(address)
+                }
+            }
             IDX => self.memory.read_u16(self.next_byte().wrapping_add(self.x.get()) as u16),
             IDY => self.memory.read_u16(self.next_byte().wrapping_add(self.y.get()) as u16),
             IMP => Default::default(),
@@ -460,9 +472,40 @@ mod test {
         assert_eq!(core.ps.get_bit(Flag::Overflow), 0);
     }
 
+    #[test]
+    fn adressing_mode() {
+        let mut core = NoveCore::new();
+        core.pc = 0x0105;
+        core.x.assign(0x05);
+        core.y.assign(0x10);
+        core.memory.write_u16(0x0105, 0x0a00);
+        core.memory.write_u16(0x0a00, 0x0b00);
+        core.memory.write_u16(0x0005, 0x0c00);
+        core.memory.write_u16(0x0010, 0x0d00);
+
+        assert_eq!(core.get_addr(&AddressingMode::IMM), 0x0105);
+        assert_eq!(core.get_addr(&AddressingMode::ZPG), 0x0000);
+        assert_eq!(core.get_addr(&AddressingMode::ZPX), 0x0005);
+        assert_eq!(core.get_addr(&AddressingMode::ZPY), 0x0010);
+        assert_eq!(core.get_addr(&AddressingMode::ABS), 0x0a00);
+        assert_eq!(core.get_addr(&AddressingMode::ABX), 0x0a05);
+        assert_eq!(core.get_addr(&AddressingMode::ABY), 0x0a10);
+        assert_eq!(core.get_addr(&AddressingMode::IND), 0x0b00);
+        assert_eq!(core.get_addr(&AddressingMode::IDX), 0x0c00);
+        assert_eq!(core.get_addr(&AddressingMode::IDY), 0x0d00);
+
+        // IND bug
+        core.pc = 0x0200;
+        core.memory.write_u16(0x200, 0x03ff);
+        core.memory.write(0x0300, 0x12);
+        core.memory.write(0x03ff, 0x34);
+        core.memory.write(0x0400, 0x56);
+        assert_eq!(core.get_addr(&AddressingMode::IND), 0x1234);
+    }
+
     fn preloaded_core() -> NoveCore {
         let mut core = NoveCore::new();
-        core.memory.write(0x0005, 10);
+        core.memory.write(0x0005, 0x000a);
         core.memory.write(0x0050, 0x0005);
         core
     }
