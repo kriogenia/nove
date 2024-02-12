@@ -35,7 +35,5 @@ mod test {
         assert_eq!(pointer.get(), 0x01fe);
         pointer.prev();
         assert_eq!(pointer.get(), 0x01ff);
-
     }
-
 }

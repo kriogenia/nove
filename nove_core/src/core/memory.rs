@@ -1,6 +1,6 @@
 use crate::Rom;
 
-const MEMORY_SIZE: usize = 0xFFFF;  // 64 KiB
+const MEMORY_SIZE: usize = 0xFFFF; // 64 KiB
 pub(crate) const PRG_ROM_ADDR: usize = 0x8000;
 pub(crate) const PC_START_ADDR: u16 = 0xFFFC;
 
@@ -16,7 +16,7 @@ impl Default for Memory {
 impl Memory {
     pub fn load_rom(&mut self, rom: Rom) {
         let end = PRG_ROM_ADDR + rom.len();
-        self.0[PRG_ROM_ADDR .. end].copy_from_slice(&rom[..]);
+        self.0[PRG_ROM_ADDR..end].copy_from_slice(&rom[..]);
         self.write_u16(PC_START_ADDR, PRG_ROM_ADDR as u16);
     }
 
@@ -75,5 +75,4 @@ mod test {
 
         assert_eq!(mem.read_u16(0), 0x0123)
     }
-
 }

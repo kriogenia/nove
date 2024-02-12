@@ -142,6 +142,12 @@ pub enum Mnemonic {
     ///
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#PHP
     PHP,
+    /// Pull Accumulator
+    ///
+    /// Pulls an 8 bit value from the stack and into the accumulator.
+    ///
+    /// https://www.nesdev.org/obelisk-6502-guide/reference.html#PLA
+    PLA,
     /// Store Accumulator
     ///
     /// M = A

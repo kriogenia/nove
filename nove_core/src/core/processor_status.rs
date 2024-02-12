@@ -18,7 +18,11 @@ pub(super) enum Flag {
 
 impl ProcessorStatus {
     pub fn get_bit(&self, flag: Flag) -> u8 {
-        if self.is_raised(flag) { 1 } else { 0 }
+        if self.is_raised(flag) {
+            1
+        } else {
+            0
+        }
     }
 
     /// Returns the status of the CPU as a byte with the B flag up.
@@ -28,7 +32,11 @@ impl ProcessorStatus {
     }
 
     pub fn set_bit(&mut self, flag: Flag, value: bool) {
-        if value { self.raise(flag) } else { self.low(flag) }
+        if value {
+            self.raise(flag)
+        } else {
+            self.low(flag)
+        }
     }
 
     pub fn raise(&mut self, flag: Flag) {
@@ -42,7 +50,6 @@ impl ProcessorStatus {
     pub fn is_raised(&self, flag: Flag) -> bool {
         (self.0 & flag as u8) != 0
     }
-
 }
 
 impl Debug for ProcessorStatus {
@@ -64,5 +71,4 @@ mod test {
         assert_eq!(ps.0, 0b0100_0001);
         assert_eq!(ps.get_for_push(), 0b0111_0001);
     }
-
 }

@@ -1,18 +1,18 @@
-mod processor_status;
 mod memory;
+mod processor_status;
 mod register;
 mod stack_pointer;
 
-use std::fmt::{Debug, Formatter};
-use std::ops::{AddAssign, BitAndAssign, BitOrAssign, BitXorAssign, SubAssign};
 use crate::core::memory::Memory;
-use crate::core::processor_status::{Flag, OVERFLOW_MASK, ProcessorStatus};
+use crate::core::processor_status::{Flag, ProcessorStatus, OVERFLOW_MASK};
 use crate::core::register::Register;
 use crate::core::stack_pointer::StackPointer;
-use crate::instruction::{mnemonic::Mnemonic, OpCode, OPCODES_MAP};
-use crate::Rom;
 use crate::exception::Exception;
 use crate::instruction::addressing_mode::AddressingMode;
+use crate::instruction::{mnemonic::Mnemonic, OpCode, OPCODES_MAP};
+use crate::Rom;
+use std::fmt::{Debug, Formatter};
+use std::ops::{AddAssign, BitAndAssign, BitOrAssign, BitXorAssign, SubAssign};
 
 #[derive(Default)]
 pub struct NoveCore {
@@ -42,22 +42,18 @@ macro_rules! hexprint {
 
 /// Composes an operation over a register and updates zn
 macro_rules! op_and_assign {
-    ($core:expr, $reg:ident.$op:ident, $val:expr) => {
-        {
-            $core.$reg.$op($val);
-            $core.update_zn($core.$reg.get());
-        }
-    };
+    ($core:expr, $reg:ident.$op:ident, $val:expr) => {{
+        $core.$reg.$op($val);
+        $core.update_zn($core.$reg.get());
+    }};
 }
 
 macro_rules! compare {
-    ($core:expr, $reg:ident, $addr:expr) => {
-        {
-            let (result, carry) = $core.$reg.overflowing_sub($core.memory.read($addr));
-            $core.ps.set_bit(Flag::Carry, carry);
-            $core.update_zn(result);
-        }
-    };
+    ($core:expr, $reg:ident, $addr:expr) => {{
+        let (result, carry) = $core.$reg.overflowing_sub($core.memory.read($addr));
+        $core.ps.set_bit(Flag::Carry, carry);
+        $core.update_zn(result);
+    }};
 }
 
 impl NoveCore {
@@ -92,7 +88,7 @@ impl NoveCore {
                 ADC => {
                     let sum = self.adc(self.memory.read(addr));
                     op_and_assign!(self, a.assign, sum);
-                },
+                }
                 AND => op_and_assign!(self, a.bitand_assign, self.memory.read(addr)),
                 CLC => self.ps.set_bit(Flag::Carry, false),
                 CLV => self.ps.set_bit(Flag::Overflow, false),
@@ -107,13 +103,17 @@ impl NoveCore {
                 }
                 INX => op_and_assign!(self, x.add_assign, 1),
                 JMP => self.pc = addr,
-                NOP => {},
+                NOP => {}
                 LDA => op_and_assign!(self, a.assign, self.memory.read(addr)),
                 LDX => op_and_assign!(self, x.assign, self.memory.read(addr)),
                 LDY => op_and_assign!(self, y.assign, self.memory.read(addr)),
                 ORA => op_and_assign!(self, a.bitor_assign, self.memory.read(addr)),
                 PHA => self.stack_push(self.a.get()),
                 PHP => self.stack_push(self.ps.get_for_push()),
+                PLA => {
+                    let val = self.stack_pull();
+                    op_and_assign!(self, a.assign, val)
+                },
                 STA => self.memory.write(addr, self.a.get()),
                 TAX => op_and_assign!(self, x.transfer, &self.a),
             }
@@ -146,8 +146,12 @@ impl NoveCore {
                     self.memory.read_u16(address)
                 }
             }
-            IDX => self.memory.read_u16(self.next_byte().wrapping_add(self.x.get()) as u16),
-            IDY => self.memory.read_u16(self.next_byte().wrapping_add(self.y.get()) as u16),
+            IDX => self
+                .memory
+                .read_u16(self.next_byte().wrapping_add(self.x.get()) as u16),
+            IDY => self
+                .memory
+                .read_u16(self.next_byte().wrapping_add(self.y.get()) as u16),
             IMP => Default::default(),
         }
     }
@@ -177,7 +181,10 @@ impl NoveCore {
         let (result, carry) = first.0.overflowing_add(m);
 
         self.ps.set_bit(Flag::Carry, first.1 || carry);
-        self.ps.set_bit(Flag::Overflow, ((a & m & !result) | (!a & !m & result)) & OVERFLOW_MASK != 0);
+        self.ps.set_bit(
+            Flag::Overflow,
+            ((a & m & !result) | (!a & !m & result)) & OVERFLOW_MASK != 0,
+        );
 
         result
     }
@@ -206,7 +213,6 @@ impl NoveCore {
     fn update_pc(&mut self, opcode: &OpCode) {
         self.pc += opcode.bytes as u16 - 1;
     }
-
 }
 
 impl Debug for NoveCore {
@@ -394,7 +400,6 @@ mod test {
         core.memory.write(0x10, 0xfe);
         test!("neg", &mut core, rom!(A, 0, X, 0x00, Y, 0; 0xee, 0x10, 0x00), 0x0010:0xff; pc: +3, ps: N);
         test!("zer", &mut core, rom!(A, 0, X, 0x00, Y, 0; 0xee, 0x10, 0x00), 0x0010:0x00; pc: +3, ps: Z);
-
     }
 
     #[test]
@@ -483,15 +488,20 @@ mod test {
     #[test]
     fn pha() {
         let mut core = NoveCore::new();
-
         test!("imp", &mut core, rom!(A, 0x12, X, 0, Y, 0; 0x48), 0x01ff:0x12; pc: +1);
     }
 
     #[test]
     fn phs() {
         let mut core = NoveCore::new();
+        test!("imp", &mut core, rom!(A, 0, X, 0, Y, 0; 0x08), 0x01ff:0b0011_0010; pc: +1);
+    }
 
-        test!("imp", &mut core, rom!(A, 0, X, 0, Y, 0; 0xa9, 0x00, 0x08), 0x01ff:0b0011_0010; pc: +3);
+    #[test]
+    fn pla() {
+        let mut core = NoveCore::default();
+
+        test!("imp", &mut core, rom!(A, 2, X, 0, Y, 0; 0x08, 0x68), a:0b0011_0010; pc: +2);
     }
 
     #[test]
@@ -579,5 +589,4 @@ mod test {
         core.memory.write(0x0050, 0x0005);
         core
     }
-
 }

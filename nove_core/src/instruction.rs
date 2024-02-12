@@ -1,12 +1,12 @@
-pub mod mnemonic;
 pub mod addressing_mode;
+pub mod mnemonic;
 
-use std::collections::HashMap;
-use lazy_static::lazy_static;
 use crate::instruction::addressing_mode::AddressingMode;
 use crate::instruction::addressing_mode::AddressingMode::*;
 use crate::instruction::mnemonic::Mnemonic;
 use crate::instruction::mnemonic::Mnemonic::*;
+use lazy_static::lazy_static;
+use std::collections::HashMap;
 
 pub struct OpCode {
     pub mnemonic: Mnemonic,
@@ -17,8 +17,20 @@ pub struct OpCode {
 }
 
 impl OpCode {
-    fn new(mnemonic: Mnemonic, code: u8, bytes: u8, cycles: u8, addressing_mode: AddressingMode) -> Self {
-        Self { mnemonic, code, bytes, cycles, addressing_mode }
+    fn new(
+        mnemonic: Mnemonic,
+        code: u8,
+        bytes: u8,
+        cycles: u8,
+        addressing_mode: AddressingMode,
+    ) -> Self {
+        Self {
+            mnemonic,
+            code,
+            bytes,
+            cycles,
+            addressing_mode,
+        }
     }
 }
 
@@ -121,6 +133,8 @@ lazy_static! {
         OpCode::new(PHA, 0x48, 1, 3, IMP),
 
         OpCode::new(PHP, 0x08, 1, 3, IMP),
+
+        OpCode::new(PLA, 0x68, 1, 4, IMP),
 
         OpCode::new(STA, 0x8d, 3, 4, ABS),
         OpCode::new(STA, 0x9d, 3, 5, ABX),

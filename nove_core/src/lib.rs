@@ -1,5 +1,5 @@
 pub mod core;
-mod instruction;
 mod exception;
+mod instruction;
 
 pub type Rom = Vec<u8>;
