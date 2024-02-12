@@ -9,6 +9,7 @@ use crate::core::register::Register;
 use crate::core::stack_pointer::StackPointer;
 use crate::exception::Exception;
 use crate::instruction::addressing_mode::AddressingMode;
+use crate::instruction::addressing_mode::AddressingMode::ACC;
 use crate::instruction::{mnemonic::Mnemonic, OpCode, OPCODES_MAP};
 use crate::Rom;
 use std::fmt::{Debug, Formatter};
@@ -113,11 +114,13 @@ impl NoveCore {
                 PLA => {
                     let val = self.stack_pull();
                     op_and_assign!(self, a.assign, val)
-                },
+                }
                 PLP => {
                     let val = self.stack_pull();
                     self.ps.set_from_pull(val)
                 }
+                ROL if opcode.addressing_mode == ACC => self.rol_a(),
+                ROL => self.rol_m(addr),
                 STA => self.memory.write(addr, self.a.get()),
                 TAX => op_and_assign!(self, x.transfer, &self.a),
             }
@@ -139,6 +142,7 @@ impl NoveCore {
             ABX => self.next_word().wrapping_add(self.x.get() as u16),
             ABY => self.next_word().wrapping_add(self.y.get() as u16),
             IND => {
+                // todo get_addr_ind
                 // 6502 was bugged when reading end-of-page addresses like $03FF, in those cases
                 // instead of reading from $03FF and $0400 it took the values from $03FF and $0300
                 let address = self.next_word();
@@ -156,7 +160,7 @@ impl NoveCore {
             IDY => self
                 .memory
                 .read_u16(self.next_byte().wrapping_add(self.y.get()) as u16),
-            IMP => Default::default(),
+            IMP | ACC => Default::default(),
         }
     }
 
@@ -191,6 +195,24 @@ impl NoveCore {
         );
 
         result
+    }
+
+    fn rol_a(&mut self) {
+        let val = self.rotate_left(self.a.get());
+        self.a.assign(val)
+    }
+
+    fn rol_m(&mut self, addr: u16) {
+        let val = self.rotate_left(self.memory.read(addr));
+        self.memory.write(addr, val)
+    }
+
+    fn rotate_left(&mut self, val: u8) -> u8 {
+        let carry = self.ps.is_raised(Flag::Carry);
+        self.ps.set_bit(Flag::Carry, val >> 7 == 1);
+        let val = (val << 1) | if carry { 1 } else { 0 };
+        self.update_zn(val);
+        val
     }
 
     #[cfg(test)]
@@ -504,15 +526,29 @@ mod test {
     #[test]
     fn pla() {
         let mut core = NoveCore::default();
-
         test!("imp", &mut core, rom!(A, 2, X, 0, Y, 0; 0x08, 0x68), a:0b0011_0010; pc: +2);
     }
 
     #[test]
     fn plp() {
         let mut core = NoveCore::default();
-
         test!("imp", &mut core, rom!(A, 0b1011_0000, X, 0, Y, 0; 0x48, 0x28),; pc: +2, ps: N);
+    }
+
+    // todo ROL
+    #[test]
+    fn rol() {
+        let mut core = preloaded_core();
+
+        test!("acc", &mut core, rom!(A, 0b0001_0101, X, 0, Y, 0; 0x2a), a:0b0010_1010; pc: +1, ps: 0);
+        test!("zer", &mut core, rom!(A, 0b0000_0000, X, 0, Y, 0; 0x2a), a:0b0000_0000; pc: +1, ps: Z);
+        test!("neg", &mut core, rom!(A, 0b0101_1001, X, 0, Y, 0; 0x2a), a:0b1011_0010; pc: +1, ps: N);
+        test!("abs", &mut core, rom!(A, 0, X, 0, Y, 0; 0x2e, 0x05, 0x00), 0x0005:0b0001_0100; pc: +3);
+        test!("abx", &mut core, rom!(A, 0, X, 2, Y, 0; 0x3e, 0x03, 0x00), 0x0005:0b0010_1000; pc: +3);
+        test!("zpg", &mut core, rom!(A, 0, X, 0, Y, 0; 0x26, 0x05), 0x0005:0b0101_0000; pc: +2);
+        test!("zpx", &mut core, rom!(A, 0, X, 2, Y, 0; 0x36, 0x03), 0x0005:0b1010_0000; pc: +2);
+
+        // todo car (needs SEC)
     }
 
     #[test]

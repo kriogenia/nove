@@ -138,6 +138,12 @@ lazy_static! {
 
         OpCode::new(PLP, 0x28, 1, 4, IMP),
 
+        OpCode::new(ROL, 0x2a, 1, 2, ACC),
+        OpCode::new(ROL, 0x2e, 3, 6, ABS),
+        OpCode::new(ROL, 0x3e, 3, 7, ABX),
+        OpCode::new(ROL, 0x26, 2, 5, ZPG),
+        OpCode::new(ROL, 0x36, 2, 6, ZPX),
+
         OpCode::new(STA, 0x8d, 3, 4, ABS),
         OpCode::new(STA, 0x9d, 3, 5, ABX),
         OpCode::new(STA, 0x99, 3, 5, ABY),

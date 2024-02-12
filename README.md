@@ -18,10 +18,10 @@ details what the current state:
 | ~~INC~~ | ~~INX~~ | INY     | ~~JMP~~ |
 | JSR     | ~~LDA~~ | ~~LDX~~ | ~~LDY~~ |
 | LSR     | ~~NOP~~ | ~~ORA~~ | ~~PHA~~ |
-| ~~PHP~~ | ~~PLA~~ | ~~PLP~~ | ROL     |
+| ~~PHP~~ | ~~PLA~~ | ~~PLP~~ | ~~ROL~~ |
 | ROR     | RTI     | RTS     | SBC     |
 | SEC     | SED     | SEI     | ~~STA~~ |
 | STX     | STY     | ~~TAX~~ | TAY     |
 | TSX     | TXA     | TXS     | TYA     |
 
-**Current state**: 23/56 (> 40%)
+**Current state**: 24/56 (~ 37.5%)

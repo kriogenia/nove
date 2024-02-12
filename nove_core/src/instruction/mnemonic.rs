@@ -154,6 +154,13 @@ pub enum Mnemonic {
     ///
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#PLP
     PLP,
+    /// Rotate Left
+    ///
+    /// Move each of the bits one place to the left.
+    /// Bit 0 is filled with the current value of the carry flag whilst the old bit 7 becomes the new carry flag value.
+    ///
+    /// https://www.nesdev.org/obelisk-6502-guide/reference.html#ROL
+    ROL,
     /// Store Accumulator
     ///
     /// M = A

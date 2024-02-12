@@ -76,6 +76,5 @@ mod test {
         assert_eq!(ps.get_for_push(), 0b0111_0001);
         ps.set_from_pull(0b0011_0001);
         assert_eq!(ps.0, 0b0000_0001);
-
     }
 }

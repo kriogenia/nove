@@ -1,6 +1,9 @@
 #[allow(clippy::upper_case_acronyms)]
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum AddressingMode {
+    /// Accumulator
+    /// https://www.nesdev.org/obelisk-6502-guide/addressing.html#IMP
+    ACC,
     /// Absolute
     /// https://www.nesdev.org/obelisk-6502-guide/addressing.html#ABS
     ABS,
