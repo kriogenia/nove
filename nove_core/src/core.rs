@@ -112,6 +112,7 @@ impl NoveCore {
                 LDX => op_and_assign!(self, x.assign, self.memory.read(addr)),
                 LDY => op_and_assign!(self, y.assign, self.memory.read(addr)),
                 ORA => op_and_assign!(self, a.bitor_assign, self.memory.read(addr)),
+                PHA => self.stack_push(self.a.get()),
                 STA => self.memory.write(addr, self.a.get()),
                 TAX => op_and_assign!(self, x.transfer, &self.a),
             }
@@ -479,6 +480,13 @@ mod test {
     }
 
     #[test]
+    fn pha() {
+        let mut core = NoveCore::new();
+
+        test!("imp", &mut core, rom!(A, 0x12, X, 0, Y, 0; 0x48), 0x01ff:0x12; pc: +1);
+    }
+
+    #[test]
     fn sta() {
         let mut core = NoveCore::new();
         core.memory.write(0x0050, 0x0005);
@@ -527,7 +535,7 @@ mod test {
     }
 
     #[test]
-    fn adressing_mode() {
+    fn addressing_mode() {
         let mut core = NoveCore::new();
         core.pc = 0x0105;
         core.x.assign(0x05);

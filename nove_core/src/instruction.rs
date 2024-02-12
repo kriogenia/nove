@@ -118,6 +118,8 @@ lazy_static! {
         OpCode::new(ORA, 0x05, 2, 3, ZPG),
         OpCode::new(ORA, 0x15, 2, 4, ZPX),
 
+        OpCode::new(PHA, 0x48, 1, 3, IMP),
+
         OpCode::new(STA, 0x8d, 3, 4, ABS),
         OpCode::new(STA, 0x9d, 3, 5, ABX),
         OpCode::new(STA, 0x99, 3, 5, ABY),

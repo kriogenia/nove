@@ -17,11 +17,11 @@ details what the current state:
 | DEC     | ~~DEX~~ | DEY     | EOR     |
 | ~~INC~~ | ~~INX~~ | INY     | ~~JMP~~ |
 | JSR     | ~~LDA~~ | ~~LDX~~ | ~~LDY~~ |
-| LSR     | ~~NOP~~ | ~~ORA~~ | PHA     |
+| LSR     | ~~NOP~~ | ~~ORA~~ | ~~PHA~~ |
 | PHP     | PLA     | PLP     | ROL     |
 | ROR     | RTI     | RTS     | SBC     |
 | SEC     | SED     | SEI     | ~~STA~~ |
 | STX     | STY     | ~~TAX~~ | TAY     |
 | TSX     | TXA     | TXS     | TYA     |
 
-**Current state**: 19/56 (> 30%)
+**Current state**: 20/56 (~ 33%)

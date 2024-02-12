@@ -85,7 +85,12 @@ pub enum Mnemonic {
     /// Logical Inclusive OR
     /// A,Z,N = A|M
     /// An inclusive OR is performed on the acc contents using the contents of a byte of memory.
+    /// https://www.nesdev.org/obelisk-6502-guide/reference.html#ORA
     ORA,
+    /// Push Accumulator
+    /// Pushes a copy of the accumulator on to the stack.
+    /// https://www.nesdev.org/obelisk-6502-guide/reference.html#PHA
+    PHA,
     /// Store Accumulator
     /// M = A
     /// Stores the contents of the accumulator into memory.
