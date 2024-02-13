@@ -2,6 +2,7 @@ mod memory;
 mod processor_status;
 mod register;
 mod stack_pointer;
+mod ops;
 
 use crate::core::memory::Memory;
 use crate::core::processor_status::{Flag, ProcessorStatus, OVERFLOW_MASK};
@@ -14,6 +15,7 @@ use crate::instruction::{mnemonic::Mnemonic, OpCode, OPCODES_MAP};
 use crate::Rom;
 use std::fmt::{Debug, Formatter};
 use std::ops::{AddAssign, BitAndAssign, BitOrAssign, BitXorAssign, SubAssign};
+use crate::core::ops::Rotation;
 
 #[derive(Default)]
 pub struct NoveCore {
@@ -54,6 +56,23 @@ macro_rules! compare {
         let (result, carry) = $core.$reg.overflowing_sub($core.memory.read($addr));
         $core.ps.set_bit(Flag::Carry, carry);
         $core.update_zn(result);
+    }};
+}
+
+macro_rules! rotate {
+    ($core:expr, $rot:ident, acc) => {{
+        let val = $core.a.get();
+        let (val, carry) = Rotation::$rot.rotate(val, $core.ps.is_raised(Flag::Carry));
+        $core.ps.set_bit(Flag::Carry, carry);
+        $core.a.assign(val);
+        $core.update_zn(val);
+    }};
+    ($core:expr, $rot:ident, mem:$addr:expr) => {{
+        let val = $core.memory.read($addr);
+        let (val, carry) = Rotation::$rot.rotate(val, $core.ps.is_raised(Flag::Carry));
+        $core.ps.set_bit(Flag::Carry, carry);
+        $core.memory.write($addr, val);
+        $core.update_zn(val);
     }};
 }
 
@@ -119,8 +138,8 @@ impl NoveCore {
                     let val = self.stack_pull();
                     self.ps.set_from_pull(val)
                 }
-                ROL if opcode.addressing_mode == ACC => self.rol_a(),
-                ROL => self.rol_m(addr),
+                ROL if opcode.addressing_mode == ACC => rotate!(self, Left, acc),
+                ROL => rotate!(self, Left, mem:addr),
                 SEC => self.ps.set_bit(Flag::Carry, true),
                 STA => self.memory.write(addr, self.a.get()),
                 TAX => op_and_assign!(self, x.transfer, &self.a),
@@ -197,24 +216,13 @@ impl NoveCore {
 
         result
     }
-
-    fn rol_a(&mut self) {
-        let val = self.rotate_left(self.a.get());
-        self.a.assign(val)
-    }
-
-    fn rol_m(&mut self, addr: u16) {
-        let val = self.rotate_left(self.memory.read(addr));
-        self.memory.write(addr, val)
-    }
-
-    fn rotate_left(&mut self, val: u8) -> u8 {
-        let carry = self.ps.is_raised(Flag::Carry);
-        self.ps.set_bit(Flag::Carry, val >> 7 == 1);
-        let val = (val << 1) | if carry { 1 } else { 0 };
+/*
+    fn rotate(&mut self, rotation: Rotation, val: u8, op: fn(u8) -> ()) {
+        let (val, carry) = rotation.rotate(val, self.ps.is_raised(Flag::Carry));
+        self.ps.set_bit(Flag::Carry, carry);
+        op(val);
         self.update_zn(val);
-        val
-    }
+    }*/
 
     #[cfg(test)]
     fn load_and_run(&mut self, rom: Rom) {
@@ -537,7 +545,6 @@ mod test {
         test!("imp", &mut core, rom!(A, 0b1011_0000, X, 0, Y, 0, 0x48; 0x28),; pc: +2, ps: N);
     }
 
-    // todo ROL
     #[test]
     fn rol() {
         let mut core = preloaded_core();
