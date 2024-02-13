@@ -144,6 +144,12 @@ lazy_static! {
         OpCode::new(ROL, 0x26, 2, 5, ZPG),
         OpCode::new(ROL, 0x36, 2, 6, ZPX),
 
+        OpCode::new(ROR, 0x6a, 1, 2, ACC),
+        OpCode::new(ROR, 0x6e, 3, 6, ABS),
+        OpCode::new(ROR, 0x7e, 3, 7, ABX),
+        OpCode::new(ROR, 0x66, 2, 5, ZPG),
+        OpCode::new(ROR, 0x76, 2, 6, ZPX),
+
         OpCode::new(SEC, 0x38, 1, 2, IMP),
 
         OpCode::new(STA, 0x8d, 3, 4, ABS),

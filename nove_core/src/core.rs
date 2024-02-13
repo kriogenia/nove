@@ -140,6 +140,8 @@ impl NoveCore {
                 }
                 ROL if opcode.addressing_mode == ACC => rotate!(self, Left, acc),
                 ROL => rotate!(self, Left, mem:addr),
+                ROR if opcode.addressing_mode == ACC => rotate!(self, Right, acc),
+                ROR => rotate!(self, Right, mem:addr),
                 SEC => self.ps.set_bit(Flag::Carry, true),
                 STA => self.memory.write(addr, self.a.get()),
                 TAX => op_and_assign!(self, x.transfer, &self.a),
@@ -216,13 +218,6 @@ impl NoveCore {
 
         result
     }
-/*
-    fn rotate(&mut self, rotation: Rotation, val: u8, op: fn(u8) -> ()) {
-        let (val, carry) = rotation.rotate(val, self.ps.is_raised(Flag::Carry));
-        self.ps.set_bit(Flag::Carry, carry);
-        op(val);
-        self.update_zn(val);
-    }*/
 
     #[cfg(test)]
     fn load_and_run(&mut self, rom: Rom) {
@@ -557,6 +552,20 @@ mod test {
         test!("abx", &mut core, rom!(A, 0, X, 2, Y, 0; 0x3e, 0x03, 0x00), 0x0005:0b0010_1000; pc: +3);
         test!("zpg", &mut core, rom!(A, 0, X, 0, Y, 0; 0x26, 0x05), 0x0005:0b0101_0000; pc: +2);
         test!("zpx", &mut core, rom!(A, 0, X, 2, Y, 0; 0x36, 0x03), 0x0005:0b1010_0000; pc: +2);
+    }
+
+    #[test]
+    fn ror() {
+        let mut core = preloaded_core();
+
+        test!("acc", &mut core, rom!(A, 0b0001_0100, X, 0, Y, 0; 0x6a), a:0b0000_1010; pc: +1, ps: 0);
+        test!("zer", &mut core, rom!(A, 0b0000_0000, X, 0, Y, 0; 0x6a), a:0b0000_0000; pc: +1, ps: Z);
+        test!("neg", &mut core, rom!(A, 0b0101_1000, X, 0, Y, 0, 0x38; 0x6a), a:0b1010_1100; pc: +2, ps: N);
+        test!("car", &mut core, rom!(A, 0b1001_0101, X, 0, Y, 0, 0x6a), a:0b0100_1010; pc: +1, ps: C);
+        test!("abs", &mut core, rom!(A, 0, X, 0, Y, 0; 0x6e, 0x05, 0x00), 0x0005:0b0000_0101; pc: +3);
+        test!("abx", &mut core, rom!(A, 0, X, 2, Y, 0; 0x7e, 0x03, 0x00), 0x0005:0b0000_0010; pc: +3);
+        test!("zpg", &mut core, rom!(A, 0, X, 0, Y, 0; 0x66, 0x05), 0x0005:0b0000_0001; pc: +2);
+        test!("zpx", &mut core, rom!(A, 0, X, 2, Y, 0; 0x76, 0x03), 0x0005:0b0000_0000; pc: +2);
     }
 
     #[test]
