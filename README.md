@@ -20,8 +20,8 @@ details what the current state:
 | LSR     | ~~NOP~~ | ~~ORA~~ | ~~PHA~~ |
 | ~~PHP~~ | ~~PLA~~ | ~~PLP~~ | ~~ROL~~ |
 | ROR     | RTI     | RTS     | SBC     |
-| SEC     | SED     | SEI     | ~~STA~~ |
+| ~~SEC~~ | SED     | SEI     | ~~STA~~ |
 | STX     | STY     | ~~TAX~~ | TAY     |
 | TSX     | TXA     | TXS     | TYA     |
 
-**Current state**: 24/56 (~ 37.5%)
+**Current state**: 25/56

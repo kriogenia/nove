@@ -161,6 +161,14 @@ pub enum Mnemonic {
     ///
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#ROL
     ROL,
+    /// Set Carry flag
+    ///
+    /// C = 1
+    ///
+    /// Set the carry flag to one
+    ///
+    /// https://www.nesdev.org/obelisk-6502-guide/reference.html#SEC
+    SEC,
     /// Store Accumulator
     ///
     /// M = A

@@ -121,6 +121,7 @@ impl NoveCore {
                 }
                 ROL if opcode.addressing_mode == ACC => self.rol_a(),
                 ROL => self.rol_m(addr),
+                SEC => self.ps.set_bit(Flag::Carry, true),
                 STA => self.memory.write(addr, self.a.get()),
                 TAX => op_and_assign!(self, x.transfer, &self.a),
             }
@@ -284,10 +285,11 @@ mod test {
             assert_eq!($core.pc, memory::PRG_ROM_ADDR as u16 + $pc + 7);
             $(assert_eq!($core.ps.0, $ps);)*
         };
-        ($id:expr, $core:expr, $rom:expr; pc: $pc:literal) => {
+        ($id:expr, $core:expr, $rom:expr; pc: $pc:literal $(, ps: $ps:expr)*) => {
             println!($id);
             $core.load_and_run($rom);
             assert_eq!($core.pc, $pc);
+            $(assert_eq!($core.ps.0, $ps);)*
         };
     }
 
@@ -526,13 +528,13 @@ mod test {
     #[test]
     fn pla() {
         let mut core = NoveCore::default();
-        test!("imp", &mut core, rom!(A, 2, X, 0, Y, 0; 0x08, 0x68), a:0b0011_0010; pc: +2);
+        test!("imp", &mut core, rom!(A, 2, X, 0, Y, 0, 0x08; 0x68), a:0b0011_0010; pc: +2);
     }
 
     #[test]
     fn plp() {
         let mut core = NoveCore::default();
-        test!("imp", &mut core, rom!(A, 0b1011_0000, X, 0, Y, 0; 0x48, 0x28),; pc: +2, ps: N);
+        test!("imp", &mut core, rom!(A, 0b1011_0000, X, 0, Y, 0, 0x48; 0x28),; pc: +2, ps: N);
     }
 
     // todo ROL
@@ -543,12 +545,17 @@ mod test {
         test!("acc", &mut core, rom!(A, 0b0001_0101, X, 0, Y, 0; 0x2a), a:0b0010_1010; pc: +1, ps: 0);
         test!("zer", &mut core, rom!(A, 0b0000_0000, X, 0, Y, 0; 0x2a), a:0b0000_0000; pc: +1, ps: Z);
         test!("neg", &mut core, rom!(A, 0b0101_1001, X, 0, Y, 0; 0x2a), a:0b1011_0010; pc: +1, ps: N);
+        test!("car", &mut core, rom!(A, 0b1001_0101, X, 0, Y, 0, 0x38; 0x2a), a:0b0010_1011; pc: +2, ps: C);
         test!("abs", &mut core, rom!(A, 0, X, 0, Y, 0; 0x2e, 0x05, 0x00), 0x0005:0b0001_0100; pc: +3);
         test!("abx", &mut core, rom!(A, 0, X, 2, Y, 0; 0x3e, 0x03, 0x00), 0x0005:0b0010_1000; pc: +3);
         test!("zpg", &mut core, rom!(A, 0, X, 0, Y, 0; 0x26, 0x05), 0x0005:0b0101_0000; pc: +2);
         test!("zpx", &mut core, rom!(A, 0, X, 2, Y, 0; 0x36, 0x03), 0x0005:0b1010_0000; pc: +2);
+    }
 
-        // todo car (needs SEC)
+    #[test]
+    fn sec() {
+        let mut core = NoveCore::new();
+        test!("imp", &mut core, rom!(A, 1, X, 1, Y, 1; 0x38),; pc: +1, ps: C);
     }
 
     #[test]
