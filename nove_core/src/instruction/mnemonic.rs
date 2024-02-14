@@ -168,6 +168,16 @@ pub enum Mnemonic {
     ///
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#ROR
     ROR,
+    /// Substract with Carry
+    ///
+    /// A,Z,C,N = A-M-(1-C)
+    ///
+    /// This instruction subtracts the contents of a memory location to the accumulator together
+    /// with the not of the carry bit.
+    /// If overflow occurs the carry bit is clear, this enables multiple byte subtraction to be performed.
+    ///
+    /// https://www.nesdev.org/obelisk-6502-guide/reference.html#SBC
+    SBC,
     /// Set Carry flag
     ///
     /// C = 1

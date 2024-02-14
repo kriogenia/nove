@@ -19,9 +19,9 @@ details what the current state:
 | JSR     | ~~LDA~~ | ~~LDX~~ | ~~LDY~~ |
 | LSR     | ~~NOP~~ | ~~ORA~~ | ~~PHA~~ |
 | ~~PHP~~ | ~~PLA~~ | ~~PLP~~ | ~~ROL~~ |
-| ~~ROR~~ | RTI     | RTS     | SBC     |
+| ~~ROR~~ | RTI     | RTS     | ~~SBC~~ |
 | ~~SEC~~ | SED     | SEI     | ~~STA~~ |
 | STX     | STY     | ~~TAX~~ | TAY     |
 | TSX     | TXA     | TXS     | TYA     |
 
-**Current state**: 26/56
+**Current state**: 27/56

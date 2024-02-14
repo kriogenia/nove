@@ -143,6 +143,10 @@ impl NoveCore {
                 ROR if opcode.addressing_mode == ACC => rotate!(self, Right, acc),
                 ROR => rotate!(self, Right, mem:addr),
                 SEC => self.ps.set_bit(Flag::Carry, true),
+                SBC => {
+                    let diff = self.sbc(self.memory.read(addr));
+                    op_and_assign!(self, a.assign, diff);
+                },
                 STA => self.memory.write(addr, self.a.get()),
                 TAX => op_and_assign!(self, x.transfer, &self.a),
             }
@@ -219,6 +223,10 @@ impl NoveCore {
         result
     }
 
+    fn sbc(&mut self, m: u8) -> u8 {
+        self.adc(m.wrapping_neg().wrapping_sub(1))
+    }
+
     #[cfg(test)]
     fn load_and_run(&mut self, rom: Rom) {
         self.load(rom);
@@ -268,7 +276,7 @@ mod test {
     const C: u8 = Flag::Carry as u8;
     const N: u8 = Flag::Negative as u8;
     const Z: u8 = Flag::Zero as u8;
-    const VN: u8 = Flag::Overflow as u8 + N;
+    const V: u8 = Flag::Overflow as u8;
 
     /// Runs a tests with the given core and rom checking the list of registers or addresses and the pc addition
     macro_rules! test {
@@ -312,7 +320,7 @@ mod test {
         test!("imm", &mut core, rom!(A, 0x00, X, 0x00, Y, 0x00; 0x69, 0x10), a:0x10; pc: +2, ps: 0);
         test!("zer", &mut core, rom!(A, 0x00, X, 0x00, Y, 0x00; 0x69, 0x00), a:0x00; pc: +2, ps: Z);
         test!("neg", &mut core, rom!(A, 0xf0, X, 0x00, Y, 0x00; 0x69, 0x05), a:0xF5; pc: +2, ps: N);
-        test!("ovf", &mut core, rom!(A, 0x7f, X, 0x00, Y, 0x00; 0x69, 0x01), a:0x80; pc: +2, ps: VN);
+        test!("ovf", &mut core, rom!(A, 0x7f, X, 0x00, Y, 0x00; 0x69, 0x01), a:0x80; pc: +2, ps: V+N);
         test!("car", &mut core, rom!(A, 0xff, X, 0x00, Y, 0x00; 0x69, 0x02), a:0x01; pc: +2, ps: C);
         test!("abs", &mut core, rom!(A, 0x20, X, 0x00, Y, 0x00; 0x6d, 0x05, 0x00), a:0x2a; pc: +3);
         test!("abx", &mut core, rom!(A, 0x20, X, 0x02, Y, 0x00; 0x7d, 0x03, 0x00), a:0x2a; pc: +3);
@@ -569,6 +577,23 @@ mod test {
     }
 
     #[test]
+    fn sbc() {
+        let mut core = preloaded_core();
+
+        test!("imm", &mut core, rom!(A, 0x08, X, 0x00, Y, 0x00; 0xe9, 0x06), a:0x01; pc: +2, ps: C);
+        test!("zer", &mut core, rom!(A, 0x08, X, 0x00, Y, 0x00; 0xe9, 0x07), a:0x00; pc: +2, ps: Z+C);
+        test!("neg", &mut core, rom!(A, 0x06, X, 0x00, Y, 0x00; 0xe9, 0x06), a:0xff; pc: +2, ps: N);
+        test!("ovf", &mut core, rom!(A, 0x40, X, 0x00, Y, 0x00; 0xe9, 0x80), a:0xbf; pc: +2, ps: V+N);
+        test!("abs", &mut core, rom!(A, 0x1b, X, 0x00, Y, 0x00; 0xed, 0x05, 0x00), a:0x10; pc: +3);
+        test!("abx", &mut core, rom!(A, 0x1b, X, 0x02, Y, 0x00; 0xfd, 0x03, 0x00), a:0x10; pc: +3);
+        test!("aby", &mut core, rom!(A, 0x1b, X, 0x00, Y, 0x01; 0xf9, 0x04, 0x00), a:0x10; pc: +3);
+        test!("idx", &mut core, rom!(A, 0x1b, X, 0x20, Y, 0x00; 0xe1, 0x30), a:0x10; pc: +2);
+        test!("idy", &mut core, rom!(A, 0x1b, X, 0x00, Y, 0x10; 0xf1, 0x40), a:0x10; pc: +2);
+        test!("zpg", &mut core, rom!(A, 0x1b, X, 0x00, Y, 0x00; 0xe5, 0x05), a:0x10; pc: +2);
+        test!("zpx", &mut core, rom!(A, 0x1b, X, 0x02, Y, 0x00; 0xf5, 0x03), a:0x10; pc: +2);
+    }
+
+    #[test]
     fn sec() {
         let mut core = NoveCore::new();
         test!("imp", &mut core, rom!(A, 1, X, 1, Y, 1; 0x38),; pc: +1, ps: C);
@@ -618,6 +643,35 @@ mod test {
 
         core.a.assign(0b0111_1000);
         assert_eq!(core.adc(0b1100_0000), 0b0011_1001);
+        assert_eq!(core.ps.get_bit(Flag::Carry), 1);
+        assert_eq!(core.ps.get_bit(Flag::Overflow), 0);
+    }
+
+    #[test]
+    fn sbc_ops() {
+        let mut core = NoveCore::new();
+
+        core.a.assign(8); // 8 - 6 = 2
+        core.ps.set_bit(Flag::Carry, true);
+        assert_eq!(core.sbc(6), 2);
+        assert_eq!(core.ps.get_bit(Flag::Carry), 1);
+        assert_eq!(core.ps.get_bit(Flag::Overflow), 0);
+
+        core.a.assign(8); // 8 - 10 = -2
+        core.ps.set_bit(Flag::Carry, true);
+        assert_eq!(core.sbc(10), 0_u8.wrapping_sub(2));
+        assert_eq!(core.ps.get_bit(Flag::Carry), 0);
+        assert_eq!(core.ps.get_bit(Flag::Overflow), 0);
+
+        core.a.assign(64); // 64 - (-128) = -64 (OV)
+        core.ps.set_bit(Flag::Carry, true);
+        assert_eq!(core.sbc(0_u8.wrapping_sub(128)), 0_u8.wrapping_sub(64));
+        assert_eq!(core.ps.get_bit(Flag::Carry), 0);
+        assert_eq!(core.ps.get_bit(Flag::Overflow), 1);
+
+        core.a.assign(8); // 8 - 6 - C = 2
+        core.ps.set_bit(Flag::Carry, false);
+        assert_eq!(core.sbc(6), 1);
         assert_eq!(core.ps.get_bit(Flag::Carry), 1);
         assert_eq!(core.ps.get_bit(Flag::Overflow), 0);
     }
