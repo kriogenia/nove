@@ -171,7 +171,21 @@ lazy_static! {
         OpCode::new(STA, 0x85, 2, 3, ZPG),
         OpCode::new(STA, 0x95, 2, 4, ZPX),
 
+        OpCode::new(STX, 0x8e, 3, 4, ABS),
+        OpCode::new(STX, 0x86, 2, 3, ZPG),
+        OpCode::new(STX, 0x96, 2, 4, ZPY),
+
+        OpCode::new(STY, 0x8c, 3, 4, ABS),
+        OpCode::new(STY, 0x84, 2, 3, ZPG),
+        OpCode::new(STY, 0x94, 2, 4, ZPX),
+
         OpCode::new(TAX, 0xaa, 1, 2, IMP),
+
+        OpCode::new(TAY, 0xa8, 1, 2, IMP),
+
+        OpCode::new(TXA, 0x8a, 1, 2, IMP),
+
+        OpCode::new(TYA, 0x98, 1, 2, IMP),
     ];
 
 

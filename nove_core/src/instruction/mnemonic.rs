@@ -202,6 +202,22 @@ pub enum Mnemonic {
     ///
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#STA
     STA,
+    /// Store X register
+    ///
+    /// M = X
+    ///
+    /// Stores the contents of the X register into memory.
+    ///
+    /// https://www.nesdev.org/obelisk-6502-guide/reference.html#STX
+    STX,
+    /// Store Y register
+    ///
+    /// M = Y
+    ///
+    /// Stores the contents of the Y register into memory.
+    ///
+    /// https://www.nesdev.org/obelisk-6502-guide/reference.html#STY
+    STY,
     /// Transfer Accumulator to X
     ///
     /// X,Z,N = A
@@ -210,4 +226,28 @@ pub enum Mnemonic {
     ///
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#TAX
     TAX,
+    /// Transfer Accumulator to Y
+    ///
+    /// Y,Z,N = A
+    ///
+    /// Copies the current contents of the accumulator into the Y register.
+    ///
+    /// https://www.nesdev.org/obelisk-6502-guide/reference.html#TAY
+    TAY,
+    /// Transfer X to Accumulator
+    ///
+    /// A,Z,N = X
+    ///
+    /// Copies the current contents of the X register into the accumulator.
+    ///
+    /// https://www.nesdev.org/obelisk-6502-guide/reference.html#TXA
+    TXA,
+    /// Transfer Y to Accumulator
+    ///
+    /// A,Z,N = Y
+    ///
+    /// Copies the current contents of the Y register into the accumulator.
+    ///
+    /// https://www.nesdev.org/obelisk-6502-guide/reference.html#TXY
+    TYA,
 }

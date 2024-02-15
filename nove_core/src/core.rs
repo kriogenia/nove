@@ -149,7 +149,12 @@ impl NoveCore {
                     op_and_assign!(self, a.assign, diff);
                 },
                 STA => self.memory.write(addr, self.a.get()),
+                STX => self.memory.write(addr, self.x.get()),
+                STY => self.memory.write(addr, self.y.get()),
                 TAX => op_and_assign!(self, x.transfer, &self.a),
+                TAY => op_and_assign!(self, y.transfer, &self.a),
+                TXA => op_and_assign!(self, a.transfer, &self.x),
+                TYA => op_and_assign!(self, a.transfer, &self.y),
             }
 
             self.update_pc(opcode);
@@ -609,16 +614,33 @@ mod test {
 
     #[test]
     fn sta() {
-        let mut core = NoveCore::new();
-        core.memory.write(0x0050, 0x0005);
+        let mut core = preloaded_core();
 
         test!("abs", &mut core, rom!(A, 10, X, 0x00, Y, 0x00; 0x8d, 0x05, 0x00), 0x0005:10; pc: +3);
-        test!("abx", &mut core, rom!(A, 10, X, 0x02, Y, 0x00; 0x9d, 0x03, 0x00), 0x0005:10; pc: +3);
-        test!("aby", &mut core, rom!(A, 10, X, 0x00, Y, 0x01; 0x99, 0x04, 0x00), 0x0005:10; pc: +3);
-        test!("idx", &mut core, rom!(A, 10, X, 0x20, Y, 0x00; 0x81, 0x30), 0x0005:10; pc: +2);
-        test!("idy", &mut core, rom!(A, 10, X, 0x00, Y, 0x10; 0x91, 0x40), 0x0005:10; pc: +2);
-        test!("zpg", &mut core, rom!(A, 10, X, 0x00, Y, 0x00; 0x85, 0x05), 0x0005:10; pc: +2);
-        test!("zpx", &mut core, rom!(A, 10, X, 0x02, Y, 0x00; 0x95, 0x03), 0x0005:10; pc: +2);
+        test!("abx", &mut core, rom!(A, 11, X, 0x02, Y, 0x00; 0x9d, 0x03, 0x00), 0x0005:11; pc: +3);
+        test!("aby", &mut core, rom!(A, 12, X, 0x00, Y, 0x01; 0x99, 0x04, 0x00), 0x0005:12; pc: +3);
+        test!("idx", &mut core, rom!(A, 13, X, 0x20, Y, 0x00; 0x81, 0x30), 0x0005:13; pc: +2);
+        test!("idy", &mut core, rom!(A, 14, X, 0x00, Y, 0x10; 0x91, 0x40), 0x0005:14; pc: +2);
+        test!("zpg", &mut core, rom!(A, 15, X, 0x00, Y, 0x00; 0x85, 0x05), 0x0005:15; pc: +2);
+        test!("zpx", &mut core, rom!(A, 16, X, 0x02, Y, 0x00; 0x95, 0x03), 0x0005:16; pc: +2);
+    }
+
+    #[test]
+    fn stx() {
+        let mut core = NoveCore::new();
+
+        test!("abs", &mut core, rom!(A, 0, X, 10, Y, 0; 0x8e, 0x05, 0x00), 0x0005:10; pc: +3);
+        test!("zpg", &mut core, rom!(A, 0, X, 11, Y, 0; 0x86, 0x05), 0x0005:11; pc: +2);
+        test!("zpy", &mut core, rom!(A, 0, X, 12, Y, 2; 0x96, 0x03), 0x0005:12; pc: +2);
+    }
+
+    #[test]
+    fn sty() {
+        let mut core = NoveCore::new();
+
+        test!("abs", &mut core, rom!(A, 0, X, 0, Y, 10; 0x8c, 0x05, 0x00), 0x0005:10; pc: +3);
+        test!("zpg", &mut core, rom!(A, 0, X, 0, Y, 11; 0x84, 0x05), 0x0005:11; pc: +2);
+        test!("zpx", &mut core, rom!(A, 0, X, 2, Y, 12; 0x94, 0x03), 0x0005:12; pc: +2);
     }
 
     #[test]
@@ -628,6 +650,33 @@ mod test {
         test!("tax", &mut core, rom!(A, 0x10, X, 5, Y, 0; 0xaa), x:0x10; pc: +1, ps: 0);
         test!("zer", &mut core, rom!(A, 0x00, X, 5, Y, 0; 0xaa), x:0x00; pc: +1, ps: Z);
         test!("neg", &mut core, rom!(A, 0xff, X, 5, Y, 0; 0xaa), x:0xff; pc: +1, ps: N);
+    }
+
+    #[test]
+    fn tay() {
+        let mut core = NoveCore::new();
+
+        test!("tax", &mut core, rom!(A, 0x10, X, 0, Y, 5; 0xa8), y:0x10; pc: +1, ps: 0);
+        test!("zer", &mut core, rom!(A, 0x00, X, 0, Y, 5; 0xa8), y:0x00; pc: +1, ps: Z);
+        test!("neg", &mut core, rom!(A, 0xff, X, 0, Y, 5; 0xa8), y:0xff; pc: +1, ps: N);
+    }
+
+    #[test]
+    fn txa() {
+        let mut core = NoveCore::new();
+
+        test!("tax", &mut core, rom!(A, 0, X, 0x05, Y, 0; 0x8a), a:0x05; pc: +1, ps: 0);
+        test!("zer", &mut core, rom!(A, 0, X, 0x00, Y, 0; 0x8a), a:0x00; pc: +1, ps: Z);
+        test!("neg", &mut core, rom!(A, 0, X, 0xff, Y, 0; 0x8a), a:0xff; pc: +1, ps: N);
+    }
+
+    #[test]
+    fn tya() {
+        let mut core = NoveCore::new();
+
+        test!("tax", &mut core, rom!(A, 0, X, 0, Y, 0x05; 0x98), a:0x05; pc: +1, ps: 0);
+        test!("zer", &mut core, rom!(A, 0, X, 0, Y, 0x00; 0x98), a:0x00; pc: +1, ps: Z);
+        test!("neg", &mut core, rom!(A, 0, X, 0, Y, 0xff; 0x98), a:0xff; pc: +1, ps: N);
     }
 
     #[test]

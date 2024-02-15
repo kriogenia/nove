@@ -21,7 +21,5 @@ details what the current state:
 | ~~PHP~~ | ~~PLA~~ | ~~PLP~~ | ~~ROL~~ |
 | ~~ROR~~ | RTI     | RTS     | ~~SBC~~ |
 | ~~SEC~~ | SED     | ~~SEI~~ | ~~STA~~ |
-| STX     | STY     | ~~TAX~~ | TAY     |
-| TSX     | TXA     | TXS     | TYA     |
-
-**Current state**: 27/56
+| ~~STX~~ | ~~STY~~ | ~~TAX~~ | ~~TAY~~ |
+| TSX     | ~~TXA~~ | TXS     | ~~TYA~~ |
