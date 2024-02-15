@@ -143,6 +143,7 @@ impl NoveCore {
                 ROR if opcode.addressing_mode == ACC => rotate!(self, Right, acc),
                 ROR => rotate!(self, Right, mem:addr),
                 SEC => self.ps.set_bit(Flag::Carry, true),
+                SEI => self.ps.set_bit(Flag::Interrupt, true),
                 SBC => {
                     let diff = self.sbc(self.memory.read(addr));
                     op_and_assign!(self, a.assign, diff);
@@ -274,6 +275,7 @@ mod test {
     const Y: u8 = 0xA0;
 
     const C: u8 = Flag::Carry as u8;
+    const I: u8 = Flag::Interrupt as u8;
     const N: u8 = Flag::Negative as u8;
     const Z: u8 = Flag::Zero as u8;
     const V: u8 = Flag::Overflow as u8;
@@ -597,6 +599,12 @@ mod test {
     fn sec() {
         let mut core = NoveCore::new();
         test!("imp", &mut core, rom!(A, 1, X, 1, Y, 1; 0x38),; pc: +1, ps: C);
+    }
+
+    #[test]
+    fn sei() {
+        let mut core = NoveCore::new();
+        test!("imp", &mut core, rom!(A, 1, X, 1, Y, 1; 0x78),; pc: +1, ps: I);
     }
 
     #[test]

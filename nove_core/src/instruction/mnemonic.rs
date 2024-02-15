@@ -186,6 +186,14 @@ pub enum Mnemonic {
     ///
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#SEC
     SEC,
+    /// Set Interrupt Disable
+    ///
+    /// I = 1
+    ///
+    /// Set the interrupt disable flag to one.
+    ///
+    /// https://www.nesdev.org/obelisk-6502-guide/reference.html#SEI
+    SEI,
     /// Store Accumulator
     ///
     /// M = A
