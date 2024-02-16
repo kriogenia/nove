@@ -55,6 +55,10 @@ impl ProcessorStatus {
     pub fn is_raised(&self, flag: Flag) -> bool {
         (self.0 & flag as u8) != 0
     }
+
+    pub fn is_lowered(&self, flag: Flag) -> bool {
+        !self.is_raised(flag)
+    }
 }
 
 impl Debug for ProcessorStatus {

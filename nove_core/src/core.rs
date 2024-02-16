@@ -114,6 +114,7 @@ impl NoveCore {
                     displace!(self, Displacement::Shift(Direction::Left), acc)
                 }
                 ASL => displace!(self, Displacement::Shift(Direction::Left), mem:addr),
+                BCC => self.branch_if(self.ps.is_lowered(Flag::Carry), addr),
                 CLC => self.ps.set_bit(Flag::Carry, false),
                 CLV => self.ps.set_bit(Flag::Overflow, false),
                 CMP => compare!(self, a, addr),
@@ -250,6 +251,13 @@ impl NoveCore {
         self.adc(m.wrapping_neg().wrapping_sub(1))
     }
 
+    #[inline]
+    fn branch_if(&mut self, condition: bool, addr: u16) {
+        if condition {
+            self.pc = addr
+        }
+    }
+
     #[cfg(test)]
     fn load_and_run(&mut self, rom: Rom) {
         self.load(rom);
@@ -292,6 +300,8 @@ impl Debug for NoveCore {
 mod test {
     use super::*;
 
+    const START_ADDR : u16= memory::PRG_ROM_ADDR as u16;
+
     const A: u8 = 0xA9;
     const X: u8 = 0xA2;
     const Y: u8 = 0xA0;
@@ -320,7 +330,7 @@ mod test {
             assert_eq!($core.pc, memory::PRG_ROM_ADDR as u16 + $pc + 7);
             $(assert_eq!($core.ps.0, $ps);)*
         };
-        ($id:expr, $core:expr, $rom:expr; pc: $pc:literal $(, ps: $ps:expr)*) => {
+        ($id:expr, $core:expr, $rom:expr; pc: $pc:expr $(, ps: $ps:expr)*) => {
             println!($id);
             $core.load_and_run($rom);
             assert_eq!($core.pc, $pc);
@@ -383,6 +393,11 @@ mod test {
         test!("abx", &mut core, rom!(A, 0, X, 2, Y, 0; 0x1e, 0x03, 0x00), 0x0005:0b0010_1000; pc: +3);
         test!("zpg", &mut core, rom!(A, 0, X, 0, Y, 0; 0x06, 0x05), 0x0005:0b0101_0000; pc: +2);
         test!("zpx", &mut core, rom!(A, 0, X, 2, Y, 0; 0x16, 0x03), 0x0005:0b1010_0000; pc: +2);
+    }
+
+    #[test]
+    fn bcc() {
+        test_branch(rom!(0x90, 0x03), 0x03);
     }
 
     #[test]
@@ -794,6 +809,11 @@ mod test {
         core.memory.write(0x03ff, 0x34);
         core.memory.write(0x0400, 0x56);
         assert_eq!(core.get_addr(&AddressingMode::IND), 0x1234);
+    }
+
+    fn test_branch(rom: Rom, jmp: u16) {
+        let mut core = NoveCore::default();
+        test!("rel", &mut core, rom; pc: START_ADDR + 1 + jmp + 1 + 1);
     }
 
     fn preloaded_core() -> NoveCore {

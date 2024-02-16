@@ -8,7 +8,7 @@ The core will be developed with Rust and the front-end will be compiled to WebAs
 The vast majority of the work on this project is the implementation of all the NMOS 6502 Opcodes, the following table
 details what the current state:
 
-| ~~ADC~~ | ~~AND~~ | ~~ASL~~ | BCC     |
+| ~~ADC~~ | ~~AND~~ | ~~ASL~~ | ~~BCC~~ |
 |---------|---------|---------|---------|
 | BCS     | BEQ     | BIT     | BMI     |
 | BNE     | BPL     | ~~BRK~~ | BVC     |

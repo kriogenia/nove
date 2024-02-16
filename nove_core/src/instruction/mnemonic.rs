@@ -28,6 +28,13 @@ pub enum Mnemonic {
     ///
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#ASL
     ASL,
+    /// Branch if Carry Clear
+    ///
+    /// If the carry flag is clear then add the relative displacement to the program counter
+    /// to cause a branch to a new location.
+    ///
+    /// https://www.nesdev.org/obelisk-6502-guide/reference.html#BCC
+    BCC,
     /// Force Interrupt
     ///
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#BRK
