@@ -54,6 +54,12 @@ lazy_static! {
         OpCode::new(AND, 0x25, 2, 3, ZPG),
         OpCode::new(AND, 0x35, 2, 4, ZPX),
 
+        OpCode::new(ASL, 0x0a, 1, 2, ACC),
+        OpCode::new(ASL, 0x0e, 3, 6, ABS),
+        OpCode::new(ASL, 0x1e, 3, 7, ABX),
+        OpCode::new(ASL, 0x06, 2, 5, ZPG),
+        OpCode::new(ASL, 0x16, 2, 6, ZPX),
+
         OpCode::new(BRK, 0x00, 1, 7, IMP),
 
         OpCode::new(CLC, 0x18, 1, 2, IMP),

@@ -1,10 +1,11 @@
 mod memory;
+mod ops;
 mod processor_status;
 mod register;
 mod stack_pointer;
-mod ops;
 
 use crate::core::memory::Memory;
+use crate::core::ops::{Direction, Displacement};
 use crate::core::processor_status::{Flag, ProcessorStatus, OVERFLOW_MASK};
 use crate::core::register::Register;
 use crate::core::stack_pointer::StackPointer;
@@ -15,7 +16,6 @@ use crate::instruction::{mnemonic::Mnemonic, OpCode, OPCODES_MAP};
 use crate::Rom;
 use std::fmt::{Debug, Formatter};
 use std::ops::{AddAssign, BitAndAssign, BitOrAssign, BitXorAssign, SubAssign};
-use crate::core::ops::{Direction, Displacement};
 
 #[derive(Default)]
 pub struct NoveCore {
@@ -73,8 +73,7 @@ macro_rules! displace {
         $core.ps.set_bit(Flag::Carry, carry);
         $core.memory.write($addr, val);
         $core.update_zn(val);
-
-    }}
+    }};
 }
 
 impl NoveCore {
@@ -111,9 +110,10 @@ impl NoveCore {
                     op_and_assign!(self, a.assign, sum);
                 }
                 AND => op_and_assign!(self, a.bitand_assign, self.memory.read(addr)),
-                ASL => {
-                    // todo
+                ASL if opcode.addressing_mode == ACC => {
+                    displace!(self, Displacement::Shift(Direction::Left), acc)
                 }
+                ASL => displace!(self, Displacement::Shift(Direction::Left), mem:addr),
                 CLC => self.ps.set_bit(Flag::Carry, false),
                 CLV => self.ps.set_bit(Flag::Overflow, false),
                 CMP => compare!(self, a, addr),
@@ -142,16 +142,28 @@ impl NoveCore {
                     let val = self.stack_pull();
                     self.ps.set_from_pull(val)
                 }
-                ROL if opcode.addressing_mode == ACC => displace!(self, Displacement::Rotation(Direction::Left, self.ps.is_raised(Flag::Carry)), acc),
-                ROL => displace!(self, Displacement::Rotation(Direction::Left, self.ps.is_raised(Flag::Carry)), mem:addr),
-                ROR if opcode.addressing_mode == ACC => displace!(self, Displacement::Rotation(Direction::Right, self.ps.is_raised(Flag::Carry)), acc),
-                ROR => displace!(self, Displacement::Rotation(Direction::Right, self.ps.is_raised(Flag::Carry)), mem:addr),
+                ROL if opcode.addressing_mode == ACC => displace!(
+                    self,
+                    Displacement::Rotation(Direction::Left, self.ps.is_raised(Flag::Carry)),
+                    acc
+                ),
+                ROL => {
+                    displace!(self, Displacement::Rotation(Direction::Left, self.ps.is_raised(Flag::Carry)), mem:addr)
+                }
+                ROR if opcode.addressing_mode == ACC => displace!(
+                    self,
+                    Displacement::Rotation(Direction::Right, self.ps.is_raised(Flag::Carry)),
+                    acc
+                ),
+                ROR => {
+                    displace!(self, Displacement::Rotation(Direction::Right, self.ps.is_raised(Flag::Carry)), mem:addr)
+                }
                 SEC => self.ps.set_bit(Flag::Carry, true),
                 SEI => self.ps.set_bit(Flag::Interrupt, true),
                 SBC => {
                     let diff = self.sbc(self.memory.read(addr));
                     op_and_assign!(self, a.assign, diff);
-                },
+                }
                 STA => self.memory.write(addr, self.a.get()),
                 STX => self.memory.write(addr, self.x.get()),
                 STY => self.memory.write(addr, self.y.get()),
@@ -356,6 +368,20 @@ mod test {
         test!("idy", &mut core, rom!(A, 0b00000110, X, 0x00, Y, 0x10; 0x31, 0x40), a:0b0010; pc: +2);
         test!("zpg", &mut core, rom!(A, 0b00000110, X, 0x00, Y, 0x00; 0x25, 0x05), a:0b0010; pc: +2);
         test!("zpx", &mut core, rom!(A, 0b00000110, X, 0x02, Y, 0x00; 0x35, 0x03), a:0b0010; pc: +2);
+    }
+
+    #[test]
+    fn asl() {
+        let mut core = preloaded_core();
+
+        test!("acc", &mut core, rom!(A, 0b0001_0101, X, 0, Y, 0; 0x0a), a:0b0010_1010; pc: +1, ps: 0);
+        test!("zer", &mut core, rom!(A, 0b0000_0000, X, 0, Y, 0; 0x0a), a:0b0000_0000; pc: +1, ps: Z);
+        test!("neg", &mut core, rom!(A, 0b0101_1001, X, 0, Y, 0; 0x0a), a:0b1011_0010; pc: +1, ps: N);
+        test!("car", &mut core, rom!(A, 0b1001_0101, X, 0, Y, 0, 0x0a), a:0b0010_1010; pc: +1, ps: C);
+        test!("abs", &mut core, rom!(A, 0, X, 0, Y, 0; 0x0e, 0x05, 0x00), 0x0005:0b0001_0100; pc: +3);
+        test!("abx", &mut core, rom!(A, 0, X, 2, Y, 0; 0x1e, 0x03, 0x00), 0x0005:0b0010_1000; pc: +3);
+        test!("zpg", &mut core, rom!(A, 0, X, 0, Y, 0; 0x06, 0x05), 0x0005:0b0101_0000; pc: +2);
+        test!("zpx", &mut core, rom!(A, 0, X, 2, Y, 0; 0x16, 0x03), 0x0005:0b1010_0000; pc: +2);
     }
 
     #[test]

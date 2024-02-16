@@ -17,17 +17,35 @@ pub enum Mnemonic {
     ///
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#AND
     AND,
+    /// ASL - Arithmetic Shift Left
+    ///
+    /// A,Z,C,N = M*2 or M,Z,C,N = M*2
+    ///
+    /// This operation shifts all the bits one bit left.
+    /// Bit 0 is set to 0 and bit 7 is placed in the carry flag.
+    /// The effect of this operation is to multiply the memory contents by 2 (ignoring 2's complement considerations),
+    /// setting the carry if the result will not fit in 8 bits.
+    ///
+    /// https://www.nesdev.org/obelisk-6502-guide/reference.html#ASL
+    ASL,
     /// Force Interrupt
+    ///
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#BRK
     BRK,
     /// Clear Carry flag
+    ///
     /// C = 0
+    ///
     /// Set the carry flag to zero.
+    ///
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#CCF
     CLC,
     /// Clear Overflow flag
+    ///
     /// V = 0
+    ///
     /// Set the overflow flag to zero.
+    ///
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#CLV
     CLV,
     /// Compare
