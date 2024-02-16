@@ -183,6 +183,7 @@ impl NoveCore {
         use AddressingMode::*;
         match mode {
             IMM => self.pc,
+            REL => self.pc.wrapping_add(self.next_byte() as u16),
             ZPG => self.next_byte() as u16,
             ZPX => self.next_byte().wrapping_add(self.x.get()) as u16,
             ZPY => self.next_byte().wrapping_add(self.y.get()) as u16,
@@ -767,20 +768,21 @@ mod test {
     fn addressing_mode() {
         let mut core = NoveCore::new();
         core.pc = 0x0105;
-        core.x.assign(0x05);
+        core.x.assign(0x04);
         core.y.assign(0x10);
-        core.memory.write_u16(0x0105, 0x0a00);
-        core.memory.write_u16(0x0a00, 0x0b00);
+        core.memory.write_u16(0x0105, 0x0a01);
+        core.memory.write_u16(0x0a01, 0x0b00);
         core.memory.write_u16(0x0005, 0x0c00);
-        core.memory.write_u16(0x0010, 0x0d00);
+        core.memory.write_u16(0x0011, 0x0d00);
 
         assert_eq!(core.get_addr(&AddressingMode::IMM), 0x0105);
-        assert_eq!(core.get_addr(&AddressingMode::ZPG), 0x0000);
+        assert_eq!(core.get_addr(&AddressingMode::REL), 0x0106);
+        assert_eq!(core.get_addr(&AddressingMode::ZPG), 0x0001);
         assert_eq!(core.get_addr(&AddressingMode::ZPX), 0x0005);
-        assert_eq!(core.get_addr(&AddressingMode::ZPY), 0x0010);
-        assert_eq!(core.get_addr(&AddressingMode::ABS), 0x0a00);
+        assert_eq!(core.get_addr(&AddressingMode::ZPY), 0x0011);
+        assert_eq!(core.get_addr(&AddressingMode::ABS), 0x0a01);
         assert_eq!(core.get_addr(&AddressingMode::ABX), 0x0a05);
-        assert_eq!(core.get_addr(&AddressingMode::ABY), 0x0a10);
+        assert_eq!(core.get_addr(&AddressingMode::ABY), 0x0a11);
         assert_eq!(core.get_addr(&AddressingMode::IND), 0x0b00);
         assert_eq!(core.get_addr(&AddressingMode::IDX), 0x0c00);
         assert_eq!(core.get_addr(&AddressingMode::IDY), 0x0d00);
