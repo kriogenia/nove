@@ -15,7 +15,7 @@ use crate::instruction::{mnemonic::Mnemonic, OpCode, OPCODES_MAP};
 use crate::Rom;
 use std::fmt::{Debug, Formatter};
 use std::ops::{AddAssign, BitAndAssign, BitOrAssign, BitXorAssign, SubAssign};
-use crate::core::ops::Rotation;
+use crate::core::ops::{Direction, Displacement};
 
 #[derive(Default)]
 pub struct NoveCore {
@@ -59,21 +59,22 @@ macro_rules! compare {
     }};
 }
 
-macro_rules! rotate {
-    ($core:expr, $rot:ident, acc) => {{
+macro_rules! displace {
+    ($core:expr, $displacement:expr, acc) => {{
         let val = $core.a.get();
-        let (val, carry) = Rotation::$rot.rotate(val, $core.ps.is_raised(Flag::Carry));
+        let (val, carry) = $displacement.displace(val);
         $core.ps.set_bit(Flag::Carry, carry);
         $core.a.assign(val);
         $core.update_zn(val);
     }};
-    ($core:expr, $rot:ident, mem:$addr:expr) => {{
+    ($core:expr, $displacement:expr, mem:$addr:expr) => {{
         let val = $core.memory.read($addr);
-        let (val, carry) = Rotation::$rot.rotate(val, $core.ps.is_raised(Flag::Carry));
+        let (val, carry) = $displacement.displace(val);
         $core.ps.set_bit(Flag::Carry, carry);
         $core.memory.write($addr, val);
         $core.update_zn(val);
-    }};
+
+    }}
 }
 
 impl NoveCore {
@@ -110,6 +111,9 @@ impl NoveCore {
                     op_and_assign!(self, a.assign, sum);
                 }
                 AND => op_and_assign!(self, a.bitand_assign, self.memory.read(addr)),
+                ASL => {
+                    // todo
+                }
                 CLC => self.ps.set_bit(Flag::Carry, false),
                 CLV => self.ps.set_bit(Flag::Overflow, false),
                 CMP => compare!(self, a, addr),
@@ -138,10 +142,10 @@ impl NoveCore {
                     let val = self.stack_pull();
                     self.ps.set_from_pull(val)
                 }
-                ROL if opcode.addressing_mode == ACC => rotate!(self, Left, acc),
-                ROL => rotate!(self, Left, mem:addr),
-                ROR if opcode.addressing_mode == ACC => rotate!(self, Right, acc),
-                ROR => rotate!(self, Right, mem:addr),
+                ROL if opcode.addressing_mode == ACC => displace!(self, Displacement::Rotation(Direction::Left, self.ps.is_raised(Flag::Carry)), acc),
+                ROL => displace!(self, Displacement::Rotation(Direction::Left, self.ps.is_raised(Flag::Carry)), mem:addr),
+                ROR if opcode.addressing_mode == ACC => displace!(self, Displacement::Rotation(Direction::Right, self.ps.is_raised(Flag::Carry)), acc),
+                ROR => displace!(self, Displacement::Rotation(Direction::Right, self.ps.is_raised(Flag::Carry)), mem:addr),
                 SEC => self.ps.set_bit(Flag::Carry, true),
                 SEI => self.ps.set_bit(Flag::Interrupt, true),
                 SBC => {
