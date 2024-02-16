@@ -62,7 +62,9 @@ lazy_static! {
 
         OpCode::new(BCC, 0x90, 2, 2, REL), // (+1 if branch succeeds, +2 if to a new page)
 
-        OpCode::new(BCS, 0xB0, 2, 2, REL), // (+1 if branch succeeds, +2 if to a new page)
+        OpCode::new(BCS, 0xb0, 2, 2, REL), // (+1 if branch succeeds, +2 if to a new page)
+
+        OpCode::new(BEQ, 0xf0, 2, 2, REL), // (+1 if branch succeeds, +2 if to a new page)
 
         OpCode::new(BRK, 0x00, 1, 7, IMP),
 

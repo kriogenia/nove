@@ -10,7 +10,7 @@ details what the current state:
 
 | ~~ADC~~ | ~~AND~~ | ~~ASL~~ | ~~BCC~~ |
 |---------|---------|---------|---------|
-| ~~BCS~~ | BEQ     | BIT     | BMI     |
+| ~~BCS~~ | ~~BEQ~~ | BIT     | BMI     |
 | BNE     | BPL     | ~~BRK~~ | BVC     |
 | BVS     | ~~CLC~~ | CLD     | CLI     |
 | ~~CLV~~ | ~~CMP~~ | ~~CPX~~ | ~~CPY~~ |

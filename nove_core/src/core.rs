@@ -116,6 +116,7 @@ impl NoveCore {
                 ASL => displace!(self, Displacement::Shift(Direction::Left), mem:addr),
                 BCC => self.branch_if(self.ps.is_lowered(Flag::Carry), addr),
                 BCS => self.branch_if(self.ps.is_raised(Flag::Carry), addr),
+                BEQ => self.branch_if(self.ps.is_raised(Flag::Zero), addr),
                 CLC => self.ps.set_bit(Flag::Carry, false),
                 CLV => self.ps.set_bit(Flag::Overflow, false),
                 CMP => compare!(self, a, addr),
@@ -406,6 +407,11 @@ mod test {
     #[test]
     fn bcs() {
         test_branch(rom!(SET_C; 0xb0, 0x03), 0x03 + 1);
+    }
+
+    #[test]
+    fn beq() {
+        test_branch(rom!(A, 0; 0xf0, 0x03), 0x03 + 2);
     }
 
     #[test]
