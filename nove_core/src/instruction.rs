@@ -60,7 +60,9 @@ lazy_static! {
         OpCode::new(ASL, 0x06, 2, 5, ZPG),
         OpCode::new(ASL, 0x16, 2, 6, ZPX),
 
-        OpCode::new(BCC, 0x90, 2, 1, REL), // (+1 if branch succeeds, +2 if to a new page)
+        OpCode::new(BCC, 0x90, 2, 2, REL), // (+1 if branch succeeds, +2 if to a new page)
+
+        OpCode::new(BCS, 0xB0, 2, 2, REL), // (+1 if branch succeeds, +2 if to a new page)
 
         OpCode::new(BRK, 0x00, 1, 7, IMP),
 

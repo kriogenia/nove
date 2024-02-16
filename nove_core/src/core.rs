@@ -115,6 +115,7 @@ impl NoveCore {
                 }
                 ASL => displace!(self, Displacement::Shift(Direction::Left), mem:addr),
                 BCC => self.branch_if(self.ps.is_lowered(Flag::Carry), addr),
+                BCS => self.branch_if(self.ps.is_raised(Flag::Carry), addr),
                 CLC => self.ps.set_bit(Flag::Carry, false),
                 CLV => self.ps.set_bit(Flag::Overflow, false),
                 CMP => compare!(self, a, addr),
@@ -300,7 +301,7 @@ impl Debug for NoveCore {
 mod test {
     use super::*;
 
-    const START_ADDR : u16= memory::PRG_ROM_ADDR as u16;
+    const START_ADDR: u16 = memory::PRG_ROM_ADDR as u16;
 
     const A: u8 = 0xA9;
     const X: u8 = 0xA2;
@@ -311,6 +312,8 @@ mod test {
     const N: u8 = Flag::Negative as u8;
     const Z: u8 = Flag::Zero as u8;
     const V: u8 = Flag::Overflow as u8;
+
+    const SET_C: u8 = 0x38;
 
     /// Runs a tests with the given core and rom checking the list of registers or addresses and the pc addition
     macro_rules! test {
@@ -398,6 +401,11 @@ mod test {
     #[test]
     fn bcc() {
         test_branch(rom!(0x90, 0x03), 0x03);
+    }
+
+    #[test]
+    fn bcs() {
+        test_branch(rom!(SET_C; 0xb0, 0x03), 0x03 + 1);
     }
 
     #[test]
@@ -608,7 +616,7 @@ mod test {
         test!("acc", &mut core, rom!(A, 0b0001_0101, X, 0, Y, 0; 0x2a), a:0b0010_1010; pc: +1, ps: 0);
         test!("zer", &mut core, rom!(A, 0b0000_0000, X, 0, Y, 0; 0x2a), a:0b0000_0000; pc: +1, ps: Z);
         test!("neg", &mut core, rom!(A, 0b0101_1001, X, 0, Y, 0; 0x2a), a:0b1011_0010; pc: +1, ps: N);
-        test!("car", &mut core, rom!(A, 0b1001_0101, X, 0, Y, 0, 0x38; 0x2a), a:0b0010_1011; pc: +2, ps: C);
+        test!("car", &mut core, rom!(A, 0b1001_0101, X, 0, Y, 0, SET_C; 0x2a), a:0b0010_1011; pc: +2, ps: C);
         test!("abs", &mut core, rom!(A, 0, X, 0, Y, 0; 0x2e, 0x05, 0x00), 0x0005:0b0001_0100; pc: +3);
         test!("abx", &mut core, rom!(A, 0, X, 2, Y, 0; 0x3e, 0x03, 0x00), 0x0005:0b0010_1000; pc: +3);
         test!("zpg", &mut core, rom!(A, 0, X, 0, Y, 0; 0x26, 0x05), 0x0005:0b0101_0000; pc: +2);
@@ -621,7 +629,7 @@ mod test {
 
         test!("acc", &mut core, rom!(A, 0b0001_0100, X, 0, Y, 0; 0x6a), a:0b0000_1010; pc: +1, ps: 0);
         test!("zer", &mut core, rom!(A, 0b0000_0000, X, 0, Y, 0; 0x6a), a:0b0000_0000; pc: +1, ps: Z);
-        test!("neg", &mut core, rom!(A, 0b0101_1000, X, 0, Y, 0, 0x38; 0x6a), a:0b1010_1100; pc: +2, ps: N);
+        test!("neg", &mut core, rom!(A, 0b0101_1000, X, 0, Y, 0, SET_C; 0x6a), a:0b1010_1100; pc: +2, ps: N);
         test!("car", &mut core, rom!(A, 0b1001_0101, X, 0, Y, 0, 0x6a), a:0b0100_1010; pc: +1, ps: C);
         test!("abs", &mut core, rom!(A, 0, X, 0, Y, 0; 0x6e, 0x05, 0x00), 0x0005:0b0000_0101; pc: +3);
         test!("abx", &mut core, rom!(A, 0, X, 2, Y, 0; 0x7e, 0x03, 0x00), 0x0005:0b0000_0010; pc: +3);

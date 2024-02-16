@@ -35,6 +35,13 @@ pub enum Mnemonic {
     ///
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#BCC
     BCC,
+    /// Branch if Carry Set
+    ///
+    /// If the carry flag is set then add the relative displacement to the program counter
+    /// to cause a branch to a new location.
+    ///
+    /// https://www.nesdev.org/obelisk-6502-guide/reference.html#BCS
+    BCS,
     /// Force Interrupt
     ///
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#BRK
