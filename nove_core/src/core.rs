@@ -121,6 +121,7 @@ impl NoveCore {
                 BMI => self.branch_if(self.ps.is_raised(Flag::Negative), addr),
                 BNE => self.branch_if(self.ps.is_lowered(Flag::Zero), addr),
                 BPL => self.branch_if(self.ps.is_lowered(Flag::Negative), addr),
+                BVC => self.branch_if(self.ps.is_lowered(Flag::Overflow), addr),
                 CLC => self.ps.set_bit(Flag::Carry, false),
                 CLV => self.ps.set_bit(Flag::Overflow, false),
                 CMP => compare!(self, a, addr),
@@ -472,6 +473,11 @@ mod test {
     #[test]
     fn bpl() {
         test_branch(rom!(0x10, 0x03), 0x03);
+    }
+
+    #[test]
+    fn bvc() {
+        test_branch(rom!(0x50, 0x03), 0x03);
     }
 
     #[test]
