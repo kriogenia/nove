@@ -73,6 +73,8 @@ lazy_static! {
 
         OpCode::new(BNE, 0xd0, 2, 2, REL), // (+1 if branch succeeds, +2 if to a new page)
 
+        OpCode::new(BPL, 0x10, 2, 2, REL), // (+1 if branch succeeds, +2 if to a new page)
+
         OpCode::new(BRK, 0x00, 1, 7, IMP),
 
         OpCode::new(CLC, 0x18, 1, 2, IMP),
