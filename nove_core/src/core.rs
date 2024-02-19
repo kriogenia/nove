@@ -118,6 +118,8 @@ impl NoveCore {
                 BCS => self.branch_if(self.ps.is_raised(Flag::Carry), addr),
                 BEQ => self.branch_if(self.ps.is_raised(Flag::Zero), addr),
                 BIT => self.bit_test(self.memory.read(addr)),
+                BMI => self.branch_if(self.ps.is_raised(Flag::Negative), addr),
+                BNE => self.branch_if(self.ps.is_lowered(Flag::Zero), addr),
                 CLC => self.ps.set_bit(Flag::Carry, false),
                 CLV => self.ps.set_bit(Flag::Overflow, false),
                 CMP => compare!(self, a, addr),
@@ -311,7 +313,6 @@ impl NoveCore {
         self.reset();
         self.run().expect("error while running the program")
     }
-
 }
 
 impl Debug for NoveCore {
@@ -455,7 +456,16 @@ mod test {
         test!("ovf", &mut core, rom!(A, 0b1111_1111, X, 0, Y, 0; 0x24, 0x10),; pc: +2, ps:V);
         test!("neg", &mut core, rom!(A, 0b1111_1111, X, 0, Y, 0; 0x24, 0x20),; pc: +2, ps:N);
         test!("zvn", &mut core, rom!(A, 0b0000_1111, X, 0, Y, 0; 0x24, 0x30),; pc: +2, ps:Z+V+N);
+    }
 
+    #[test]
+    fn bmi() {
+        test_branch(rom!(A, 0_u8.wrapping_sub(2); 0x30, 0x03), 0x03 + 2);
+    }
+
+    #[test]
+    fn bne() {
+        test_branch(rom!(0xd0, 0x03), 0x03);
     }
 
     #[test]

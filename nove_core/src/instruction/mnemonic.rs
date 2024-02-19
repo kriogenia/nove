@@ -60,6 +60,20 @@ pub enum Mnemonic {
     ///
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#BIT
     BIT,
+    /// Branch if Minus
+    ///
+    /// If the negative flag is set then add the relative displacement to the program counter
+    /// to cause a branch to a new location.
+    ///
+    /// https://www.nesdev.org/obelisk-6502-guide/reference.html#BMI
+    BMI,
+    /// Branch if Not Equal
+    ///
+    /// If the zero flag is clear then add the relative displacement to the program counter
+    /// to cause a branch to a new location.
+    ///
+    /// https://www.nesdev.org/obelisk-6502-guide/reference.html#BNE
+    BNE,
     /// Force Interrupt
     ///
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#BRK
