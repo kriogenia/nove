@@ -88,6 +88,13 @@ pub enum Mnemonic {
     ///
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#BVC
     BVC,
+    /// Branch if Overflow Set
+    ///
+    /// If the overflow flag is set then add the relative displacement to the program counter
+    /// to cause a branch to a new location.
+    ///
+    /// https://www.nesdev.org/obelisk-6502-guide/reference.html#BVS
+    BVS,
     /// Force Interrupt
     ///
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#BRK
