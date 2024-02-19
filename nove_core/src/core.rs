@@ -117,6 +117,7 @@ impl NoveCore {
                 BCC => self.branch_if(self.ps.is_lowered(Flag::Carry), addr),
                 BCS => self.branch_if(self.ps.is_raised(Flag::Carry), addr),
                 BEQ => self.branch_if(self.ps.is_raised(Flag::Zero), addr),
+                BIT => self.bit_test(self.memory.read(addr)),
                 CLC => self.ps.set_bit(Flag::Carry, false),
                 CLV => self.ps.set_bit(Flag::Overflow, false),
                 CMP => compare!(self, a, addr),
@@ -249,6 +250,12 @@ impl NoveCore {
         result
     }
 
+    fn bit_test(&mut self, value: u8) {
+        self.update_z(&self.a & value);
+        self.update_n(value);
+        self.update_v(value);
+    }
+
     fn sbc(&mut self, m: u8) -> u8 {
         self.adc(m.wrapping_neg().wrapping_sub(1))
     }
@@ -260,20 +267,23 @@ impl NoveCore {
         }
     }
 
-    #[cfg(test)]
-    fn load_and_run(&mut self, rom: Rom) {
-        self.load(rom);
-        self.reset();
-        self.run().expect("error while running the program")
+    #[inline]
+    fn update_zn(&mut self, value: u8) {
+        self.update_z(value);
+        self.update_n(value);
     }
 
     #[inline]
-    fn update_zn(&mut self, value: u8) {
+    fn update_z(&mut self, value: u8) {
         if value == 0 {
             self.ps.raise(Flag::Zero);
         } else {
             self.ps.low(Flag::Zero);
         }
+    }
+
+    #[inline]
+    fn update_n(&mut self, value: u8) {
         if value & 0b1000_0000 != 0 {
             self.ps.raise(Flag::Negative)
         } else {
@@ -281,9 +291,27 @@ impl NoveCore {
         }
     }
 
+    #[inline]
+    fn update_v(&mut self, value: u8) {
+        if value & 0b0100_0000 != 0 {
+            self.ps.raise(Flag::Overflow)
+        } else {
+            self.ps.low(Flag::Overflow);
+        }
+    }
+
+    #[inline]
     fn update_pc(&mut self, opcode: &OpCode) {
         self.pc += opcode.bytes as u16 - 1;
     }
+
+    #[cfg(test)]
+    fn load_and_run(&mut self, rom: Rom) {
+        self.load(rom);
+        self.reset();
+        self.run().expect("error while running the program")
+    }
+
 }
 
 impl Debug for NoveCore {
@@ -412,6 +440,22 @@ mod test {
     #[test]
     fn beq() {
         test_branch(rom!(A, 0; 0xf0, 0x03), 0x03 + 2);
+    }
+
+    #[test]
+    fn bit() {
+        let mut core = preloaded_core();
+        core.memory.write(0x0010, 0b0100_0000);
+        core.memory.write(0x0020, 0b1000_0000);
+        core.memory.write(0x0030, 0b1111_0000);
+
+        test!("abs", &mut core, rom!(A, 0b0000_0011, X, 0, Y, 0; 0x2c, 0x05, 0x00),; pc: +3, ps:0);
+        test!("zpg", &mut core, rom!(A, 0b0000_1100, X, 0, Y, 0; 0x24, 0x05),; pc: +2, ps:0);
+        test!("zer", &mut core, rom!(A, 0b0000_0101, X, 0, Y, 0; 0x24, 0x05),; pc: +2, ps:Z);
+        test!("ovf", &mut core, rom!(A, 0b1111_1111, X, 0, Y, 0; 0x24, 0x10),; pc: +2, ps:V);
+        test!("neg", &mut core, rom!(A, 0b1111_1111, X, 0, Y, 0; 0x24, 0x20),; pc: +2, ps:N);
+        test!("zvn", &mut core, rom!(A, 0b0000_1111, X, 0, Y, 0; 0x24, 0x30),; pc: +2, ps:Z+V+N);
+
     }
 
     #[test]

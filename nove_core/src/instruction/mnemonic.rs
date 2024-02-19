@@ -49,6 +49,17 @@ pub enum Mnemonic {
     ///
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#BEQ
     BEQ,
+    /// Bit Test
+    ///
+    /// A & M, N = M7, V = M6
+    ///
+    /// This instruction is used to test if one or more bits are set in a target memory location.
+    /// The mask pattern in A is ANDed with the value in memory to set or clear the zero flag,
+    /// but the result is not kept.
+    /// Bits 7 and 6 of the value from memory are copied into the N and V flags.
+    ///
+    /// https://www.nesdev.org/obelisk-6502-guide/reference.html#BIT
+    BIT,
     /// Force Interrupt
     ///
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#BRK

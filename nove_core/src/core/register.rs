@@ -1,4 +1,4 @@
-use std::ops::{AddAssign, BitAndAssign, BitOrAssign, BitXorAssign, SubAssign};
+use std::ops::{AddAssign, BitAnd, BitAndAssign, BitOrAssign, BitXorAssign, SubAssign};
 
 #[derive(Debug, Default)]
 pub(super) struct Register(u8);
@@ -58,5 +58,13 @@ impl BitXorAssign<u8> for Register {
 impl PartialEq<u8> for Register {
     fn eq(&self, other: &u8) -> bool {
         self.0 == *other
+    }
+}
+
+impl BitAnd<u8> for &Register {
+    type Output = u8;
+
+    fn bitand(self, rhs: u8) -> Self::Output {
+        self.0 & rhs
     }
 }
