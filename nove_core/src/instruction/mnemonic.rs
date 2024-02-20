@@ -115,6 +115,14 @@ pub enum Mnemonic {
     ///
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#CLD
     CLD,
+    /// Clear Interrupt flag
+    ///
+    /// I = 0
+    ///
+    /// Set the interrupt flag to zero.
+    ///
+    /// https://www.nesdev.org/obelisk-6502-guide/reference.html#CLI
+    CLI,
     /// Clear Overflow flag
     ///
     /// V = 0
@@ -147,6 +155,14 @@ pub enum Mnemonic {
     ///
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#CPY
     CPY,
+    /// Decrement memory
+    ///
+    /// M,Z,N = M-1
+    ///
+    /// Subtracts one to the value held at a specified memory location.
+    ///
+    /// https://www.nesdev.org/obelisk-6502-guide/reference.html#DEC
+    DEC,
     /// Decrement X register
     ///
     /// X,Z,N = X-1
@@ -167,7 +183,7 @@ pub enum Mnemonic {
     ///
     /// M,Z,N = M+1
     ///
-    /// Adds one to the value held at a specified memory location setting the zero and negative flags as appropriate.
+    /// Adds one to the value held at a specified memory location.
     ///
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#INC
     INC,

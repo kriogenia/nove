@@ -85,6 +85,8 @@ lazy_static! {
 
         OpCode::new(CLD, 0xd8, 1, 2, IMP),
 
+        OpCode::new(CLI, 0x58, 1, 2, IMP),
+
         OpCode::new(CLV, 0xb8, 1, 2, IMP),
 
         OpCode::new(CMP, 0xcd, 3, 4, ABS),
@@ -103,6 +105,11 @@ lazy_static! {
         OpCode::new(CPY, 0xcc, 3, 4, ABS),
         OpCode::new(CPY, 0xc0, 2, 2, IMM),
         OpCode::new(CPY, 0xc4, 2, 3, ZPG),
+
+        OpCode::new(DEC, 0xce, 3, 6, ABS),
+        OpCode::new(DEC, 0xde, 3, 7, ABX),
+        OpCode::new(DEC, 0xc6, 2, 5, ZPG),
+        OpCode::new(DEC, 0xd6, 2, 6, ZPX),
 
         OpCode::new(DEX, 0xca, 1, 2, IMP),
 
