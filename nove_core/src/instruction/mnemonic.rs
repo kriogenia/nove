@@ -171,6 +171,14 @@ pub enum Mnemonic {
     ///
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#DEX
     DEX,
+    /// Decrement Y register
+    ///
+    /// Y,Z,N = Y-1
+    ///
+    /// Subtracts one from the Y register.
+    ///
+    /// https://www.nesdev.org/obelisk-6502-guide/reference.html#DEY
+    DEY,
     /// Logical Exclusive OR
     ///
     /// A,Z,N = A^M

@@ -116,7 +116,7 @@ impl NoveCore {
                     op_and_assign!(self, a.assign, sum);
                 }
                 AND => op_and_assign!(self, a.bitand_assign, self.memory.read(addr)),
-                ASL if opcode.addressing_mode == ACC => {
+                ASL if opcode.addressing_mode == AddressingMode::ACC => {
                     displace!(self, Displacement::Shift(Direction::Left), acc)
                 }
                 ASL => displace!(self, Displacement::Shift(Direction::Left), mem:addr),
@@ -138,6 +138,7 @@ impl NoveCore {
                 CPY => compare!(self, y, addr),
                 DEC => update_mem!(self, addr, wrapping_sub),
                 DEX => op_and_assign!(self, x.sub_assign, 1),
+                DEY => op_and_assign!(self, y.sub_assign, 1),
                 EOR => op_and_assign!(self, a.bitxor_assign, self.memory.read(addr)),
                 INC => update_mem!(self, addr, wrapping_add),
                 INX => op_and_assign!(self, x.add_assign, 1),
@@ -582,6 +583,15 @@ mod test {
         test!("dex", &mut core, rom!(A, 0, X, 5, Y, 0; 0xca), x:0x04; pc: +1, ps: 0);
         test!("zer", &mut core, rom!(A, 0, X, 1, Y, 0; 0xca), x:0x00; pc: +1, ps: Z);
         test!("neg", &mut core, rom!(A, 0, X, 0, Y, 0; 0xca), x:0xff; pc: +1, ps: N);
+    }
+
+    #[test]
+    fn dey() {
+        let mut core = NoveCore::default();
+
+        test!("dey", &mut core, rom!(A, 0, X, 0, Y, 5; 0x88), y:0x04; pc: +1, ps: 0);
+        test!("zer", &mut core, rom!(A, 0, X, 0, Y, 1; 0x88), y:0x00; pc: +1, ps: Z);
+        test!("neg", &mut core, rom!(A, 0, X, 0, Y, 0; 0x88), y:0xff; pc: +1, ps: N);
     }
 
     #[test]
