@@ -131,6 +131,8 @@ lazy_static! {
 
         OpCode::new(INX, 0xe8, 1, 2, IMP),
 
+        OpCode::new(INY, 0xc8, 1, 2, IMP),
+
         OpCode::new(JMP, 0x4c, 1, 3, ABS), // setting 1 byte to evade JMP to advance the pc
         OpCode::new(JMP, 0x6c, 1, 5, IND),
 

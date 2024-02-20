@@ -142,6 +142,7 @@ impl NoveCore {
                 EOR => op_and_assign!(self, a.bitxor_assign, self.memory.read(addr)),
                 INC => update_mem!(self, addr, wrapping_add),
                 INX => op_and_assign!(self, x.add_assign, 1),
+                INY => op_and_assign!(self, y.add_assign, 1),
                 JMP => self.pc = addr,
                 NOP => {}
                 LDA => op_and_assign!(self, a.assign, self.memory.read(addr)),
@@ -628,9 +629,18 @@ mod test {
     fn inx() {
         let mut core = NoveCore::default();
 
-        test!("inx", &mut core, rom!(A, 0, X, 0x05, Y, 0; 0xe8), x:0x06; pc: +1, ps: 0);
+        test!("imp", &mut core, rom!(A, 0, X, 0x05, Y, 0; 0xe8), x:0x06; pc: +1, ps: 0);
         test!("zer", &mut core, rom!(A, 0, X, 0xff, Y, 0; 0xe8), x:0x00; pc: +1, ps: Z);
         test!("neg", &mut core, rom!(A, 0, X, 0xf0, Y, 0; 0xe8), x:0xF1; pc: +1, ps: N);
+    }
+
+    #[test]
+    fn iny() {
+        let mut core = NoveCore::default();
+
+        test!("imp", &mut core, rom!(A, 0, X, 0, Y, 0x05; 0xc8), y:0x06; pc: +1, ps: 0);
+        test!("zer", &mut core, rom!(A, 0, X, 0, Y, 0xff; 0xc8), y:0x00; pc: +1, ps: Z);
+        test!("neg", &mut core, rom!(A, 0, X, 0, Y, 0xf0; 0xc8), y:0xF1; pc: +1, ps: N);
     }
 
     #[test]

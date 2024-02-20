@@ -203,6 +203,14 @@ pub enum Mnemonic {
     ///
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#INX
     INX,
+    /// Increment Y register
+    ///
+    /// Y,Z,N = Y+1
+    ///
+    /// Adds one to the Y register.
+    ///
+    /// https://www.nesdev.org/obelisk-6502-guide/reference.html#INY
+    INY,
     /// Jump
     ///
     /// Sets the program counter to the address specified by the operand.
