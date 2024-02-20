@@ -217,6 +217,14 @@ pub enum Mnemonic {
     ///
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#JMP
     JMP,
+    /// Jump to Subroutine
+    ///
+    /// The JSR instruction pushes the address (minus one) of the return point on to the stack
+    /// and then sets the program counter to the target memory address.
+    ///
+    /// https://www.nesdev.org/obelisk-6502-guide/reference.html#JSR
+    ///
+    JSR,
     /// Load Accumulator
     ///
     /// A,Z,N = M

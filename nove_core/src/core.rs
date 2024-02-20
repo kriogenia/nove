@@ -144,6 +144,10 @@ impl NoveCore {
                 INX => op_and_assign!(self, x.add_assign, 1),
                 INY => op_and_assign!(self, y.add_assign, 1),
                 JMP => self.pc = addr,
+                JSR => {
+                    self.stack_push_u16(self.pc.wrapping_add(1));
+                    self.pc = self.memory.read_u16(addr);
+                }
                 NOP => {}
                 LDA => op_and_assign!(self, a.assign, self.memory.read(addr)),
                 LDX => op_and_assign!(self, x.assign, self.memory.read(addr)),
@@ -243,6 +247,11 @@ impl NoveCore {
         self.sp.next()
     }
 
+    fn stack_push_u16(&mut self, content: u16) {
+        self.memory.write_u16(self.sp.get(), content);
+        self.sp.next()
+    }
+
     fn stack_pull(&mut self) -> u8 {
         self.sp.prev();
         self.memory.read(self.sp.get())
@@ -324,6 +333,12 @@ impl NoveCore {
         self.reset();
         self.run().expect("error while running the program")
     }
+
+    #[cfg(test)]
+    fn stack_peek_u16(&self) -> u16 {
+        self.memory.read_u16(self.sp.get() + 1)
+    }
+
 }
 
 impl Debug for NoveCore {
@@ -650,6 +665,14 @@ mod test {
 
         test!("abs", &mut core, rom!(0x4c, 0x05, 0x00); pc: 0x0006);
         test!("ind", &mut core, rom!(0x6c, 0x50, 0x00); pc: 0x0101);
+    }
+
+    #[test]
+    fn jsr() {
+        let mut core = preloaded_core();
+
+        test!("abs", &mut core, rom!(0x20, 0x05, 0x00); pc: 0x000a + 1);
+        assert_eq!(core.stack_peek_u16(), START_ADDR + 2);
     }
 
     #[test]

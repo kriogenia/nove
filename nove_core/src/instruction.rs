@@ -136,6 +136,8 @@ lazy_static! {
         OpCode::new(JMP, 0x4c, 1, 3, ABS), // setting 1 byte to evade JMP to advance the pc
         OpCode::new(JMP, 0x6c, 1, 5, IND),
 
+        OpCode::new(JSR, 0x20, 1, 6, ABS), // setting 1 byte to evade JMP to advance the pc
+
         OpCode::new(LDA, 0xad, 3, 4, ABS),
         OpCode::new(LDA, 0xbd, 3, 4, ABX), // +1 cycle if page crossed
         OpCode::new(LDA, 0xb9, 3, 4, ABY), // +1 cycle if page crossed
