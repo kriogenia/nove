@@ -107,6 +107,14 @@ pub enum Mnemonic {
     ///
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#CCF
     CLC,
+    /// Clear Decimal flag
+    ///
+    /// D = 0
+    ///
+    /// Set the decimal flag to zero.
+    ///
+    /// https://www.nesdev.org/obelisk-6502-guide/reference.html#CLD
+    CLD,
     /// Clear Overflow flag
     ///
     /// V = 0

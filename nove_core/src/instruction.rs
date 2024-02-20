@@ -83,6 +83,8 @@ lazy_static! {
 
         OpCode::new(CLC, 0x18, 1, 2, IMP),
 
+        OpCode::new(CLD, 0xd8, 1, 2, IMP),
+
         OpCode::new(CLV, 0xb8, 1, 2, IMP),
 
         OpCode::new(CMP, 0xcd, 3, 4, ABS),

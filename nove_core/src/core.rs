@@ -124,6 +124,7 @@ impl NoveCore {
                 BVC => self.branch_if(self.ps.is_lowered(Flag::Overflow), addr),
                 BVS => self.branch_if(self.ps.is_raised(Flag::Overflow), addr),
                 CLC => self.ps.set_bit(Flag::Carry, false),
+                CLD => self.ps.set_bit(Flag::Decimal, false),
                 CLV => self.ps.set_bit(Flag::Overflow, false),
                 CMP => compare!(self, a, addr),
                 CPX => compare!(self, x, addr),
@@ -494,10 +495,17 @@ mod test {
     }
 
     #[test]
+    fn cld() {
+        let mut core = NoveCore::default();
+        core.ps.set_bit(Flag::Decimal, true);
+        test!("clc", &mut core, rom!(A, 1, X, 1, Y, 1, 0xd8), a:1; pc: +1, ps:0);
+    }
+
+    #[test]
     fn clv() {
         let mut core = NoveCore::default();
         core.ps.set_bit(Flag::Overflow, true);
-        test!("clc", &mut core, rom!(A, 1, X, 1, Y, 1, 0xB8), a:1; pc: +1, ps:0);
+        test!("clc", &mut core, rom!(A, 1, X, 1, Y, 1, 0xb8), a:1; pc: +1, ps:0);
     }
 
     #[test]
