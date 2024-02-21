@@ -159,6 +159,12 @@ lazy_static! {
         OpCode::new(LDY, 0xa4, 2, 3, ZPG),
         OpCode::new(LDY, 0xb4, 2, 4, ZPX),
 
+        OpCode::new(LSR, 0x4a, 1, 2, ACC),
+        OpCode::new(LSR, 0x4e, 3, 6, ABS),
+        OpCode::new(LSR, 0x5e, 3, 7, ABX),
+        OpCode::new(LSR, 0x46, 2, 5, ZPG),
+        OpCode::new(LSR, 0x56, 2, 6, ZPX),
+
         OpCode::new(NOP, 0xea, 1, 2, IMP),
 
         OpCode::new(ORA, 0x0d, 3, 4, ABS),

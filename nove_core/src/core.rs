@@ -15,6 +15,7 @@ use crate::instruction::{mnemonic::Mnemonic, OpCode, OPCODES_MAP};
 use crate::Rom;
 use std::fmt::{Debug, Formatter};
 use std::ops::{AddAssign, BitAndAssign, BitOrAssign, BitXorAssign, SubAssign};
+use crate::instruction::mnemonic::Mnemonic::ASL;
 
 #[derive(Default)]
 pub struct NoveCore {
@@ -152,6 +153,10 @@ impl NoveCore {
                 LDA => op_and_assign!(self, a.assign, self.memory.read(addr)),
                 LDX => op_and_assign!(self, x.assign, self.memory.read(addr)),
                 LDY => op_and_assign!(self, y.assign, self.memory.read(addr)),
+                LSR if opcode.addressing_mode == AddressingMode::ACC => {
+                    displace!(self, Displacement::Shift(Direction::Right), acc)
+                }
+                LSR => displace!(self, Displacement::Shift(Direction::Right), mem:addr),
                 ORA => op_and_assign!(self, a.bitor_assign, self.memory.read(addr)),
                 PHA => self.stack_push(self.a.get()),
                 PHP => self.stack_push(self.ps.get_for_push()),
@@ -715,6 +720,19 @@ mod test {
         test!("abx", &mut core, rom!(A, 0, X, 0x01, Y, 0; 0xbc, 0x04, 0x00), y:10; pc: +3);
         test!("zpg", &mut core, rom!(A, 0, X, 0x00, Y, 0; 0xa4, 0x05), y:10; pc: +2);
         test!("zpx", &mut core, rom!(A, 0, X, 0x01, Y, 0; 0xb4, 0x04), y:10; pc: +2);
+    }
+
+    #[test]
+    fn lsr() {
+        let mut core = preloaded_core();
+
+        test!("acc", &mut core, rom!(A, 0b0101_0100, X, 0, Y, 0; 0x4a), a:0b0010_1010; pc: +1, ps: 0);
+        test!("zer", &mut core, rom!(A, 0b0000_0000, X, 0, Y, 0; 0x4a), a:0b0000_0000; pc: +1, ps: Z);
+        test!("car", &mut core, rom!(A, 0b1001_0101, X, 0, Y, 0, 0x4a), a:0b0100_1010; pc: +1, ps: C);
+        test!("abs", &mut core, rom!(A, 0, X, 0, Y, 0; 0x4e, 0x05, 0x00), 0x0005:0b0000_0101; pc: +3);
+        test!("abx", &mut core, rom!(A, 0, X, 2, Y, 0; 0x5e, 0x03, 0x00), 0x0005:0b0000_0010; pc: +3);
+        test!("zpg", &mut core, rom!(A, 0, X, 0, Y, 0; 0x46, 0x05), 0x0005:0b0000_0001; pc: +2);
+        test!("zpx", &mut core, rom!(A, 0, X, 2, Y, 0; 0x56, 0x03), 0x0005:0b0000_0000; pc: +2);
     }
 
     #[test]
