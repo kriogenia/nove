@@ -15,7 +15,6 @@ use crate::instruction::{mnemonic::Mnemonic, OpCode, OPCODES_MAP};
 use crate::Rom;
 use std::fmt::{Debug, Formatter};
 use std::ops::{AddAssign, BitAndAssign, BitOrAssign, BitXorAssign, SubAssign};
-use crate::instruction::mnemonic::Mnemonic::ASL;
 
 #[derive(Default)]
 pub struct NoveCore {
@@ -164,10 +163,7 @@ impl NoveCore {
                     let val = self.stack_pull();
                     op_and_assign!(self, a.assign, val)
                 }
-                PLP => {
-                    let val = self.stack_pull();
-                    self.ps.set_from_pull(val)
-                }
+                PLP => self.pull_ps(),
                 ROL if opcode.addressing_mode == AddressingMode::ACC => displace!(
                     self,
                     Displacement::Rotation(Direction::Left, self.ps.is_raised(Flag::Carry)),
@@ -183,6 +179,11 @@ impl NoveCore {
                 ),
                 ROR => {
                     displace!(self, Displacement::Rotation(Direction::Right, self.ps.is_raised(Flag::Carry)), mem:addr)
+                }
+                RTI => {
+                    self.pull_ps();
+                    let val = self.stack_pull_u16();
+                    self.pc = val;
                 }
                 SEC => self.ps.set_bit(Flag::Carry, true),
                 SEI => self.ps.set_bit(Flag::Interrupt, true),
@@ -262,6 +263,11 @@ impl NoveCore {
         self.memory.read(self.sp.get())
     }
 
+    fn stack_pull_u16(&mut self) -> u16 {
+        self.sp.prev();
+        self.memory.read_u16(self.sp.get())
+    }
+
     fn adc(&mut self, m: u8) -> u8 {
         let a = self.a.get();
 
@@ -281,6 +287,11 @@ impl NoveCore {
         self.update_z(&self.a & value);
         self.update_n(value);
         self.update_v(value);
+    }
+
+    fn pull_ps(&mut self) {
+        let val = self.stack_pull();
+        self.ps.set_from_pull(val);
     }
 
     fn sbc(&mut self, m: u8) -> u8 {
@@ -375,6 +386,8 @@ mod test {
     const V: u8 = Flag::Overflow as u8;
 
     const SET_C: u8 = 0x38;
+    const PUSH_A: u8 = 0x48;
+    const PUSH_PS: u8 = 0x08;
 
     /// Runs a tests with the given core and rom checking the list of registers or addresses and the pc addition
     macro_rules! test {
@@ -808,6 +821,13 @@ mod test {
         test!("abx", &mut core, rom!(A, 0, X, 2, Y, 0; 0x7e, 0x03, 0x00), 0x0005:0b0000_0010; pc: +3);
         test!("zpg", &mut core, rom!(A, 0, X, 0, Y, 0; 0x66, 0x05), 0x0005:0b0000_0001; pc: +2);
         test!("zpx", &mut core, rom!(A, 0, X, 2, Y, 0; 0x76, 0x03), 0x0005:0b0000_0000; pc: +2);
+    }
+
+    #[test]
+    fn rti() {
+        let mut core = preloaded_core();
+
+        test!("imp", &mut core, rom!(A, 0x12, PUSH_A, A, 0, PUSH_A, PUSH_PS; 0x40); pc: 0x1200 + 1, ps: Z);
     }
 
     #[test]

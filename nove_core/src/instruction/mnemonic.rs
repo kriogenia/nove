@@ -310,6 +310,13 @@ pub enum Mnemonic {
     ///
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#ROR
     ROR,
+    /// Return from Interrupt
+    ///
+    /// The RTI instruction is used at the end of an interrupt processing routine.
+    /// It pulls the processor flags from the stack followed by the program counter.
+    ///
+    /// https://www.nesdev.org/obelisk-6502-guide/reference.html#RTI
+    RTI,
     /// Substract with Carry
     ///
     /// A,Z,C,N = A-M-(1-C)
