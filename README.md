@@ -22,4 +22,6 @@ details what the current state:
 | ~~ROR~~ | ~~RTI~~ | ~~RTS~~ | ~~SBC~~ |
 | ~~SEC~~ | ~~SED~~ | ~~SEI~~ | ~~STA~~ |
 | ~~STX~~ | ~~STY~~ | ~~TAX~~ | ~~TAY~~ |
-| ~~TSX~~ | ~~TXA~~ | TXS     | ~~TYA~~ |
+| ~~TSX~~ | ~~TXA~~ | ~~TXS~~ | ~~TYA~~ |
+
+**All implemented!**

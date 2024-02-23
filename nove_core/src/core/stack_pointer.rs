@@ -1,15 +1,11 @@
 const STACK_PAGE: u16 = 0x0100;
 const STACK_START: u8 = 0xff;
 
-pub(crate) struct StackPointer(u8);
+pub(crate) struct StackPointer(pub u8);
 
 impl StackPointer {
     pub fn get(&self) -> u16 {
         STACK_PAGE | (self.0 as u16)
-    }
-
-    pub fn pointer(&self) -> u8 {
-        self.0
     }
 
     pub fn next(&mut self) {

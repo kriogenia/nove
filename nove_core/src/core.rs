@@ -201,8 +201,9 @@ impl NoveCore {
                 STY => self.memory.write(addr, self.y.get()),
                 TAX => op_and_assign!(self, x.transfer, &self.a),
                 TAY => op_and_assign!(self, y.transfer, &self.a),
-                TSX => op_and_assign!(self, x.assign, self.sp.pointer()),
+                TSX => op_and_assign!(self, x.assign, self.sp.0),
                 TXA => op_and_assign!(self, a.transfer, &self.x),
+                TXS => self.sp.0 = self.x.get(),
                 TYA => op_and_assign!(self, a.transfer, &self.y),
             }
 
@@ -758,7 +759,6 @@ mod test {
     #[test]
     fn nop() {
         let mut core = NoveCore::new();
-
         test!("imp", &mut core, rom!(A, 0, X, 0, Y, 0; 0xea),; pc: +1);
     }
 
@@ -833,14 +833,12 @@ mod test {
     #[test]
     fn rti() {
         let mut core = preloaded_core();
-
         test!("imp", &mut core, rom!(A, 0x12, PUSH_A, A, 0x00, PUSH_A, PUSH_PS; 0x40); pc: 0x1200 + 1, ps: Z);
     }
 
     #[test]
     fn rts() {
         let mut core = preloaded_core();
-
         test!("imp", &mut core, rom!(A, 0x12, PUSH_A, A, 0x00, PUSH_A; 0x60); pc: 0x1200);
     }
 
@@ -942,6 +940,13 @@ mod test {
         test!("imp", &mut core, rom!(A, 0, X, 0x05, Y, 0; 0x8a), a:0x05; pc: +1, ps: 0);
         test!("zer", &mut core, rom!(A, 0, X, 0x00, Y, 0; 0x8a), a:0x00; pc: +1, ps: Z);
         test!("neg", &mut core, rom!(A, 0, X, 0xff, Y, 0; 0x8a), a:0xff; pc: +1, ps: N);
+    }
+
+    #[test]
+    fn txs() {
+        let mut core = NoveCore::new();
+        test!("imp", &mut core, rom!(A, 0, Y, 0, X, 0x12; 0x9a), x:0x12; pc: +1);
+        assert_eq!(core.sp.0, 0x12);
     }
 
     #[test]
