@@ -342,6 +342,14 @@ pub enum Mnemonic {
     ///
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#SEC
     SEC,
+    /// Set Decimal flag
+    ///
+    /// D = 1
+    ///
+    /// Set the decimal flag to one
+    ///
+    /// https://www.nesdev.org/obelisk-6502-guide/reference.html#SED
+    SED,
     /// Set Interrupt Disable
     ///
     /// I = 1

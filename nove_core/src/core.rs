@@ -190,6 +190,7 @@ impl NoveCore {
                     self.pc = val.wrapping_sub(1);
                 }
                 SEC => self.ps.set_bit(Flag::Carry, true),
+                SED => self.ps.set_bit(Flag::Decimal, true),
                 SEI => self.ps.set_bit(Flag::Interrupt, true),
                 SBC => {
                     let diff = self.sbc(self.memory.read(addr));
@@ -385,6 +386,7 @@ mod test {
 
     const C: u8 = Flag::Carry as u8;
     const I: u8 = Flag::Interrupt as u8;
+    const D: u8 = Flag::Decimal as u8;
     const N: u8 = Flag::Negative as u8;
     const Z: u8 = Flag::Zero as u8;
     const V: u8 = Flag::Overflow as u8;
@@ -862,6 +864,12 @@ mod test {
     fn sec() {
         let mut core = NoveCore::new();
         test!("imp", &mut core, rom!(A, 1, X, 1, Y, 1; 0x38),; pc: +1, ps: C);
+    }
+
+    #[test]
+    fn sed() {
+        let mut core = NoveCore::new();
+        test!("imp", &mut core, rom!(A, 1, X, 1, Y, 1; 0xf8),; pc: +1, ps: D);
     }
 
     #[test]
