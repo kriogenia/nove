@@ -201,6 +201,7 @@ impl NoveCore {
                 STY => self.memory.write(addr, self.y.get()),
                 TAX => op_and_assign!(self, x.transfer, &self.a),
                 TAY => op_and_assign!(self, y.transfer, &self.a),
+                TSX => op_and_assign!(self, x.assign, self.sp.pointer()),
                 TXA => op_and_assign!(self, a.transfer, &self.x),
                 TYA => op_and_assign!(self, a.transfer, &self.y),
             }
@@ -913,7 +914,7 @@ mod test {
     fn tax() {
         let mut core = NoveCore::new();
 
-        test!("tax", &mut core, rom!(A, 0x10, X, 5, Y, 0; 0xaa), x:0x10; pc: +1, ps: 0);
+        test!("imp", &mut core, rom!(A, 0x10, X, 5, Y, 0; 0xaa), x:0x10; pc: +1, ps: 0);
         test!("zer", &mut core, rom!(A, 0x00, X, 5, Y, 0; 0xaa), x:0x00; pc: +1, ps: Z);
         test!("neg", &mut core, rom!(A, 0xff, X, 5, Y, 0; 0xaa), x:0xff; pc: +1, ps: N);
     }
@@ -922,16 +923,23 @@ mod test {
     fn tay() {
         let mut core = NoveCore::new();
 
-        test!("tax", &mut core, rom!(A, 0x10, X, 0, Y, 5; 0xa8), y:0x10; pc: +1, ps: 0);
+        test!("imp", &mut core, rom!(A, 0x10, X, 0, Y, 5; 0xa8), y:0x10; pc: +1, ps: 0);
         test!("zer", &mut core, rom!(A, 0x00, X, 0, Y, 5; 0xa8), y:0x00; pc: +1, ps: Z);
         test!("neg", &mut core, rom!(A, 0xff, X, 0, Y, 5; 0xa8), y:0xff; pc: +1, ps: N);
+    }
+
+    #[test]
+    fn tsx() {
+        let mut core = NoveCore::new();
+
+        test!("imp", &mut core, rom!(A, 1, X, 1, Y, 1; 0xba), x:0xff; pc: +1, ps: N);
     }
 
     #[test]
     fn txa() {
         let mut core = NoveCore::new();
 
-        test!("tax", &mut core, rom!(A, 0, X, 0x05, Y, 0; 0x8a), a:0x05; pc: +1, ps: 0);
+        test!("imp", &mut core, rom!(A, 0, X, 0x05, Y, 0; 0x8a), a:0x05; pc: +1, ps: 0);
         test!("zer", &mut core, rom!(A, 0, X, 0x00, Y, 0; 0x8a), a:0x00; pc: +1, ps: Z);
         test!("neg", &mut core, rom!(A, 0, X, 0xff, Y, 0; 0x8a), a:0xff; pc: +1, ps: N);
     }
@@ -940,7 +948,7 @@ mod test {
     fn tya() {
         let mut core = NoveCore::new();
 
-        test!("tax", &mut core, rom!(A, 0, X, 0, Y, 0x05; 0x98), a:0x05; pc: +1, ps: 0);
+        test!("imp", &mut core, rom!(A, 0, X, 0, Y, 0x05; 0x98), a:0x05; pc: +1, ps: 0);
         test!("zer", &mut core, rom!(A, 0, X, 0, Y, 0x00; 0x98), a:0x00; pc: +1, ps: Z);
         test!("neg", &mut core, rom!(A, 0, X, 0, Y, 0xff; 0x98), a:0xff; pc: +1, ps: N);
     }

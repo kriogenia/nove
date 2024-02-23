@@ -235,6 +235,8 @@ lazy_static! {
 
         OpCode::new(TAY, 0xa8, 1, 2, IMP),
 
+        OpCode::new(TSX, 0xba, 1, 2, IMP),
+
         OpCode::new(TXA, 0x8a, 1, 2, IMP),
 
         OpCode::new(TYA, 0x98, 1, 2, IMP),

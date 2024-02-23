@@ -398,6 +398,14 @@ pub enum Mnemonic {
     ///
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#TAY
     TAY,
+    /// Transfer Stack Pointer to X
+    ///
+    /// X = S
+    ///
+    /// Copies the current contents of the stack register into the X register.
+    ///
+    /// https://www.nesdev.org/obelisk-6502-guide/reference.html#TSX
+    TSX,
     /// Transfer X to Accumulator
     ///
     /// A,Z,N = X

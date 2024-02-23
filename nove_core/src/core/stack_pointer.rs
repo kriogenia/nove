@@ -8,6 +8,10 @@ impl StackPointer {
         STACK_PAGE | (self.0 as u16)
     }
 
+    pub fn pointer(&self) -> u8 {
+        self.0
+    }
+
     pub fn next(&mut self) {
         self.0 = self.0.wrapping_sub(1)
     }
