@@ -198,6 +198,8 @@ lazy_static! {
 
         OpCode::new(RTI, 0x40, 1, 6, IMP),
 
+        OpCode::new(RTS, 0x60, 1, 6, IMP),
+
         OpCode::new(SBC, 0xed, 3, 4, ABS),
         OpCode::new(SBC, 0xfd, 3, 4, ABX), // +1 cycle if page crossed
         OpCode::new(SBC, 0xf9, 3, 4, ABY), // +1 cycle if page crossed

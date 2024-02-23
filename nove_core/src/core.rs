@@ -185,6 +185,10 @@ impl NoveCore {
                     let val = self.stack_pull_u16();
                     self.pc = val;
                 }
+                RTS => {
+                    let val = self.stack_pull_u16();
+                    self.pc = val.wrapping_sub(1);
+                }
                 SEC => self.ps.set_bit(Flag::Carry, true),
                 SEI => self.ps.set_bit(Flag::Interrupt, true),
                 SBC => {
@@ -827,7 +831,14 @@ mod test {
     fn rti() {
         let mut core = preloaded_core();
 
-        test!("imp", &mut core, rom!(A, 0x12, PUSH_A, A, 0, PUSH_A, PUSH_PS; 0x40); pc: 0x1200 + 1, ps: Z);
+        test!("imp", &mut core, rom!(A, 0x12, PUSH_A, A, 0x00, PUSH_A, PUSH_PS; 0x40); pc: 0x1200 + 1, ps: Z);
+    }
+
+    #[test]
+    fn rts() {
+        let mut core = preloaded_core();
+
+        test!("imp", &mut core, rom!(A, 0x12, PUSH_A, A, 0x00, PUSH_A; 0x60); pc: 0x1200);
     }
 
     #[test]
