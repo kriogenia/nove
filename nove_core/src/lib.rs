@@ -1,5 +1,6 @@
+mod cartridge;
 pub mod core;
 mod exception;
 mod instruction;
 
-pub type Rom = Vec<u8>;
+pub type Program = Vec<u8>;

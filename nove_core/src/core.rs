@@ -9,10 +9,10 @@ use crate::core::ops::{Direction, Displacement};
 use crate::core::processor_status::{Flag, ProcessorStatus, OVERFLOW_MASK};
 use crate::core::register::Register;
 use crate::core::stack_pointer::StackPointer;
-use crate::exception::Exception;
+use crate::exception::NoveError;
 use crate::instruction::addressing_mode::AddressingMode;
 use crate::instruction::{mnemonic::Mnemonic, OpCode, OPCODES_MAP};
-use crate::Rom;
+use crate::Program;
 use std::fmt::{Debug, Formatter};
 use std::ops::{AddAssign, BitAndAssign, BitOrAssign, BitXorAssign, SubAssign};
 
@@ -96,20 +96,20 @@ impl NoveCore {
         self.ps = Default::default();
     }
 
-    pub fn load(&mut self, rom: Rom) {
+    pub fn load(&mut self, rom: Program) {
         self.memory.load_rom(rom);
     }
 
-    pub fn snake_load(&mut self, rom: Rom) {
+    pub fn snake_load(&mut self, rom: Program) {
         self.memory.0[0x0600..(0x0600 + rom.len())].copy_from_slice(&rom[..]);
         self.memory.write_u16(0xFFFC, 0x0600);
     }
 
-    pub fn tick(&mut self) -> Result<bool, Exception> {
+    pub fn tick(&mut self) -> Result<bool, NoveError> {
         let byte = self.memory.read(self.pc);
         self.pc += 1;
 
-        let opcode = OPCODES_MAP.get(&byte).ok_or(Exception::WrongOpCode(byte))?;
+        let opcode = OPCODES_MAP.get(&byte).ok_or(NoveError::WrongOpCode(byte))?;
         let addr = self.get_addr(&opcode.addressing_mode);
 
         use Mnemonic::*;
@@ -213,7 +213,7 @@ impl NoveCore {
     }
 
     #[cfg(not(test))]
-    pub fn run<F>(&mut self, mut callback: F) -> Result<(), Exception>
+    pub fn run<F>(&mut self, mut callback: F) -> Result<(), NoveError>
     where
         F: FnMut(&mut Self),
     {
@@ -224,7 +224,7 @@ impl NoveCore {
     }
 
     #[cfg(test)]
-    fn run(&mut self) -> Result<(), Exception> {
+    fn run(&mut self) -> Result<(), NoveError> {
         while let Ok(true) = self.tick() {}
         Ok(())
     }
@@ -369,7 +369,7 @@ impl NoveCore {
     }
 
     #[cfg(test)]
-    fn load_and_run(&mut self, rom: Rom) {
+    fn load_and_run(&mut self, rom: Program) {
         self.load(rom);
         self.reset();
         self.run().expect("error while running the program")
@@ -1061,7 +1061,7 @@ mod test {
         assert_eq!(core.get_addr(&AddressingMode::IND), 0x1234);
     }
 
-    fn test_branch(rom: Rom, jmp: u16) {
+    fn test_branch(rom: Program, jmp: u16) {
         let mut core = NoveCore::default();
         test!("rel", &mut core, rom; pc: START_ADDR + 1 + jmp + 1 + 1);
     }
