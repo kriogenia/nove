@@ -31,7 +31,7 @@ pub struct NoveCore {
     /// Processor Status
     ps: ProcessorStatus,
     /// Memory Map
-    memory: Memory,
+    pub memory: Memory,
 }
 
 /// Helper macro for debugging, easies the printing of hex values
@@ -100,116 +100,131 @@ impl NoveCore {
         self.memory.load_rom(rom);
     }
 
-    pub fn run(&mut self) -> Result<(), Exception> {
-        'game_loop: loop {
-            let byte = self.memory.read(self.pc);
-            self.pc += 1;
+    pub fn snake_load(&mut self, rom:Rom) {
+        self.memory.0[0x0600..(0x0600 + rom.len())].copy_from_slice(&rom[..]);
+        self.memory.write_u16(0xFFFC, 0x0600);
+    }
 
-            let opcode = OPCODES_MAP.get(&byte).ok_or(Exception::WrongOpCode(byte))?;
-            let addr = self.get_addr(&opcode.addressing_mode);
+    pub fn tick(&mut self) -> Result<bool, Exception> {
+        let byte = self.memory.read(self.pc);
+        self.pc += 1;
 
-            use Mnemonic::*;
-            match opcode.mnemonic {
-                BRK => break 'game_loop,
-                ADC => {
-                    let sum = self.adc(self.memory.read(addr));
-                    op_and_assign!(self, a.assign, sum);
-                }
-                AND => op_and_assign!(self, a.bitand_assign, self.memory.read(addr)),
-                ASL if opcode.addressing_mode == AddressingMode::ACC => {
-                    displace!(self, Displacement::Shift(Direction::Left), acc)
-                }
-                ASL => displace!(self, Displacement::Shift(Direction::Left), mem:addr),
-                BCC => self.branch_if(self.ps.is_lowered(Flag::Carry), addr),
-                BCS => self.branch_if(self.ps.is_raised(Flag::Carry), addr),
-                BEQ => self.branch_if(self.ps.is_raised(Flag::Zero), addr),
-                BIT => self.bit_test(self.memory.read(addr)),
-                BMI => self.branch_if(self.ps.is_raised(Flag::Negative), addr),
-                BNE => self.branch_if(self.ps.is_lowered(Flag::Zero), addr),
-                BPL => self.branch_if(self.ps.is_lowered(Flag::Negative), addr),
-                BVC => self.branch_if(self.ps.is_lowered(Flag::Overflow), addr),
-                BVS => self.branch_if(self.ps.is_raised(Flag::Overflow), addr),
-                CLC => self.ps.set_bit(Flag::Carry, false),
-                CLD => self.ps.set_bit(Flag::Decimal, false),
-                CLI => self.ps.set_bit(Flag::Interrupt, false),
-                CLV => self.ps.set_bit(Flag::Overflow, false),
-                CMP => compare!(self, a, addr),
-                CPX => compare!(self, x, addr),
-                CPY => compare!(self, y, addr),
-                DEC => update_mem!(self, addr, wrapping_sub),
-                DEX => op_and_assign!(self, x.sub_assign, 1),
-                DEY => op_and_assign!(self, y.sub_assign, 1),
-                EOR => op_and_assign!(self, a.bitxor_assign, self.memory.read(addr)),
-                INC => update_mem!(self, addr, wrapping_add),
-                INX => op_and_assign!(self, x.add_assign, 1),
-                INY => op_and_assign!(self, y.add_assign, 1),
-                JMP => self.pc = addr,
-                JSR => {
-                    self.stack_push_u16(self.pc.wrapping_add(1));
-                    self.pc = self.memory.read_u16(addr);
-                }
-                NOP => {}
-                LDA => op_and_assign!(self, a.assign, self.memory.read(addr)),
-                LDX => op_and_assign!(self, x.assign, self.memory.read(addr)),
-                LDY => op_and_assign!(self, y.assign, self.memory.read(addr)),
-                LSR if opcode.addressing_mode == AddressingMode::ACC => {
-                    displace!(self, Displacement::Shift(Direction::Right), acc)
-                }
-                LSR => displace!(self, Displacement::Shift(Direction::Right), mem:addr),
-                ORA => op_and_assign!(self, a.bitor_assign, self.memory.read(addr)),
-                PHA => self.stack_push(self.a.get()),
-                PHP => self.stack_push(self.ps.get_for_push()),
-                PLA => {
-                    let val = self.stack_pull();
-                    op_and_assign!(self, a.assign, val)
-                }
-                PLP => self.pull_ps(),
-                ROL if opcode.addressing_mode == AddressingMode::ACC => displace!(
+        let opcode = OPCODES_MAP.get(&byte).ok_or(Exception::WrongOpCode(byte))?;
+        let addr = self.get_addr(&opcode.addressing_mode);
+
+        use Mnemonic::*;
+        match opcode.mnemonic {
+            BRK => return Ok(false),
+            ADC => {
+                let sum = self.adc(self.memory.read(addr));
+                op_and_assign!(self, a.assign, sum);
+            }
+            AND => op_and_assign!(self, a.bitand_assign, self.memory.read(addr)),
+            ASL if opcode.addressing_mode == AddressingMode::ACC => {
+                displace!(self, Displacement::Shift(Direction::Left), acc)
+            }
+            ASL => displace!(self, Displacement::Shift(Direction::Left), mem:addr),
+            BCC => self.branch_if(self.ps.is_lowered(Flag::Carry), addr),
+            BCS => self.branch_if(self.ps.is_raised(Flag::Carry), addr),
+            BEQ => self.branch_if(self.ps.is_raised(Flag::Zero), addr),
+            BIT => self.bit_test(self.memory.read(addr)),
+            BMI => self.branch_if(self.ps.is_raised(Flag::Negative), addr),
+            BNE => self.branch_if(self.ps.is_lowered(Flag::Zero), addr),
+            BPL => self.branch_if(self.ps.is_lowered(Flag::Negative), addr),
+            BVC => self.branch_if(self.ps.is_lowered(Flag::Overflow), addr),
+            BVS => self.branch_if(self.ps.is_raised(Flag::Overflow), addr),
+            CLC => self.ps.set_bit(Flag::Carry, false),
+            CLD => self.ps.set_bit(Flag::Decimal, false),
+            CLI => self.ps.set_bit(Flag::Interrupt, false),
+            CLV => self.ps.set_bit(Flag::Overflow, false),
+            CMP => compare!(self, a, addr),
+            CPX => compare!(self, x, addr),
+            CPY => compare!(self, y, addr),
+            DEC => update_mem!(self, addr, wrapping_sub),
+            DEX => op_and_assign!(self, x.sub_assign, 1),
+            DEY => op_and_assign!(self, y.sub_assign, 1),
+            EOR => op_and_assign!(self, a.bitxor_assign, self.memory.read(addr)),
+            INC => update_mem!(self, addr, wrapping_add),
+            INX => op_and_assign!(self, x.add_assign, 1),
+            INY => op_and_assign!(self, y.add_assign, 1),
+            JMP => self.pc = addr,
+            JSR => {
+                self.stack_push_u16(self.pc.wrapping_add(2));
+                self.pc = addr;
+            }
+            NOP => {}
+            LDA => op_and_assign!(self, a.assign, self.memory.read(addr)),
+            LDX => op_and_assign!(self, x.assign, self.memory.read(addr)),
+            LDY => op_and_assign!(self, y.assign, self.memory.read(addr)),
+            LSR if opcode.addressing_mode == AddressingMode::ACC => {
+                displace!(self, Displacement::Shift(Direction::Right), acc)
+            }
+            LSR => displace!(self, Displacement::Shift(Direction::Right), mem:addr),
+            ORA => op_and_assign!(self, a.bitor_assign, self.memory.read(addr)),
+            PHA => self.stack_push(self.a.get()),
+            PHP => self.stack_push(self.ps.get_for_push()),
+            PLA => {
+                let val = self.stack_pull();
+                op_and_assign!(self, a.assign, val)
+            }
+            PLP => self.pull_ps(),
+            ROL if opcode.addressing_mode == AddressingMode::ACC => displace!(
                     self,
                     Displacement::Rotation(Direction::Left, self.ps.is_raised(Flag::Carry)),
                     acc
                 ),
-                ROL => {
-                    displace!(self, Displacement::Rotation(Direction::Left, self.ps.is_raised(Flag::Carry)), mem:addr)
-                }
-                ROR if opcode.addressing_mode == AddressingMode::ACC => displace!(
+            ROL => {
+                displace!(self, Displacement::Rotation(Direction::Left, self.ps.is_raised(Flag::Carry)), mem:addr)
+            }
+            ROR if opcode.addressing_mode == AddressingMode::ACC => displace!(
                     self,
                     Displacement::Rotation(Direction::Right, self.ps.is_raised(Flag::Carry)),
                     acc
                 ),
-                ROR => {
-                    displace!(self, Displacement::Rotation(Direction::Right, self.ps.is_raised(Flag::Carry)), mem:addr)
-                }
-                RTI => {
-                    self.pull_ps();
-                    let val = self.stack_pull_u16();
-                    self.pc = val;
-                }
-                RTS => {
-                    let val = self.stack_pull_u16();
-                    self.pc = val.wrapping_sub(1);
-                }
-                SEC => self.ps.set_bit(Flag::Carry, true),
-                SED => self.ps.set_bit(Flag::Decimal, true),
-                SEI => self.ps.set_bit(Flag::Interrupt, true),
-                SBC => {
-                    let diff = self.sbc(self.memory.read(addr));
-                    op_and_assign!(self, a.assign, diff);
-                }
-                STA => self.memory.write(addr, self.a.get()),
-                STX => self.memory.write(addr, self.x.get()),
-                STY => self.memory.write(addr, self.y.get()),
-                TAX => op_and_assign!(self, x.transfer, &self.a),
-                TAY => op_and_assign!(self, y.transfer, &self.a),
-                TSX => op_and_assign!(self, x.assign, self.sp.0),
-                TXA => op_and_assign!(self, a.transfer, &self.x),
-                TXS => self.sp.0 = self.x.get(),
-                TYA => op_and_assign!(self, a.transfer, &self.y),
+            ROR => {
+                displace!(self, Displacement::Rotation(Direction::Right, self.ps.is_raised(Flag::Carry)), mem:addr)
             }
-
-            self.update_pc(opcode);
+            RTI => {
+                self.pull_ps();
+                let val = self.stack_pull_u16();
+                self.pc = val;
+            }
+            RTS => self.pc = self.stack_pull_u16(),
+            SEC => self.ps.set_bit(Flag::Carry, true),
+            SED => self.ps.set_bit(Flag::Decimal, true),
+            SEI => self.ps.set_bit(Flag::Interrupt, true),
+            SBC => {
+                let diff = self.sbc(self.memory.read(addr));
+                op_and_assign!(self, a.assign, diff);
+            }
+            STA => self.memory.write(addr, self.a.get()),
+            STX => self.memory.write(addr, self.x.get()),
+            STY => self.memory.write(addr, self.y.get()),
+            TAX => op_and_assign!(self, x.transfer, &self.a),
+            TAY => op_and_assign!(self, y.transfer, &self.a),
+            TSX => op_and_assign!(self, x.assign, self.sp.0),
+            TXA => op_and_assign!(self, a.transfer, &self.x),
+            TXS => self.sp.0 = self.x.get(),
+            TYA => op_and_assign!(self, a.transfer, &self.y),
         }
 
+        self.update_pc(opcode);
+        Ok(true)
+    }
+
+    #[cfg(not(test))]
+    pub fn run<F>(&mut self, mut callback: F) -> Result<(), Exception>
+        where F: FnMut(&mut Self)
+    {
+        while self.tick()? {
+            callback(self);
+        }
+        Ok(())
+    }
+
+    #[cfg(test)]
+    fn run(&mut self) -> Result<(), Exception> {
+        while let Ok(true) = self.tick() {}
         Ok(())
     }
 
@@ -217,7 +232,7 @@ impl NoveCore {
         use AddressingMode::*;
         match mode {
             IMM => self.pc,
-            REL => self.pc.wrapping_add(self.next_byte() as u16),
+            REL => self.pc.wrapping_add(self.next_byte() as i8 as u16),
             ZPG => self.next_byte() as u16,
             ZPX => self.next_byte().wrapping_add(self.x.get()) as u16,
             ZPY => self.next_byte().wrapping_add(self.y.get()) as u16,
@@ -261,8 +276,9 @@ impl NoveCore {
     }
 
     fn stack_push_u16(&mut self, content: u16) {
-        self.memory.write_u16(self.sp.get(), content);
-        self.sp.next()
+        let [lo, hi] = content.to_le_bytes();
+        self.stack_push(hi);
+        self.stack_push(lo);
     }
 
     fn stack_pull(&mut self) -> u8 {
@@ -272,7 +288,8 @@ impl NoveCore {
 
     fn stack_pull_u16(&mut self) -> u16 {
         self.sp.prev();
-        self.memory.read_u16(self.sp.get())
+        self.sp.prev();
+        self.memory.read_u16(self.sp.get().wrapping_sub(1))
     }
 
     fn adc(&mut self, m: u8) -> u8 {
@@ -361,7 +378,6 @@ impl NoveCore {
     fn stack_peek_u16(&self) -> u16 {
         self.memory.read_u16(self.sp.get() + 1)
     }
-
 }
 
 impl Debug for NoveCore {
@@ -697,8 +713,8 @@ mod test {
     fn jsr() {
         let mut core = preloaded_core();
 
-        test!("abs", &mut core, rom!(0x20, 0x05, 0x00); pc: 0x000a + 1);
-        assert_eq!(core.stack_peek_u16(), START_ADDR + 2);
+        test!("abs", &mut core, rom!(0x20, 0x05, 0x00); pc: 0x0007);
+        assert_eq!(core.stack_peek_u16(), START_ADDR + 3);
     }
 
     #[test]
@@ -839,7 +855,7 @@ mod test {
     #[test]
     fn rts() {
         let mut core = preloaded_core();
-        test!("imp", &mut core, rom!(A, 0x12, PUSH_A, A, 0x00, PUSH_A; 0x60); pc: 0x1200);
+        test!("imp", &mut core, rom!(A, 0x12, PUSH_A, A, 0x00, PUSH_A; 0x60); pc: 0x1201);
     }
 
     #[test]

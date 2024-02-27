@@ -5,7 +5,7 @@ pub(crate) const PRG_ROM_ADDR: usize = 0x8000;
 pub(crate) const PC_START_ADDR: u16 = 0xFFFC;
 
 #[derive(Debug)]
-pub(crate) struct Memory([u8; MEMORY_SIZE]);
+pub struct Memory(pub [u8; MEMORY_SIZE]);
 
 impl Default for Memory {
     fn default() -> Self {
