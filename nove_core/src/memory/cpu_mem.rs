@@ -1,9 +1,5 @@
-use crate::memory::Memory;
+use crate::memory::{Memory, MEMORY_SIZE, PC_START_ADDR, PRG_ROM_START_ADDR};
 use crate::Program;
-
-const MEMORY_SIZE: usize = 0xFFFF; // 64 KiB
-pub(crate) const PRG_ROM_ADDR: usize = 0x8000;
-pub(crate) const PC_START_ADDR: u16 = 0xFFFC;
 
 #[derive(Debug)]
 pub struct CpuMem(pub [u8; MEMORY_SIZE]);
@@ -16,9 +12,9 @@ impl Default for CpuMem {
 
 impl CpuMem {
     pub fn load_rom(&mut self, rom: Program) {
-        let end = PRG_ROM_ADDR + rom.len();
-        self.0[PRG_ROM_ADDR..end].copy_from_slice(&rom[..]);
-        self.write_u16(PC_START_ADDR, PRG_ROM_ADDR as u16);
+        let end = PRG_ROM_START_ADDR as usize + rom.len();
+        self.0[PRG_ROM_START_ADDR as usize..end].copy_from_slice(&rom[..]);
+        self.write_u16(PC_START_ADDR, PRG_ROM_START_ADDR);
     }
 }
 

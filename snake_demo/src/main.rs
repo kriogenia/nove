@@ -1,4 +1,4 @@
-use nove_core::core::NoveCore;
+use nove_core::core::{Core6502, NoveCore};
 use nove_core::memory::cpu_mem::CpuMem;
 use nove_core::memory::Memory;
 use rand::Rng;
@@ -324,7 +324,7 @@ fn main() {
               // game_over:
     ];
 
-    let mut cpu = NoveCore::new();
+    let mut cpu = Core6502::new();
     cpu.snake_load(game_code);
     cpu.reset();
 

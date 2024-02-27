@@ -3,6 +3,7 @@ mod processor_status;
 mod register;
 mod stack_pointer;
 
+use crate::cartridge::Rom;
 use crate::core::ops::{Direction, Displacement};
 use crate::core::processor_status::{Flag, ProcessorStatus, OVERFLOW_MASK};
 use crate::core::register::Register;
@@ -10,11 +11,15 @@ use crate::core::stack_pointer::StackPointer;
 use crate::exception::NoveError;
 use crate::instruction::addressing_mode::AddressingMode;
 use crate::instruction::{mnemonic::Mnemonic, OpCode, OPCODES_MAP};
+use crate::memory::bus::Bus;
 use crate::memory::cpu_mem::CpuMem;
-use crate::memory::{cpu_mem, Memory};
+use crate::memory::{Memory, PC_START_ADDR};
 use crate::Program;
 use std::fmt::{Debug, Formatter};
 use std::ops::{AddAssign, BitAndAssign, BitOrAssign, BitXorAssign, SubAssign};
+
+pub type Core6502 = NoveCore<CpuMem>;
+pub type NesNoveCore = NoveCore<Bus>;
 
 #[derive(Default)]
 pub struct NoveCore<M> {
@@ -82,27 +87,14 @@ macro_rules! update_mem {
     }};
 }
 
-impl NoveCore<CpuMem> {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
+impl<M: Memory> NoveCore<M> {
     pub fn reset(&mut self) {
-        self.pc = self.memory.read_u16(cpu_mem::PC_START_ADDR);
+        self.pc = self.memory.read_u16(PC_START_ADDR);
         self.sp = Default::default();
         self.a = Default::default();
         self.x = Default::default();
         self.y = Default::default();
         self.ps = Default::default();
-    }
-
-    pub fn load(&mut self, rom: Program) {
-        self.memory.load_rom(rom);
-    }
-
-    pub fn snake_load(&mut self, rom: Program) {
-        self.memory.0[0x0600..(0x0600 + rom.len())].copy_from_slice(&rom[..]);
-        self.memory.write_u16(0xFFFC, 0x0600);
     }
 
     pub fn tick(&mut self) -> Result<bool, NoveError> {
@@ -210,23 +202,6 @@ impl NoveCore<CpuMem> {
 
         self.update_pc(opcode);
         Ok(true)
-    }
-
-    #[cfg(not(test))]
-    pub fn run<F>(&mut self, mut callback: F) -> Result<(), NoveError>
-    where
-        F: FnMut(&mut Self),
-    {
-        while self.tick()? {
-            callback(self);
-        }
-        Ok(())
-    }
-
-    #[cfg(test)]
-    fn run(&mut self) -> Result<(), NoveError> {
-        while let Ok(true) = self.tick() {}
-        Ok(())
     }
 
     fn get_addr(&self, mode: &AddressingMode) -> u16 {
@@ -369,15 +344,61 @@ impl NoveCore<CpuMem> {
     }
 
     #[cfg(test)]
+    fn stack_peek_u16(&self) -> u16 {
+        self.memory.read_u16(self.sp.get() + 1)
+    }
+}
+
+impl NesNoveCore {
+    pub fn new(rom: Rom) -> Self {
+        Self {
+            pc: Default::default(),
+            sp: Default::default(),
+            a: Default::default(),
+            x: Default::default(),
+            y: Default::default(),
+            ps: Default::default(),
+            memory: Bus::new(rom),
+        }
+    }
+}
+
+impl Core6502 {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn load(&mut self, rom: Program) {
+        self.memory.load_rom(rom);
+    }
+
+    pub fn snake_load(&mut self, rom: Program) {
+        self.memory.0[0x0600..(0x0600 + rom.len())].copy_from_slice(&rom[..]);
+        self.memory.write_u16(0xFFFC, 0x0600);
+    }
+
+    #[cfg(not(test))]
+    pub fn run<F>(&mut self, mut callback: F) -> Result<(), NoveError>
+    where
+        F: FnMut(&mut Self),
+    {
+        while self.tick()? {
+            callback(self);
+        }
+        Ok(())
+    }
+
+    #[cfg(test)]
+    fn run(&mut self) -> Result<(), NoveError> {
+        while let Ok(true) = self.tick() {}
+        Ok(())
+    }
+
+    #[cfg(test)]
     fn load_and_run(&mut self, rom: Program) {
         self.load(rom);
         self.reset();
         self.run().expect("error while running the program")
-    }
-
-    #[cfg(test)]
-    fn stack_peek_u16(&self) -> u16 {
-        self.memory.read_u16(self.sp.get() + 1)
     }
 }
 
@@ -396,9 +417,9 @@ impl<M> Debug for NoveCore<M> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::memory::cpu_mem;
+    use crate::memory;
 
-    const START_ADDR: u16 = cpu_mem::PRG_ROM_ADDR as u16;
+    const START_ADDR: u16 = memory::PRG_ROM_START_ADDR;
 
     const A: u8 = 0xA9;
     const X: u8 = 0xA2;
@@ -421,7 +442,7 @@ mod test {
             println!($id);
             $core.load_and_run($rom);
             $(assert_eq!($core.$reg, $val);)+
-            assert_eq!($core.pc, cpu_mem::PRG_ROM_ADDR as u16 + $pc + 7);
+            assert_eq!($core.pc, memory::PRG_ROM_START_ADDR as u16 + $pc + 7);
             $(assert_eq!($core.ps.0, $ps);)*
         };
         ($id:expr, $core:expr, $rom:expr, $($addr:literal: $val:literal),*; pc: +$pc:literal $(, ps: $ps:expr)*) => {
@@ -430,7 +451,7 @@ mod test {
             $({
                 assert_eq!($core.memory.read_u16($addr), $val);
             })*
-            assert_eq!($core.pc, cpu_mem::PRG_ROM_ADDR as u16 + $pc + 7);
+            assert_eq!($core.pc, memory::PRG_ROM_START_ADDR as u16 + $pc + 7);
             $(assert_eq!($core.ps.0, $ps);)*
         };
         ($id:expr, $core:expr, $rom:expr; pc: $pc:expr $(, ps: $ps:expr)*) => {
@@ -776,7 +797,7 @@ mod test {
 
     #[test]
     fn nop() {
-        let mut core = NoveCore::new();
+        let mut core = Core6502::new();
         test!("imp", &mut core, rom!(A, 0, X, 0, Y, 0; 0xea),; pc: +1);
     }
 
@@ -798,25 +819,25 @@ mod test {
 
     #[test]
     fn pha() {
-        let mut core = NoveCore::new();
+        let mut core = Core6502::new();
         test!("imp", &mut core, rom!(A, 0x12, X, 0, Y, 0; 0x48), 0x01ff:0x12; pc: +1);
     }
 
     #[test]
     fn phs() {
-        let mut core = NoveCore::new();
+        let mut core = Core6502::new();
         test!("imp", &mut core, rom!(A, 0, X, 0, Y, 0; 0x08), 0x01ff:0b0011_0010; pc: +1);
     }
 
     #[test]
     fn pla() {
-        let mut core = NoveCore::default();
+        let mut core = Core6502::default();
         test!("imp", &mut core, rom!(A, 2, X, 0, Y, 0, 0x08; 0x68), a:0b0011_0010; pc: +2);
     }
 
     #[test]
     fn plp() {
-        let mut core = NoveCore::default();
+        let mut core = Core6502::default();
         test!("imp", &mut core, rom!(A, 0b1011_0000, X, 0, Y, 0, 0x48; 0x28),; pc: +2, ps: N);
     }
 
@@ -879,19 +900,19 @@ mod test {
 
     #[test]
     fn sec() {
-        let mut core = NoveCore::new();
+        let mut core = Core6502::new();
         test!("imp", &mut core, rom!(A, 1, X, 1, Y, 1; 0x38),; pc: +1, ps: C);
     }
 
     #[test]
     fn sed() {
-        let mut core = NoveCore::new();
+        let mut core = Core6502::new();
         test!("imp", &mut core, rom!(A, 1, X, 1, Y, 1; 0xf8),; pc: +1, ps: D);
     }
 
     #[test]
     fn sei() {
-        let mut core = NoveCore::new();
+        let mut core = Core6502::new();
         test!("imp", &mut core, rom!(A, 1, X, 1, Y, 1; 0x78),; pc: +1, ps: I);
     }
 
@@ -910,7 +931,7 @@ mod test {
 
     #[test]
     fn stx() {
-        let mut core = NoveCore::new();
+        let mut core = Core6502::new();
 
         test!("abs", &mut core, rom!(A, 0, X, 10, Y, 0; 0x8e, 0x05, 0x00), 0x0005:10; pc: +3);
         test!("zpg", &mut core, rom!(A, 0, X, 11, Y, 0; 0x86, 0x05), 0x0005:11; pc: +2);
@@ -919,7 +940,7 @@ mod test {
 
     #[test]
     fn sty() {
-        let mut core = NoveCore::new();
+        let mut core = Core6502::new();
 
         test!("abs", &mut core, rom!(A, 0, X, 0, Y, 10; 0x8c, 0x05, 0x00), 0x0005:10; pc: +3);
         test!("zpg", &mut core, rom!(A, 0, X, 0, Y, 11; 0x84, 0x05), 0x0005:11; pc: +2);
@@ -928,7 +949,7 @@ mod test {
 
     #[test]
     fn tax() {
-        let mut core = NoveCore::new();
+        let mut core = Core6502::new();
 
         test!("imp", &mut core, rom!(A, 0x10, X, 5, Y, 0; 0xaa), x:0x10; pc: +1, ps: 0);
         test!("zer", &mut core, rom!(A, 0x00, X, 5, Y, 0; 0xaa), x:0x00; pc: +1, ps: Z);
@@ -937,7 +958,7 @@ mod test {
 
     #[test]
     fn tay() {
-        let mut core = NoveCore::new();
+        let mut core = Core6502::new();
 
         test!("imp", &mut core, rom!(A, 0x10, X, 0, Y, 5; 0xa8), y:0x10; pc: +1, ps: 0);
         test!("zer", &mut core, rom!(A, 0x00, X, 0, Y, 5; 0xa8), y:0x00; pc: +1, ps: Z);
@@ -946,14 +967,14 @@ mod test {
 
     #[test]
     fn tsx() {
-        let mut core = NoveCore::new();
+        let mut core = Core6502::new();
 
         test!("imp", &mut core, rom!(A, 1, X, 1, Y, 1; 0xba), x:0xff; pc: +1, ps: N);
     }
 
     #[test]
     fn txa() {
-        let mut core = NoveCore::new();
+        let mut core = Core6502::new();
 
         test!("imp", &mut core, rom!(A, 0, X, 0x05, Y, 0; 0x8a), a:0x05; pc: +1, ps: 0);
         test!("zer", &mut core, rom!(A, 0, X, 0x00, Y, 0; 0x8a), a:0x00; pc: +1, ps: Z);
@@ -962,14 +983,14 @@ mod test {
 
     #[test]
     fn txs() {
-        let mut core = NoveCore::new();
+        let mut core = Core6502::new();
         test!("imp", &mut core, rom!(A, 0, Y, 0, X, 0x12; 0x9a), x:0x12; pc: +1);
         assert_eq!(core.sp.0, 0x12);
     }
 
     #[test]
     fn tya() {
-        let mut core = NoveCore::new();
+        let mut core = Core6502::new();
 
         test!("imp", &mut core, rom!(A, 0, X, 0, Y, 0x05; 0x98), a:0x05; pc: +1, ps: 0);
         test!("zer", &mut core, rom!(A, 0, X, 0, Y, 0x00; 0x98), a:0x00; pc: +1, ps: Z);
@@ -978,7 +999,7 @@ mod test {
 
     #[test]
     fn adc_ops() {
-        let mut core = NoveCore::new();
+        let mut core = Core6502::new();
 
         core.a.assign(0b0000_0000);
         assert_eq!(core.adc(0b0101_1010), 0b0101_1010);
@@ -1003,7 +1024,7 @@ mod test {
 
     #[test]
     fn sbc_ops() {
-        let mut core = NoveCore::new();
+        let mut core = Core6502::new();
 
         core.a.assign(8); // 8 - 6 = 2
         core.ps.set_bit(Flag::Carry, true);
@@ -1032,7 +1053,7 @@ mod test {
 
     #[test]
     fn addressing_mode() {
-        let mut core = NoveCore::new();
+        let mut core = Core6502::new();
         core.pc = 0x0105;
         core.x.assign(0x04);
         core.y.assign(0x10);
@@ -1067,8 +1088,8 @@ mod test {
         test!("rel", &mut core, rom; pc: START_ADDR + 1 + jmp + 1 + 1);
     }
 
-    fn preloaded_core() -> NoveCore<CpuMem> {
-        let mut core = NoveCore::new();
+    fn preloaded_core() -> Core6502 {
+        let mut core = Core6502::new();
         core.memory.write(0x0005, 0x000a);
         core.memory.write(0x0050, 0x0005);
         core

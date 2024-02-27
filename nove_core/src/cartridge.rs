@@ -25,8 +25,8 @@ impl From<u8> for Mirroring {
 }
 
 #[derive(Debug, PartialEq)]
-pub(crate) struct Rom {
-    prg_rom: Program,
+pub struct Rom {
+    pub(crate) prg_rom: Program,
     chr_rom: Program,
     mapper: u8,
     screen_mirroring: Mirroring,
