@@ -100,7 +100,7 @@ impl NoveCore {
         self.memory.load_rom(rom);
     }
 
-    pub fn snake_load(&mut self, rom:Rom) {
+    pub fn snake_load(&mut self, rom: Rom) {
         self.memory.0[0x0600..(0x0600 + rom.len())].copy_from_slice(&rom[..]);
         self.memory.write_u16(0xFFFC, 0x0600);
     }
@@ -169,18 +169,18 @@ impl NoveCore {
             }
             PLP => self.pull_ps(),
             ROL if opcode.addressing_mode == AddressingMode::ACC => displace!(
-                    self,
-                    Displacement::Rotation(Direction::Left, self.ps.is_raised(Flag::Carry)),
-                    acc
-                ),
+                self,
+                Displacement::Rotation(Direction::Left, self.ps.is_raised(Flag::Carry)),
+                acc
+            ),
             ROL => {
                 displace!(self, Displacement::Rotation(Direction::Left, self.ps.is_raised(Flag::Carry)), mem:addr)
             }
             ROR if opcode.addressing_mode == AddressingMode::ACC => displace!(
-                    self,
-                    Displacement::Rotation(Direction::Right, self.ps.is_raised(Flag::Carry)),
-                    acc
-                ),
+                self,
+                Displacement::Rotation(Direction::Right, self.ps.is_raised(Flag::Carry)),
+                acc
+            ),
             ROR => {
                 displace!(self, Displacement::Rotation(Direction::Right, self.ps.is_raised(Flag::Carry)), mem:addr)
             }
@@ -214,7 +214,8 @@ impl NoveCore {
 
     #[cfg(not(test))]
     pub fn run<F>(&mut self, mut callback: F) -> Result<(), Exception>
-        where F: FnMut(&mut Self)
+    where
+        F: FnMut(&mut Self),
     {
         while self.tick()? {
             callback(self);
