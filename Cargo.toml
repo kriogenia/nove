@@ -1,6 +1,7 @@
 [workspace]
 members = [
   "nove_core",
+  "snake_demo",
 ]
 resolver = "2"
 

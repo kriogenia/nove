@@ -1,0 +1,10 @@
+[package]
+name = "snake_demo"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+
+[dependencies]
+nove_core = { path = "../nove_core" }
+sdl2 = "0.36.0"
+rand = "0.8.5"
