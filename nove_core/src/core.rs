@@ -1,10 +1,8 @@
-mod memory;
 mod ops;
 mod processor_status;
 mod register;
 mod stack_pointer;
 
-use crate::core::memory::Memory;
 use crate::core::ops::{Direction, Displacement};
 use crate::core::processor_status::{Flag, ProcessorStatus, OVERFLOW_MASK};
 use crate::core::register::Register;
@@ -12,12 +10,14 @@ use crate::core::stack_pointer::StackPointer;
 use crate::exception::NoveError;
 use crate::instruction::addressing_mode::AddressingMode;
 use crate::instruction::{mnemonic::Mnemonic, OpCode, OPCODES_MAP};
+use crate::memory::cpu_mem::CpuMem;
+use crate::memory::{cpu_mem, Memory};
 use crate::Program;
 use std::fmt::{Debug, Formatter};
 use std::ops::{AddAssign, BitAndAssign, BitOrAssign, BitXorAssign, SubAssign};
 
 #[derive(Default)]
-pub struct NoveCore {
+pub struct NoveCore<M> {
     /// Program Counter
     pc: u16,
     /// Stack Pointer
@@ -31,7 +31,7 @@ pub struct NoveCore {
     /// Processor Status
     ps: ProcessorStatus,
     /// Memory Map
-    pub memory: Memory,
+    pub memory: M,
 }
 
 /// Helper macro for debugging, easies the printing of hex values
@@ -82,13 +82,13 @@ macro_rules! update_mem {
     }};
 }
 
-impl NoveCore {
+impl NoveCore<CpuMem> {
     pub fn new() -> Self {
         Self::default()
     }
 
     pub fn reset(&mut self) {
-        self.pc = self.memory.read_u16(memory::PC_START_ADDR);
+        self.pc = self.memory.read_u16(cpu_mem::PC_START_ADDR);
         self.sp = Default::default();
         self.a = Default::default();
         self.x = Default::default();
@@ -381,7 +381,7 @@ impl NoveCore {
     }
 }
 
-impl Debug for NoveCore {
+impl<M> Debug for NoveCore<M> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "NovaCode {{ ")?;
         writeln!(f, "\tpc: {}", self.pc)?;
@@ -396,8 +396,9 @@ impl Debug for NoveCore {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::memory::cpu_mem;
 
-    const START_ADDR: u16 = memory::PRG_ROM_ADDR as u16;
+    const START_ADDR: u16 = cpu_mem::PRG_ROM_ADDR as u16;
 
     const A: u8 = 0xA9;
     const X: u8 = 0xA2;
@@ -420,7 +421,7 @@ mod test {
             println!($id);
             $core.load_and_run($rom);
             $(assert_eq!($core.$reg, $val);)+
-            assert_eq!($core.pc, memory::PRG_ROM_ADDR as u16 + $pc + 7);
+            assert_eq!($core.pc, cpu_mem::PRG_ROM_ADDR as u16 + $pc + 7);
             $(assert_eq!($core.ps.0, $ps);)*
         };
         ($id:expr, $core:expr, $rom:expr, $($addr:literal: $val:literal),*; pc: +$pc:literal $(, ps: $ps:expr)*) => {
@@ -429,7 +430,7 @@ mod test {
             $({
                 assert_eq!($core.memory.read_u16($addr), $val);
             })*
-            assert_eq!($core.pc, memory::PRG_ROM_ADDR as u16 + $pc + 7);
+            assert_eq!($core.pc, cpu_mem::PRG_ROM_ADDR as u16 + $pc + 7);
             $(assert_eq!($core.ps.0, $ps);)*
         };
         ($id:expr, $core:expr, $rom:expr; pc: $pc:expr $(, ps: $ps:expr)*) => {
@@ -703,7 +704,7 @@ mod test {
 
     #[test]
     fn jmp() {
-        let mut core = NoveCore::default();
+        let mut core = NoveCore::<CpuMem>::default();
         core.memory.write_u16(0x0050, 0x0100);
 
         test!("abs", &mut core, rom!(0x4c, 0x05, 0x00); pc: 0x0006);
@@ -1066,7 +1067,7 @@ mod test {
         test!("rel", &mut core, rom; pc: START_ADDR + 1 + jmp + 1 + 1);
     }
 
-    fn preloaded_core() -> NoveCore {
+    fn preloaded_core() -> NoveCore<CpuMem> {
         let mut core = NoveCore::new();
         core.memory.write(0x0005, 0x000a);
         core.memory.write(0x0050, 0x0005);

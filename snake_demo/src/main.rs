@@ -1,4 +1,6 @@
 use nove_core::core::NoveCore;
+use nove_core::memory::cpu_mem::CpuMem;
+use nove_core::memory::Memory;
 use rand::Rng;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
@@ -38,7 +40,7 @@ fn color(byte: u8) -> Color {
 }
 
 fn read_screen_state(
-    cpu: &NoveCore,
+    cpu: &NoveCore<CpuMem>,
     frame: &mut [u8; (WIDTH * HEIGHT * RGB_SPACE) as usize],
 ) -> bool {
     let mut frame_idx = 0;
@@ -57,7 +59,7 @@ fn read_screen_state(
     update
 }
 
-fn handle_user_input(cpu: &mut NoveCore, event_pump: &mut EventPump) {
+fn handle_user_input(cpu: &mut NoveCore<CpuMem>, event_pump: &mut EventPump) {
     for event in event_pump.poll_iter() {
         match event {
             Event::Quit { .. }
