@@ -1,4 +1,4 @@
-mod cartridge;
+pub mod cartridge;
 pub mod core;
 mod exception;
 mod instruction;

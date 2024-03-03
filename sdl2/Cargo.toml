@@ -1,10 +1,12 @@
 [package]
-name = "snake_demo"
+name = "sdl2"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
 
 [dependencies]
 nove_core = { path = "../nove_core" }
-sdl2.workspace = true
 rand.workspace = true
+sdl2.workspace = true
+quicli = "0.4.0"
+structopt = "0.3"

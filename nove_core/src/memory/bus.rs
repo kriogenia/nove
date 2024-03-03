@@ -24,7 +24,7 @@ impl Bus {
     pub fn read_rom(&self, addr: u16) -> u8 {
         let mut addr = (addr - PRG_ROM_START_ADDR) as usize;
         if self.rom.prg_rom.len() == HALF_ROM_SIZE && addr >= HALF_ROM_SIZE {
-            addr = addr % 0x4000;
+            addr %= 0x4000;
         }
         self.rom.prg_rom[addr]
     }

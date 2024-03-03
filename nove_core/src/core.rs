@@ -97,6 +97,17 @@ impl<M: Memory> NoveCore<M> {
         self.ps = Default::default();
     }
 
+    #[cfg(not(test))]
+    pub fn run<F>(&mut self, mut callback: F) -> Result<(), NoveError>
+    where
+        F: FnMut(&mut Self),
+    {
+        while self.tick()? {
+            callback(self);
+        }
+        Ok(())
+    }
+
     pub fn tick(&mut self) -> Result<bool, NoveError> {
         let byte = self.memory.read(self.pc);
         self.pc += 1;
@@ -375,17 +386,6 @@ impl Core6502 {
     pub fn snake_load(&mut self, rom: Program) {
         self.memory.0[0x0600..(0x0600 + rom.len())].copy_from_slice(&rom[..]);
         self.memory.write_u16(0xFFFC, 0x0600);
-    }
-
-    #[cfg(not(test))]
-    pub fn run<F>(&mut self, mut callback: F) -> Result<(), NoveError>
-    where
-        F: FnMut(&mut Self),
-    {
-        while self.tick()? {
-            callback(self);
-        }
-        Ok(())
     }
 
     #[cfg(test)]

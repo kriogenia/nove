@@ -34,7 +34,7 @@ pub struct Rom {
 
 impl Rom {
     pub fn new(raw: &Program) -> Result<Rom, NoveError> {
-        if &raw[0..4] != NES_TAG {
+        if raw[0..4] != NES_TAG {
             return Err(NoveError::WrongRomFormat);
         }
 

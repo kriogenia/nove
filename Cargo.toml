@@ -1,14 +1,17 @@
 [workspace]
 members = [
   "nove_core",
+  "sdl2",
   "snake_demo",
 ]
 resolver = "2"
 
 [workspace.package]
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 authors = [ "Kriogenia <ricardo@sotoestevez.dev>"]
 
 [workspace.dependencies]
+rand = "0.8.5"
+sdl2 = "0.36.0"
 
