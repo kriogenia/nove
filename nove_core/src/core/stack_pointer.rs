@@ -1,7 +1,7 @@
 const STACK_PAGE: u16 = 0x0100;
-const STACK_START: u8 = 0xff;
+const STACK_START: u8 = 0xfd;
 
-pub(crate) struct StackPointer(pub u8);
+pub struct StackPointer(pub u8);
 
 impl StackPointer {
     pub fn get(&self) -> u16 {
@@ -30,10 +30,10 @@ mod test {
     #[test]
     fn stack_pointer() {
         let mut pointer = StackPointer::default();
-        assert_eq!(pointer.get(), 0x01ff);
+        assert_eq!(pointer.get(), 0x01fd);
         pointer.next();
-        assert_eq!(pointer.get(), 0x01fe);
+        assert_eq!(pointer.get(), 0x01fc);
         pointer.prev();
-        assert_eq!(pointer.get(), 0x01ff);
+        assert_eq!(pointer.get(), 0x01fd);
     }
 }

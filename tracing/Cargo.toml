@@ -1,12 +1,10 @@
 [package]
-name = "sdl2"
+name = "tracing"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
 
 [dependencies]
 nove_core = { path = "../nove_core" }
-rand.workspace = true
-sdl2.workspace = true
 quicli.workspace = true
 structopt.workspace = true

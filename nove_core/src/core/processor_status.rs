@@ -1,13 +1,14 @@
 use std::fmt::{Debug, Formatter};
 use std::ops::Not;
 
+const INIT: u8 = 0b100100;
 pub(super) const OVERFLOW_MASK: u8 = 0b1000_0000;
 
 /// N V _ B D I Z C
 #[derive(Default)]
-pub(super) struct ProcessorStatus(pub u8);
+pub struct ProcessorStatus(pub u8);
 
-pub(super) enum Flag {
+pub enum Flag {
     Carry = 0b0000_0001,
     Zero = 0b0000_0010,
     Interrupt = 0b0000_0100,
@@ -19,6 +20,10 @@ pub(super) enum Flag {
 }
 
 impl ProcessorStatus {
+    pub fn new() -> Self {
+        Self(INIT)
+    }
+
     pub fn get_bit(&self, flag: Flag) -> u8 {
         if self.is_raised(flag) {
             1

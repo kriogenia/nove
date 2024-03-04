@@ -24,17 +24,17 @@ pub type NesNoveCore = NoveCore<Bus>;
 #[derive(Default)]
 pub struct NoveCore<M> {
     /// Program Counter
-    pc: u16,
+    pub pc: u16,
     /// Stack Pointer
-    sp: StackPointer,
+    pub sp: StackPointer,
     /// Accumulator
-    a: Register,
+    pub a: Register,
     /// Index Register X
-    x: Register,
+    pub x: Register,
     /// Index Register Y
-    y: Register,
+    pub y: Register,
     /// Processor Status
-    ps: ProcessorStatus,
+    pub ps: ProcessorStatus,
     /// Memory Map
     pub memory: M,
 }
@@ -94,7 +94,7 @@ impl<M: Memory> NoveCore<M> {
         self.a = Default::default();
         self.x = Default::default();
         self.y = Default::default();
-        self.ps = Default::default();
+        self.ps = ProcessorStatus::new();
     }
 
     #[cfg(not(test))]
@@ -215,7 +215,7 @@ impl<M: Memory> NoveCore<M> {
         Ok(true)
     }
 
-    fn get_addr(&self, mode: &AddressingMode) -> u16 {
+    pub fn get_addr(&self, mode: &AddressingMode) -> u16 {
         use AddressingMode::*;
         match mode {
             IMM => self.pc,
@@ -249,11 +249,11 @@ impl<M: Memory> NoveCore<M> {
         }
     }
 
-    fn next_byte(&self) -> u8 {
+    pub fn next_byte(&self) -> u8 {
         self.memory.read(self.pc)
     }
 
-    fn next_word(&self) -> u16 {
+    pub fn next_word(&self) -> u16 {
         self.memory.read_u16(self.pc)
     }
 
@@ -398,6 +398,7 @@ impl Core6502 {
     fn load_and_run(&mut self, rom: Program) {
         self.load(rom);
         self.reset();
+        self.ps = Default::default();
         self.run().expect("error while running the program")
     }
 }
@@ -820,13 +821,13 @@ mod test {
     #[test]
     fn pha() {
         let mut core = Core6502::new();
-        test!("imp", &mut core, rom!(A, 0x12, X, 0, Y, 0; 0x48), 0x01ff:0x12; pc: +1);
+        test!("imp", &mut core, rom!(A, 0x12, X, 0, Y, 0; 0x48), 0x01fd:0x12; pc: +1);
     }
 
     #[test]
     fn phs() {
         let mut core = Core6502::new();
-        test!("imp", &mut core, rom!(A, 0, X, 0, Y, 0; 0x08), 0x01ff:0b0011_0010; pc: +1);
+        test!("imp", &mut core, rom!(A, 0, X, 0, Y, 0; 0x08), 0x01fd:0b0011_0010; pc: +1);
     }
 
     #[test]
@@ -969,7 +970,7 @@ mod test {
     fn tsx() {
         let mut core = Core6502::new();
 
-        test!("imp", &mut core, rom!(A, 1, X, 1, Y, 1; 0xba), x:0xff; pc: +1, ps: N);
+        test!("imp", &mut core, rom!(A, 1, X, 1, Y, 1; 0xba), x:0xfd; pc: +1, ps: N);
     }
 
     #[test]

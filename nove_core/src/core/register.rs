@@ -1,7 +1,7 @@
 use std::ops::{AddAssign, BitAnd, BitAndAssign, BitOrAssign, BitXorAssign, SubAssign};
 
 #[derive(Debug, Default)]
-pub(super) struct Register(u8);
+pub struct Register(u8);
 
 impl Register {
     #[inline]

@@ -34,9 +34,7 @@ impl Memory for Bus {
     fn read(&self, addr: u16) -> u8 {
         match addr {
             RAM_START_ADDR..=RAM_MIRRORS_END_ADDR => self.vram[addr as usize & 0b00000111_11111111],
-            PPU_REGISTERS_START_ADDR..=PPU_REGISTERS_MIRRORS_END_ADDR => {
-                todo!("PPU is not supported yet")
-            }
+            PPU_REGISTERS_START_ADDR..=PPU_REGISTERS_MIRRORS_END_ADDR => 0,
             PRG_ROM_START_ADDR..=PRG_ROM_END_ADDR => self.read_rom(addr),
             _ => 0,
         }

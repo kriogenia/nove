@@ -716,6 +716,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "tracing"
+version = "0.2.0"
+dependencies = [
+ "nove_core",
+ "quicli",
+ "structopt 0.3.26",
+]
+
+[[package]]
 name = "unicode-ident"
 version = "1.0.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
