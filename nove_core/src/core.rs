@@ -57,9 +57,9 @@ macro_rules! op_and_assign {
 
 macro_rules! compare {
     ($core:expr, $reg:ident, $addr:expr) => {{
-        let (result, carry) = $core.$reg.overflowing_sub($core.memory.read($addr));
-        $core.ps.set_bit(Flag::Carry, carry || result == 0);
-        $core.update_zn(result);
+        let val = $core.memory.read($addr);
+        $core.ps.set_bit(Flag::Carry, val <= $core.$reg.get());
+        $core.update_zn($core.$reg.get().wrapping_sub(val));
     }};
 }
 
@@ -608,10 +608,10 @@ mod test {
     fn cmp() {
         let mut core = preloaded_core();
 
-        test!("imm", &mut core, rom!(A, 0x20, X, 0x00, Y, 0x00; 0xc9, 0x10), a:0x20; pc: +2, ps: 0);
+        test!("imm", &mut core, rom!(A, 0x00, X, 0x00, Y, 0x00; 0xc9, 0xff), a:0x00; pc: +2, ps: 0);
         test!("zer", &mut core, rom!(A, 0x20, X, 0x00, Y, 0x00; 0xc9, 0x20), a:0x20; pc: +2, ps: Z+C);
-        test!("neg", &mut core, rom!(A, 0xff, X, 0x00, Y, 0x00; 0xc9, 0x0f), a:0xff; pc: +2, ps: N);
-        test!("car", &mut core, rom!(A, 0x00, X, 0x00, Y, 0x00; 0xc9, 0xff), a:0x00; pc: +2, ps: C);
+        test!("neg", &mut core, rom!(A, 0xff, X, 0x00, Y, 0x00; 0xc9, 0x0f), a:0xff; pc: +2, ps: N+C);
+        test!("car", &mut core, rom!(A, 0x20, X, 0x00, Y, 0x00; 0xc9, 0x10), a:0x20; pc: +2, ps: C);
         test!("abs", &mut core, rom!(A, 0x0a, X, 0x00, Y, 0x00; 0xcd, 0x05, 0x00), a:0x0a; pc: +3, ps: Z+C);
         test!("abx", &mut core, rom!(A, 0x0a, X, 0x02, Y, 0x00; 0xdd, 0x03, 0x00), a:0x0a; pc: +3, ps: Z+C);
         test!("aby", &mut core, rom!(A, 0x0a, X, 0x00, Y, 0x01; 0xd9, 0x04, 0x00), a:0x0a; pc: +3, ps: Z+C);
@@ -625,10 +625,10 @@ mod test {
     fn cpx() {
         let mut core = preloaded_core();
 
-        test!("imm", &mut core, rom!(A, 0x20, X, 0x20, Y, 0x00; 0xe0, 0x10), a:0x20; pc: +2, ps: 0);
+        test!("imm", &mut core, rom!(A, 0x00, X, 0x00, Y, 0x00; 0xe0, 0xff), a:0x00; pc: +2, ps: 0);
         test!("zer", &mut core, rom!(A, 0x20, X, 0x20, Y, 0x00; 0xe0, 0x20), a:0x20; pc: +2, ps: Z+C);
-        test!("neg", &mut core, rom!(A, 0xff, X, 0xff, Y, 0x00; 0xe0, 0x0f), a:0xff; pc: +2, ps: N);
-        test!("car", &mut core, rom!(A, 0x00, X, 0x00, Y, 0x00; 0xe0, 0xff), a:0x00; pc: +2, ps: C);
+        test!("neg", &mut core, rom!(A, 0xff, X, 0xff, Y, 0x00; 0xe0, 0x0f), a:0xff; pc: +2, ps: N+C);
+        test!("car", &mut core, rom!(A, 0x20, X, 0x20, Y, 0x00; 0xe0, 0x10), a:0x20; pc: +2, ps: C);
         test!("abs", &mut core, rom!(A, 0x0a, X, 0x0a, Y, 0x00; 0xec, 0x05, 0x00), a:0x0a; pc: +3, ps: Z+C);
         test!("zpg", &mut core, rom!(A, 0x0a, X, 0x0a, Y, 0x00; 0xe4, 0x05), a:0x0a; pc: +2, ps: Z+C);
     }
@@ -637,10 +637,10 @@ mod test {
     fn cpy() {
         let mut core = preloaded_core();
 
-        test!("imm", &mut core, rom!(A, 0x20, X, 0x20, Y, 0x20; 0xc0, 0x10), a:0x20; pc: +2, ps: 0);
+        test!("imm", &mut core, rom!(A, 0x00, X, 0x00, Y, 0x00; 0xc0, 0xff), a:0x00; pc: +2, ps: 0);
         test!("zer", &mut core, rom!(A, 0x20, X, 0x20, Y, 0x20; 0xc0, 0x20), a:0x20; pc: +2, ps: Z+C);
-        test!("neg", &mut core, rom!(A, 0xff, X, 0xff, Y, 0xff; 0xc0, 0x0f), a:0xff; pc: +2, ps: N);
-        test!("car", &mut core, rom!(A, 0x00, X, 0x00, Y, 0x00; 0xc0, 0xff), a:0x00; pc: +2, ps: C);
+        test!("neg", &mut core, rom!(A, 0xff, X, 0xff, Y, 0xff; 0xc0, 0x0f), a:0xff; pc: +2, ps: N+C);
+        test!("car", &mut core, rom!(A, 0x20, X, 0x20, Y, 0x20; 0xc0, 0x10), a:0x20; pc: +2, ps: C);
         test!("abs", &mut core, rom!(A, 0x0a, X, 0x0a, Y, 0x0a; 0xcc, 0x05, 0x00), a:0x0a; pc: +3, ps: Z+C);
         test!("zpg", &mut core, rom!(A, 0x0a, X, 0x0a, Y, 0x0a; 0xc4, 0x05), a:0x0a; pc: +2, ps: Z+C);
     }
