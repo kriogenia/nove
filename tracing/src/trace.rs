@@ -86,9 +86,13 @@ pub fn trace(core: &NesNoveCore) -> String {
         .map(|z| format!("{:02x}", z))
         .collect::<Vec<String>>()
         .join(" ");
-    let asm_str = format!("{pc:04x}  {hex_str:8}  {:>4?} {tmp}", op.mnemonic)
-        .trim()
-        .to_string();
+    let unofficial = if op.unofficial { "*" } else { " " }.to_string();
+    let asm_str = format!(
+        "{pc:04x}  {hex_str:8} {unofficial}{:>4?} {tmp}",
+        op.mnemonic
+    )
+    .trim()
+    .to_string();
 
     format!(
         "{:47} A:{:02x} X:{:02x} Y:{:02x} P:{:02x} SP:{:02x}",

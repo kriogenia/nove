@@ -14,6 +14,7 @@ pub struct OpCode {
     pub bytes: u8,
     pub cycles: u8,
     pub addressing_mode: AddressingMode,
+    pub unofficial: bool,
 }
 
 impl OpCode {
@@ -30,6 +31,24 @@ impl OpCode {
             bytes,
             cycles,
             addressing_mode,
+            unofficial: false,
+        }
+    }
+
+    fn unofficial(
+        mnemonic: Mnemonic,
+        code: u8,
+        bytes: u8,
+        cycles: u8,
+        addressing_mode: AddressingMode,
+    ) -> Self {
+        Self {
+            mnemonic,
+            code,
+            bytes,
+            cycles,
+            addressing_mode,
+            unofficial: true,
         }
     }
 }
@@ -166,6 +185,7 @@ lazy_static! {
         OpCode::new(LSR, 0x56, 2, 6, ZPX),
 
         OpCode::new(NOP, 0xea, 1, 2, IMP),
+        OpCode::unofficial(NOP, 0x04, 2, 3, ZPG),
 
         OpCode::new(ORA, 0x0d, 3, 4, ABS),
         OpCode::new(ORA, 0x1d, 3, 4, ABX), // +1 cycle if page crossed
