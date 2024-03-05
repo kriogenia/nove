@@ -430,6 +430,7 @@ mod test {
     const I: u8 = Flag::Interrupt as u8;
     const D: u8 = Flag::Decimal as u8;
     const N: u8 = Flag::Negative as u8;
+    const O: u8 = Flag::One as u8;
     const Z: u8 = Flag::Zero as u8;
     const V: u8 = Flag::Overflow as u8;
 
@@ -839,7 +840,7 @@ mod test {
     #[test]
     fn plp() {
         let mut core = Core6502::default();
-        test!("imp", &mut core, rom!(A, 0b1011_0000, X, 0, Y, 0, 0x48; 0x28),; pc: +2, ps: N);
+        test!("imp", &mut core, rom!(A, 0b1011_0000, X, 0, Y, 0, 0x48; 0x28),; pc: +2, ps: N+O);
     }
 
     #[test]
@@ -873,7 +874,7 @@ mod test {
     #[test]
     fn rti() {
         let mut core = preloaded_core();
-        test!("imp", &mut core, rom!(A, 0x12, PUSH_A, A, 0x00, PUSH_A, PUSH_PS; 0x40); pc: 0x1200 + 1, ps: Z);
+        test!("imp", &mut core, rom!(A, 0x12, PUSH_A, A, 0x00, PUSH_A, PUSH_PS; 0x40); pc: 0x1200 + 1, ps: Z+O);
     }
 
     #[test]
