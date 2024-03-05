@@ -11,7 +11,7 @@ pub fn trace(core: &NesNoveCore) -> String {
     let mut hex_dump = vec![op.code];
 
     let (mem_addr, stored_val) = match &op.addressing_mode {
-        IMM | IMP | REL => (0, 0),
+        IMM | IMP | REL | ACC | IND => (0, 0),
         mode => {
             let addr = get_absolute_address(core, mode, pc + 1);
             (addr, core.memory.read(addr))
@@ -25,6 +25,20 @@ pub fn trace(core: &NesNoveCore) -> String {
                 hex_dump.push(core.memory.read(pc + 1));
                 hex_dump.push(core.memory.read(pc + 2));
                 format!("${mem_addr:04x}")
+            }
+            0x6c => {
+                hex_dump.push(core.memory.read(pc + 1));
+                hex_dump.push(core.memory.read(pc + 2));
+
+                let addr = core.memory.read_u16(pc + 1);
+                let jmp_addr = if addr & 0x00FF == 0x00FF {
+                    let lo = core.memory.read(addr);
+                    let hi = core.memory.read(addr & 0xFF00);
+                    u16::from_le_bytes([lo, hi])
+                } else {
+                    core.memory.read_u16(addr)
+                };
+                format!("(${addr:04x}) = {jmp_addr:04x}")
             }
             _ => "".to_string(),
         },
@@ -43,7 +57,7 @@ pub fn trace(core: &NesNoveCore) -> String {
                 ),
                 IDY => format!(
                     "(${addr:02x}),Y = {:04x} @ {mem_addr:04x} = {stored_val:02x}",
-                    mem_addr.wrapping_sub(core.x.get() as u16)
+                    mem_addr.wrapping_sub(core.y.get() as u16)
                 ),
                 _ => format!(
                     "${:04x}",
@@ -61,21 +75,7 @@ pub fn trace(core: &NesNoveCore) -> String {
                 ABS => format!("${mem_addr:04x} = {stored_val:02x}"),
                 ABX => format!("${addr:04x},X @ {mem_addr:04x} = {stored_val:02x}"),
                 ABY => format!("${addr:04x},Y @ {mem_addr:04x} = {stored_val:02x}"),
-                _ => {
-                    if op.code == 0x6c {
-                        //jmp indirect
-                        let jmp_addr = if addr & 0x00FF == 0x00FF {
-                            let lo = core.memory.read(addr);
-                            let hi = core.memory.read(addr & 0xFF00);
-                            u16::from_le_bytes([lo, hi])
-                        } else {
-                            core.memory.read_u16(addr)
-                        };
-                        format!("(${addr:04x}) = {jmp_addr:04x}")
-                    } else {
-                        format!("${:04x}", addr)
-                    }
-                }
+                _ => format!("${:04x}", addr),
             }
         }
         _ => "".to_string(),
@@ -111,12 +111,16 @@ pub fn get_absolute_address(core: &NesNoveCore, mode: &AddressingMode, addr: u16
         ZPX => core.memory.read(addr).wrapping_add(core.x.get()) as u16,
         ZPY => core.memory.read(addr).wrapping_add(core.y.get()) as u16,
         IDX => {
-            let base = core.memory.read(addr);
-            core.memory.read_u16(base.wrapping_add(core.x.get()) as u16)
+            let addr = core.memory.read(addr).wrapping_add(core.x.get());
+            let lo = core.memory.read(addr as u16);
+            let hi = core.memory.read(addr.wrapping_add(1) as u16);
+            u16::from_le_bytes([lo, hi])
         }
         IDY => {
-            let base = core.memory.read(addr);
-            core.memory.read_u16(base.wrapping_add(core.y.get()) as u16)
+            let addr = core.memory.read(addr);
+            let lo = core.memory.read(addr as u16);
+            let hi = core.memory.read(addr.wrapping_add(1) as u16);
+            u16::from_le_bytes([lo, hi]).wrapping_add(core.y.get() as u16)
         }
         _ => panic!("mode {:?} is not supported", mode),
     }

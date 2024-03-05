@@ -152,7 +152,7 @@ impl<M: Memory> NoveCore<M> {
             INY => op_and_assign!(self, y.add_assign, 1),
             JMP => self.pc = addr,
             JSR => {
-                self.stack_push_u16(self.pc.wrapping_add(2));
+                self.stack_push_u16(self.pc.wrapping_add(1));
                 self.pc = addr;
             }
             NOP => {}
@@ -192,7 +192,7 @@ impl<M: Memory> NoveCore<M> {
                 let val = self.stack_pull_u16();
                 self.pc = val;
             }
-            RTS => self.pc = self.stack_pull_u16(),
+            RTS => self.pc = self.stack_pull_u16() + 1,
             SEC => self.ps.set_bit(Flag::Carry, true),
             SED => self.ps.set_bit(Flag::Decimal, true),
             SEI => self.ps.set_bit(Flag::Interrupt, true),
@@ -226,6 +226,19 @@ impl<M: Memory> NoveCore<M> {
             ABS => self.next_word(),
             ABX => self.next_word().wrapping_add(self.x.get() as u16),
             ABY => self.next_word().wrapping_add(self.y.get() as u16),
+            IDX => {
+                let addr = self.next_byte().wrapping_add(self.x.get());
+                let lo = self.memory.read(addr as u16);
+                let hi = self.memory.read(addr.wrapping_add(1) as u16);
+                u16::from_le_bytes([lo, hi])
+            }
+            IDY => {
+                let addr = self.next_byte();
+                let lo = self.memory.read(addr as u16);
+                let hi = self.memory.read(addr.wrapping_add(1) as u16);
+                u16::from_le_bytes([lo, hi]).wrapping_add(self.y.get() as u16)
+            }
+            IMP | ACC => Default::default(),
             IND => {
                 // todo get_addr_ind
                 // 6502 was bugged when reading end-of-page addresses like $03FF, in those cases
@@ -239,13 +252,6 @@ impl<M: Memory> NoveCore<M> {
                     self.memory.read_u16(address)
                 }
             }
-            IDX => self
-                .memory
-                .read_u16(self.next_byte().wrapping_add(self.x.get()) as u16),
-            IDY => self
-                .memory
-                .read_u16(self.next_byte().wrapping_add(self.y.get()) as u16),
-            IMP | ACC => Default::default(),
         }
     }
 
@@ -486,7 +492,7 @@ mod test {
         test!("abx", &mut core, rom!(A, 0x20, X, 0x02, Y, 0x00; 0x7d, 0x03, 0x00), a:0x2a; pc: +3);
         test!("aby", &mut core, rom!(A, 0x20, X, 0x00, Y, 0x01; 0x79, 0x04, 0x00), a:0x2a; pc: +3);
         test!("idx", &mut core, rom!(A, 0x20, X, 0x20, Y, 0x00; 0x61, 0x30), a:0x2a; pc: +2);
-        test!("idy", &mut core, rom!(A, 0x20, X, 0x00, Y, 0x10; 0x71, 0x40), a:0x2a; pc: +2);
+        test!("idy", &mut core, rom!(A, 0x20, X, 0x00, Y, 0x10; 0x71, 0x40), a:0x20; pc: +2);
         test!("zpg", &mut core, rom!(A, 0x20, X, 0x00, Y, 0x00; 0x65, 0x05), a:0x2a; pc: +2);
         test!("zpx", &mut core, rom!(A, 0x20, X, 0x02, Y, 0x00; 0x75, 0x03), a:0x2a; pc: +2);
     }
@@ -502,7 +508,7 @@ mod test {
         test!("abx", &mut core, rom!(A, 0b00000110, X, 0x02, Y, 0x00; 0x3d, 0x03, 0x00), a:0b0010; pc: +3);
         test!("aby", &mut core, rom!(A, 0b00000110, X, 0x00, Y, 0x01; 0x39, 0x04, 0x00), a:0b0010; pc: +3);
         test!("idx", &mut core, rom!(A, 0b00000110, X, 0x20, Y, 0x00; 0x21, 0x30), a:0b0010; pc: +2);
-        test!("idy", &mut core, rom!(A, 0b00000110, X, 0x00, Y, 0x10; 0x31, 0x40), a:0b0010; pc: +2);
+        test!("idy", &mut core, rom!(A, 0b00000110, X, 0x00, Y, 0x10; 0x31, 0x40), a:0b0000; pc: +2);
         test!("zpg", &mut core, rom!(A, 0b00000110, X, 0x00, Y, 0x00; 0x25, 0x05), a:0b0010; pc: +2);
         test!("zpx", &mut core, rom!(A, 0b00000110, X, 0x02, Y, 0x00; 0x35, 0x03), a:0b0010; pc: +2);
     }
@@ -616,7 +622,7 @@ mod test {
         test!("abx", &mut core, rom!(A, 0x0a, X, 0x02, Y, 0x00; 0xdd, 0x03, 0x00), a:0x0a; pc: +3, ps: Z+C);
         test!("aby", &mut core, rom!(A, 0x0a, X, 0x00, Y, 0x01; 0xd9, 0x04, 0x00), a:0x0a; pc: +3, ps: Z+C);
         test!("idx", &mut core, rom!(A, 0x0a, X, 0x20, Y, 0x00; 0xc1, 0x30), a:0x0a; pc: +2, ps: Z+C);
-        test!("idy", &mut core, rom!(A, 0x0a, X, 0x00, Y, 0x10; 0xd1, 0x40), a:0x0a; pc: +2, ps: Z+C);
+        test!("idy", &mut core, rom!(A, 0x0a, X, 0x00, Y, 0x10; 0xd1, 0x40), a:0x0a; pc: +2, ps: C);
         test!("zpg", &mut core, rom!(A, 0x0a, X, 0x00, Y, 0x00; 0xc5, 0x05), a:0x0a; pc: +2, ps: Z+C);
         test!("zpx", &mut core, rom!(A, 0x0a, X, 0x02, Y, 0x00; 0xd5, 0x03), a:0x0a; pc: +2, ps: Z+C);
     }
@@ -688,7 +694,7 @@ mod test {
         test!("abx", &mut core, rom!(A, 0b00000110, X, 0x02, Y, 0x00; 0x5d, 0x03, 0x00), a:0b1100; pc: +3);
         test!("aby", &mut core, rom!(A, 0b00000110, X, 0x00, Y, 0x01; 0x59, 0x04, 0x00), a:0b1100; pc: +3);
         test!("idx", &mut core, rom!(A, 0b00000110, X, 0x20, Y, 0x00; 0x41, 0x30), a:0b1100; pc: +2);
-        test!("idy", &mut core, rom!(A, 0b00000110, X, 0x00, Y, 0x10; 0x51, 0x40), a:0b1100; pc: +2);
+        test!("idy", &mut core, rom!(A, 0b00000110, X, 0x00, Y, 0x10; 0x51, 0x40), a:0b0110; pc: +2);
         test!("zpg", &mut core, rom!(A, 0b00000110, X, 0x00, Y, 0x00; 0x45, 0x05), a:0b1100; pc: +2);
         test!("zpx", &mut core, rom!(A, 0b00000110, X, 0x02, Y, 0x00; 0x55, 0x03), a:0b1100; pc: +2);
     }
@@ -739,7 +745,7 @@ mod test {
         let mut core = preloaded_core();
 
         test!("abs", &mut core, rom!(0x20, 0x05, 0x00); pc: 0x0007);
-        assert_eq!(core.stack_peek_u16(), START_ADDR + 3);
+        assert_eq!(core.stack_peek_u16(), START_ADDR + 2);
     }
 
     #[test]
@@ -753,7 +759,7 @@ mod test {
         test!("abx", &mut core, rom!(A, 0, X, 0x02, Y, 0x00; 0xbd, 0x03, 0x00), a:10; pc: +3);
         test!("aby", &mut core, rom!(A, 0, X, 0x00, Y, 0x01; 0xb9, 0x04, 0x00), a:10; pc: +3);
         test!("idx", &mut core, rom!(A, 0, X, 0x20, Y, 0x00; 0xa1, 0x30), a:10; pc: +2);
-        test!("idy", &mut core, rom!(A, 0, X, 0x00, Y, 0x10; 0xb1, 0x40), a:10; pc: +2);
+        test!("idy", &mut core, rom!(A, 0, X, 0x00, Y, 0x10; 0xb1, 0x40), a:00; pc: +2);
         test!("zpg", &mut core, rom!(A, 0, X, 0x00, Y, 0x00; 0xa5, 0x05), a:10; pc: +2);
         test!("zpx", &mut core, rom!(A, 0, X, 0x02, Y, 0x00; 0xb5, 0x03), a:10; pc: +2);
     }
@@ -814,7 +820,7 @@ mod test {
         test!("abx", &mut core, rom!(A, 0b00000110, X, 0x02, Y, 0x00; 0x1d, 0x03, 0x00), a:0b1110; pc: +3);
         test!("aby", &mut core, rom!(A, 0b00000110, X, 0x00, Y, 0x01; 0x19, 0x04, 0x00), a:0b1110; pc: +3);
         test!("idx", &mut core, rom!(A, 0b00000110, X, 0x20, Y, 0x00; 0x01, 0x30), a:0b1110; pc: +2);
-        test!("idy", &mut core, rom!(A, 0b00000110, X, 0x00, Y, 0x10; 0x11, 0x40), a:0b1110; pc: +2);
+        test!("idy", &mut core, rom!(A, 0b00000110, X, 0x00, Y, 0x10; 0x11, 0x40), a:0b0110; pc: +2);
         test!("zpg", &mut core, rom!(A, 0b00000110, X, 0x00, Y, 0x00; 0x05, 0x05), a:0b1110; pc: +2);
         test!("zpx", &mut core, rom!(A, 0b00000110, X, 0x02, Y, 0x00; 0x15, 0x03), a:0b1110; pc: +2);
     }
@@ -880,7 +886,7 @@ mod test {
     #[test]
     fn rts() {
         let mut core = preloaded_core();
-        test!("imp", &mut core, rom!(A, 0x12, PUSH_A, A, 0x00, PUSH_A; 0x60); pc: 0x1201);
+        test!("imp", &mut core, rom!(A, 0x12, PUSH_A, A, 0x00, PUSH_A; 0x60); pc: 0x1202);
     }
 
     #[test]
@@ -895,7 +901,7 @@ mod test {
         test!("abx", &mut core, rom!(A, 0x1b, X, 0x02, Y, 0x00; 0xfd, 0x03, 0x00), a:0x10; pc: +3);
         test!("aby", &mut core, rom!(A, 0x1b, X, 0x00, Y, 0x01; 0xf9, 0x04, 0x00), a:0x10; pc: +3);
         test!("idx", &mut core, rom!(A, 0x1b, X, 0x20, Y, 0x00; 0xe1, 0x30), a:0x10; pc: +2);
-        test!("idy", &mut core, rom!(A, 0x1b, X, 0x00, Y, 0x10; 0xf1, 0x40), a:0x10; pc: +2);
+        test!("idy", &mut core, rom!(A, 0x1b, X, 0x00, Y, 0x10; 0xf1, 0x40), a:0x1a; pc: +2);
         test!("zpg", &mut core, rom!(A, 0x1b, X, 0x00, Y, 0x00; 0xe5, 0x05), a:0x10; pc: +2);
         test!("zpx", &mut core, rom!(A, 0x1b, X, 0x02, Y, 0x00; 0xf5, 0x03), a:0x10; pc: +2);
     }
@@ -926,7 +932,7 @@ mod test {
         test!("abx", &mut core, rom!(A, 11, X, 0x02, Y, 0x00; 0x9d, 0x03, 0x00), 0x0005:11; pc: +3);
         test!("aby", &mut core, rom!(A, 12, X, 0x00, Y, 0x01; 0x99, 0x04, 0x00), 0x0005:12; pc: +3);
         test!("idx", &mut core, rom!(A, 13, X, 0x20, Y, 0x00; 0x81, 0x30), 0x0005:13; pc: +2);
-        test!("idy", &mut core, rom!(A, 14, X, 0x00, Y, 0x10; 0x91, 0x40), 0x0005:14; pc: +2);
+        test!("idy", &mut core, rom!(A, 14, X, 0x00, Y, 0x10; 0x91, 0x40), 0x0005:13; pc: +2);
         test!("zpg", &mut core, rom!(A, 15, X, 0x00, Y, 0x00; 0x85, 0x05), 0x0005:15; pc: +2);
         test!("zpx", &mut core, rom!(A, 16, X, 0x02, Y, 0x00; 0x95, 0x03), 0x0005:16; pc: +2);
     }
@@ -1074,7 +1080,7 @@ mod test {
         assert_eq!(core.get_addr(&AddressingMode::ABY), 0x0a11);
         assert_eq!(core.get_addr(&AddressingMode::IND), 0x0b00);
         assert_eq!(core.get_addr(&AddressingMode::IDX), 0x0c00);
-        assert_eq!(core.get_addr(&AddressingMode::IDY), 0x0d00);
+        assert_eq!(core.get_addr(&AddressingMode::IDY), 0x0010);
 
         // IND bug
         core.pc = 0x0200;
