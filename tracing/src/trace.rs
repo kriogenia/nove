@@ -6,7 +6,9 @@ use nove_core::memory::Memory;
 
 pub fn trace(core: &NesNoveCore) -> String {
     let pc = core.pc;
-    let op = *instruction::OPCODES_MAP.get(&core.next_byte()).unwrap();
+    let op = *instruction::OPCODES_MAP
+        .get(&core.next_byte())
+        .unwrap_or_else(|| panic!("unknown opcode: {:#04x}", &core.next_byte()));
 
     let mut hex_dump = vec![op.code];
 
