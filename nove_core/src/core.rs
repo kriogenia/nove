@@ -197,13 +197,14 @@ impl<M: Memory> NoveCore<M> {
                 self.pc = val;
             }
             RTS => self.pc = self.stack_pull_u16() + 1,
-            SEC => self.ps.set_bit(Flag::Carry, true),
-            SED => self.ps.set_bit(Flag::Decimal, true),
-            SEI => self.ps.set_bit(Flag::Interrupt, true),
+            SAX => self.memory.write(addr, self.a.get() & self.x.get()),
             SBC => {
                 let diff = self.sbc(self.memory.read(addr));
                 op_and_assign!(self, a.assign, diff);
             }
+            SEC => self.ps.set_bit(Flag::Carry, true),
+            SED => self.ps.set_bit(Flag::Decimal, true),
+            SEI => self.ps.set_bit(Flag::Interrupt, true),
             STA => self.memory.write(addr, self.a.get()),
             STX => self.memory.write(addr, self.x.get()),
             STY => self.memory.write(addr, self.y.get()),
@@ -753,6 +754,12 @@ mod test {
     fn rts() {
         let mut core = preloaded_core();
         test!(&mut core, rom!(A, 0x12, PUSH_A, A, 0x00, PUSH_A; 0x60); pc: 0x1202);
+    }
+
+    #[test]
+    fn sax() {
+        let mut core = Core6502::new();
+        test!(&mut core, rom!(A, 0b1010, X, 0b1100, Y, 0; 0x87, 0x25), 0x25:0b1000; pc: +2);
     }
 
     #[test]

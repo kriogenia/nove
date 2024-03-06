@@ -333,7 +333,15 @@ pub enum Mnemonic {
     ///
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#RTS
     RTS,
-    /// Substract with Carry
+    /// AND Accumulator and X register
+    ///
+    /// M,Z,N = A & M
+    ///
+    /// AND X register with accumulator and store result in memory.
+    ///
+    /// _Unofficial_
+    SAX,
+    /// Subtract with Carry
     ///
     /// A,Z,C,N = A-M-(1-C)
     ///

@@ -252,6 +252,11 @@ lazy_static! {
 
         OpCode::new(RTS, 0x60, 1, 6, IMP),
 
+        OpCode::unofficial(SAX, 0x8f, 3, 4, ABS),
+        OpCode::unofficial(SAX, 0x83, 2, 6, IDX),
+        OpCode::unofficial(SAX, 0x87, 2, 3, ZPG),
+        OpCode::unofficial(SAX, 0x97, 2, 4, ZPY),
+
         OpCode::new(SBC, 0xed, 3, 4, ABS),
         OpCode::new(SBC, 0xfd, 3, 4, ABX), // +1 cycle if page crossed
         OpCode::new(SBC, 0xf9, 3, 4, ABY), // +1 cycle if page crossed
