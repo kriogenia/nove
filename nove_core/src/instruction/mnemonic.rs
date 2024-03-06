@@ -226,6 +226,12 @@ pub enum Mnemonic {
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#JSR
     ///
     JSR,
+    /// Load Accumulator and X register
+    ///
+    /// A,X,Z,N = M
+    ///
+    /// Loads a byte of memory into the accumulator and the X register.
+    LAX,
     /// Load Accumulator
     ///
     /// A,Z,N = M

@@ -156,6 +156,10 @@ impl<M: Memory> NoveCore<M> {
                 self.pc = addr;
             }
             NOP => {}
+            LAX => {
+                op_and_assign!(self, a.assign, self.memory.read(addr));
+                op_and_assign!(self, x.assign, self.a.get());
+            }
             LDA => op_and_assign!(self, a.assign, self.memory.read(addr)),
             LDX => op_and_assign!(self, x.assign, self.memory.read(addr)),
             LDY => op_and_assign!(self, y.assign, self.memory.read(addr)),
@@ -449,7 +453,9 @@ mod test {
         ($id:expr, $core:expr, $rom:expr, $($reg:ident: $val:literal),+; pc: +$pc:literal $(, ps: $ps:expr)*) => {
             println!($id);
             $core.load_and_run($rom);
-            $(assert_eq!($core.$reg, $val);)+
+            $({
+                assert_eq!($core.$reg, $val);
+            })+
             assert_eq!($core.pc, memory::PRG_ROM_START_ADDR as u16 + $pc + 7);
             $(assert_eq!($core.ps.0, $ps);)*
         };
@@ -746,6 +752,12 @@ mod test {
 
         test!("abs", &mut core, rom!(0x20, 0x05, 0x00); pc: 0x0007);
         assert_eq!(core.stack_peek_u16(), START_ADDR + 2);
+    }
+
+    #[test]
+    fn lax() {
+        let mut core = preloaded_core();
+        test!("abs", &mut core, rom!(A, 0, X, 0x00, Y, 0x00; 0xaf, 0x05, 0x00), a:10, x:10; pc: +3);
     }
 
     #[test]
