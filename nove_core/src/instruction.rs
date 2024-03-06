@@ -192,7 +192,6 @@ lazy_static! {
         OpCode::new(LSR, 0x56, 2, 6, ZPX),
 
         OpCode::new(NOP, 0xea, 1, 2, IMP),
-        // NOP
         OpCode::unofficial(NOP, 0x1a, 1, 2, IMP),
         OpCode::unofficial(NOP, 0x3a, 1, 2, IMP),
         OpCode::unofficial(NOP, 0x5a, 1, 2, IMP),
@@ -265,6 +264,7 @@ lazy_static! {
         OpCode::new(SBC, 0xf1, 2, 5, IDY), // +1 cycle if page crossed
         OpCode::new(SBC, 0xe5, 2, 3, ZPG),
         OpCode::new(SBC, 0xf5, 2, 4, ZPX),
+        OpCode::unofficial(SBC, 0xeb, 2, 2, IMM),
 
         OpCode::new(SEC, 0x38, 1, 2, IMP),
 
