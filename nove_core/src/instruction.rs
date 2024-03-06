@@ -125,6 +125,14 @@ lazy_static! {
         OpCode::new(CPY, 0xc0, 2, 2, IMM),
         OpCode::new(CPY, 0xc4, 2, 3, ZPG),
 
+        OpCode::unofficial(DCP, 0xcf, 3, 6, ABS),
+        OpCode::unofficial(DCP, 0xdf, 3, 7, ABX),
+        OpCode::unofficial(DCP, 0xdb, 3, 7, ABY),
+        OpCode::unofficial(DCP, 0xc3, 2, 8, IDX),
+        OpCode::unofficial(DCP, 0xd3, 2, 8, IDY),
+        OpCode::unofficial(DCP, 0xc7, 2, 5, ZPG),
+        OpCode::unofficial(DCP, 0xd7, 2, 6, ZPX),
+
         OpCode::new(DEC, 0xce, 3, 6, ABS),
         OpCode::new(DEC, 0xde, 3, 7, ABX),
         OpCode::new(DEC, 0xc6, 2, 5, ZPG),

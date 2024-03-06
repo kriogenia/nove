@@ -143,6 +143,11 @@ impl<M: Memory> NoveCore<M> {
             CMP => compare!(self, a, addr),
             CPX => compare!(self, x, addr),
             CPY => compare!(self, y, addr),
+            DCP => {
+                self.memory
+                    .write(addr, self.memory.read(addr).wrapping_sub(1));
+                compare!(self, a, addr);
+            }
             DEC => update_mem!(self, addr, wrapping_sub),
             DEX => op_and_assign!(self, x.sub_assign, 1),
             DEY => op_and_assign!(self, y.sub_assign, 1),
@@ -602,6 +607,12 @@ mod test {
         let mut core = preloaded_core();
         test!(&mut core, rom!(A, 0x00, X, 0x00, Y, 0x00; 0xc0, 0xff), a:0x00; pc: +2, ps: 0);
         test!(&mut core, rom!(A, 0x20, X, 0x20, Y, 0x20; 0xc0, 0x10), a:0x20; pc: +2, ps: C);
+    }
+
+    #[test]
+    fn dcp() {
+        let mut core = preloaded_core();
+        test!(&mut core, rom!(A, 0x0a, X, 0, Y, 1; 0xc7, 0x05), 0x05:0x09; pc: +2, ps: C);
     }
 
     #[test]

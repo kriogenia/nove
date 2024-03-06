@@ -156,6 +156,14 @@ pub enum Mnemonic {
     ///
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#CPY
     CPY,
+    /// Decrement and compare
+    ///
+    /// MC = M - 1
+    ///
+    /// Subtract 1 from memory (without borrow).
+    ///
+    /// _Unofficial_
+    DCP,
     /// Decrement memory
     ///
     /// M,Z,N = M-1
