@@ -192,20 +192,15 @@ lazy_static! {
         OpCode::new(LSR, 0x56, 2, 6, ZPX),
 
         OpCode::new(NOP, 0xea, 1, 2, IMP),
-        OpCode::unofficial(NOP, 0x0c, 3, 4, ABS),
-        OpCode::unofficial(NOP, 0x1c, 3, 4, ABX), // +1 cycle if page crossed
-        OpCode::unofficial(NOP, 0x3c, 3, 4, ABX), // +1 cycle if page crossed
-        OpCode::unofficial(NOP, 0x5c, 3, 4, ABX), // +1 cycle if page crossed
-        OpCode::unofficial(NOP, 0x7c, 3, 4, ABX), // +1 cycle if page crossed
-        OpCode::unofficial(NOP, 0xdc, 3, 4, ABX), // +1 cycle if page crossed
-        OpCode::unofficial(NOP, 0xfc, 3, 4, ABX), // +1 cycle if page crossed
-        OpCode::unofficial(NOP, 0x80, 2, 2, IMM),
+        // NOP
         OpCode::unofficial(NOP, 0x1a, 1, 2, IMP),
         OpCode::unofficial(NOP, 0x3a, 1, 2, IMP),
         OpCode::unofficial(NOP, 0x5a, 1, 2, IMP),
         OpCode::unofficial(NOP, 0x7a, 1, 2, IMP),
         OpCode::unofficial(NOP, 0xda, 1, 2, IMP),
         OpCode::unofficial(NOP, 0xfa, 1, 2, IMP),
+        // DOP
+        OpCode::unofficial(NOP, 0x80, 2, 2, IMM),
         OpCode::unofficial(NOP, 0x04, 2, 3, ZPG),
         OpCode::unofficial(NOP, 0x44, 2, 3, ZPG),
         OpCode::unofficial(NOP, 0x64, 2, 3, ZPG),
@@ -215,6 +210,14 @@ lazy_static! {
         OpCode::unofficial(NOP, 0x74, 2, 4, ZPX),
         OpCode::unofficial(NOP, 0xd4, 2, 4, ZPX),
         OpCode::unofficial(NOP, 0xf4, 2, 4, ZPX),
+        // TOP
+        OpCode::unofficial(NOP, 0x0c, 3, 4, ABS),
+        OpCode::unofficial(NOP, 0x1c, 3, 4, ABX), // +1 cycle if page crossed
+        OpCode::unofficial(NOP, 0x3c, 3, 4, ABX), // +1 cycle if page crossed
+        OpCode::unofficial(NOP, 0x5c, 3, 4, ABX), // +1 cycle if page crossed
+        OpCode::unofficial(NOP, 0x7c, 3, 4, ABX), // +1 cycle if page crossed
+        OpCode::unofficial(NOP, 0xdc, 3, 4, ABX), // +1 cycle if page crossed
+        OpCode::unofficial(NOP, 0xfc, 3, 4, ABX), // +1 cycle if page crossed
 
         OpCode::new(ORA, 0x0d, 3, 4, ABS),
         OpCode::new(ORA, 0x1d, 3, 4, ABX), // +1 cycle if page crossed

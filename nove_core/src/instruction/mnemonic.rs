@@ -231,6 +231,8 @@ pub enum Mnemonic {
     /// A,X,Z,N = M
     ///
     /// Loads a byte of memory into the accumulator and the X register.
+    ///
+    /// _Unofficial_
     LAX,
     /// Load Accumulator
     ///
