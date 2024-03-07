@@ -2,9 +2,9 @@ pub mod bus;
 pub mod cpu_mem;
 
 pub const PRG_ROM_START_ADDR: u16 = 0x8000;
-pub const PRG_ROM_END_ADDR: u16 = 0xFFFF;
+pub const PRG_ROM_END_ADDR: u16 = 0xffff;
 pub const MEMORY_SIZE: usize = PRG_ROM_END_ADDR as usize; // 64 KiB
-pub const PC_START_ADDR: u16 = 0xFFFC;
+pub const PC_START_ADDR: u16 = 0xfffc;
 
 pub trait Memory {
     fn read(&self, addr: u16) -> u8;

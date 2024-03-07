@@ -8,7 +8,7 @@ const PRG_ROM_PAGE_SIZE: usize = 16384; // 16kB
 const CHR_ROM_PAGE_SIZE: usize = 8192; //  8kB
 
 #[derive(Debug, PartialEq)]
-pub(crate) enum Mirroring {
+pub enum Mirroring {
     Vertical,
     Horizontal,
     FourScreen,
@@ -26,10 +26,10 @@ impl From<u8> for Mirroring {
 
 #[derive(Debug, PartialEq)]
 pub struct Rom {
-    pub(crate) prg_rom: Program,
-    chr_rom: Program,
+    pub prg_rom: Program,
+    pub chr_rom: Program,
     mapper: u8,
-    screen_mirroring: Mirroring,
+    pub screen_mirroring: Mirroring,
 }
 
 impl Rom {

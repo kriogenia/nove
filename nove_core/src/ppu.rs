@@ -63,11 +63,11 @@ impl PPU {
         prev
     }
 
-    fn write_addr(&mut self, val: u8) {
+    pub fn write_addr(&mut self, val: u8) {
         self.addr.update(val);
     }
 
-    fn write_ctrl(&mut self, val: u8) {
+    pub fn write_ctrl(&mut self, val: u8) {
         self.ctrl.set(val)
     }
 
