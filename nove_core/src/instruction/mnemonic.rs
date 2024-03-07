@@ -399,12 +399,16 @@ pub enum Mnemonic {
     SEI,
     /// Shift Left and OR
     ///
-    /// A,N,Z,C = M <<1 | A
-    ///
     /// Shift left one bit in memory, then OR accumulator with memory.
     ///
     /// _Unofficial_
     SLO,
+    /// Shift Right and Exclusive OR
+    ///
+    /// Shift right one bit in memory, then EOR accumulator with memory.
+    ///
+    /// _Unofficial_
+    SRE,
     /// Store Accumulator
     ///
     /// M = A

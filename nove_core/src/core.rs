@@ -219,6 +219,10 @@ impl<M: Memory> NoveCore<M> {
                 displace!(self, Displacement::Shift(Direction::Left), mem:addr);
                 op_and_assign!(self, a.bitor_assign, self.memory.read(addr))
             }
+            SRE => {
+                displace!(self, Displacement::Shift(Direction::Right), mem:addr);
+                op_and_assign!(self, a.bitxor_assign, self.memory.read(addr))
+            }
             STA => self.memory.write(addr, self.a.get()),
             STX => self.memory.write(addr, self.x.get()),
             STY => self.memory.write(addr, self.y.get()),
@@ -833,6 +837,13 @@ mod test {
         let mut core = preloaded_core();
         test!(&mut core, rom!(A, 0b1010, X, 0x00, Y, 0x00; 0x07, 0x05), a:0b0001_1110; pc: +2, ps: 0);
         assert_eq!(0b0001_0100, core.memory.read(0x05));
+    }
+
+    #[test]
+    fn sre() {
+        let mut core = preloaded_core();
+        test!(&mut core, rom!(A, 0b1100, X, 0x00, Y, 0x00; 0x47, 0x05), a:0b1001; pc: +2, ps: 0);
+        assert_eq!(0b0101, core.memory.read(0x05));
     }
 
     #[test]

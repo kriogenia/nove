@@ -304,6 +304,14 @@ lazy_static! {
         OpCode::unofficial(SLO, 0x07, 2, 5, ZPG),
         OpCode::unofficial(SLO, 0x17, 2, 6, ZPX),
 
+        OpCode::unofficial(SRE, 0x4f, 3, 6, ABS),
+        OpCode::unofficial(SRE, 0x5f, 3, 7, ABX),
+        OpCode::unofficial(SRE, 0x5b, 3, 7, ABY),
+        OpCode::unofficial(SRE, 0x43, 2, 8, IDX),
+        OpCode::unofficial(SRE, 0x53, 2, 8, IDY),
+        OpCode::unofficial(SRE, 0x47, 2, 5, ZPG),
+        OpCode::unofficial(SRE, 0x57, 2, 6, ZPX),
+
         OpCode::new(STA, 0x8d, 3, 4, ABS),
         OpCode::new(STA, 0x9d, 3, 5, ABX),
         OpCode::new(STA, 0x99, 3, 5, ABY),
