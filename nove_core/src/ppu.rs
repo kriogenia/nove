@@ -1,11 +1,11 @@
 use crate::cartridge::Mirroring;
 use crate::ppu::address_register::AddressRegister;
-use crate::ppu::control_register::ControlRegister;
+use crate::ppu::controller_register::ControllerRegister;
 use crate::ppu::mask_register::MaskRegister;
 use crate::Program;
 
 mod address_register;
-mod control_register;
+mod controller_register;
 mod mask_register;
 
 const PALETTE_SIZE: usize = 32;
@@ -15,9 +15,9 @@ const NAMETABLE_SIZE: u16 = 1024; // 1KiB
 
 pub struct Ppu {
     chrom: Program,
-    pub ctrl: ControlRegister, // 0x2000
-    pub mask: MaskRegister,    // 0x2001
-    pub addr: AddressRegister, // 0x2006
+    pub ctrl: ControllerRegister, // 0x2000
+    pub mask: MaskRegister,       // 0x2001
+    pub addr: AddressRegister,    // 0x2006
     palette: [u8; PALETTE_SIZE],
     vram: [u8; VRAM_SIZE],
     oam: [u8; OAM_SIZE],
