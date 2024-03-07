@@ -37,7 +37,7 @@ impl Memory for Bus {
     fn read(&self, addr: u16) -> u8 {
         match addr {
             ram::START..=ram::MIRRORS_END => self.vram[addr as usize & 0b00000111_11111111],
-            ppu::CTRL | 0x2001 | 0x2003 | 0x2005 | ppu::ADDR | 0x4014 => {
+            ppu::CTRL | ppu::MASK | 0x2003 | 0x2005 | ppu::ADDR | 0x4014 => {
                 panic!("invalid attempt to read from write-only PPU address {addr:x}");
             }
             ppu::DATA => self.ppu.borrow_mut().read_data(),
@@ -51,6 +51,7 @@ impl Memory for Bus {
         match addr {
             ram::START..=ram::MIRRORS_END => self.vram[addr as usize & 0b11111111111] = value,
             ppu::CTRL => self.ppu.borrow_mut().ctrl.write(value),
+            ppu::MASK => self.ppu.borrow_mut().mask.write(value),
             ppu::ADDR => self.ppu.borrow_mut().addr.write(value),
             ppu::DATA => todo!("write to ppu data"),
             ppu::REGISTERS_START..=ppu::REGISTERS_MIRRORS_END => {

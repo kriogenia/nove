@@ -1,4 +1,5 @@
 use crate::RegWrite;
+use std::fmt::Formatter;
 use std::marker::PhantomData;
 use std::ops::Not;
 
@@ -40,6 +41,11 @@ impl<F: Into<u8>> FlagRegister<F> {
 
     pub fn is_lowered(&self, flag: F) -> bool {
         !self.is_raised(flag)
+    }
+
+    pub(crate) fn print(&self, f: &mut Formatter<'_>, cheatsheet: &str) -> std::fmt::Result {
+        writeln!(f, "\n\t\t  {cheatsheet}")?;
+        writeln!(f, "\t\t{:#010b}", self.0)
     }
 }
 

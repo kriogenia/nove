@@ -1,7 +1,7 @@
 use crate::flag_register::FlagRegister;
 use std::fmt::{Debug, Formatter};
 
-#[derive(Debug, Default, PartialEq)]
+#[derive(Debug, Default)]
 pub enum ControlFlags {
     #[default]
     Increment = 0b0000_0010,
@@ -31,7 +31,6 @@ impl ControlRegister {
 
 impl Debug for ControlRegister {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "\n\t\t  VPHBSINN")?;
-        writeln!(f, "\t\t{:#010b}", self.0)
+        self.print(f, "VPHBSINN")
     }
 }

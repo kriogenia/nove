@@ -2,6 +2,7 @@ pub mod ppu {
     pub const LIMIT: u16 = 0x3fff;
 
     pub const CTRL: u16 = 0x2000;
+    pub const MASK: u16 = 0x2001;
     pub const ADDR: u16 = 0x2006;
     pub const DATA: u16 = 0x2007;
 
