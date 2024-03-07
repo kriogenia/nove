@@ -5,7 +5,7 @@ mod stack_pointer;
 
 use crate::cartridge::Rom;
 use crate::core::ops::{Direction, Displacement};
-use crate::core::processor_status::{Flag, ProcessorStatus, OVERFLOW_MASK};
+use crate::core::processor_status::{ProcessorStatus, StatusFlag, OVERFLOW_MASK};
 use crate::core::register::Register;
 use crate::core::stack_pointer::StackPointer;
 use crate::exception::NoveError;
@@ -58,7 +58,7 @@ macro_rules! op_and_assign {
 macro_rules! compare {
     ($core:expr, $reg:ident, $addr:expr) => {{
         let val = $core.memory.read($addr);
-        $core.ps.set_bit(Flag::Carry, val <= $core.$reg.get());
+        $core.ps.set_bit(StatusFlag::Carry, val <= $core.$reg.get());
         $core.update_zn($core.$reg.get().wrapping_sub(val));
     }};
 }
@@ -67,14 +67,14 @@ macro_rules! displace {
     ($core:expr, $displacement:expr, acc) => {{
         let val = $core.a.get();
         let (val, carry) = $displacement.displace(val);
-        $core.ps.set_bit(Flag::Carry, carry);
+        $core.ps.set_bit(StatusFlag::Carry, carry);
         $core.a.assign(val);
         $core.update_zn(val);
     }};
     ($core:expr, $displacement:expr, mem:$addr:expr) => {{
         let val = $core.memory.read($addr);
         let (val, carry) = $displacement.displace(val);
-        $core.ps.set_bit(Flag::Carry, carry);
+        $core.ps.set_bit(StatusFlag::Carry, carry);
         $core.memory.write($addr, val);
         $core.update_zn(val);
     }};
@@ -127,19 +127,19 @@ impl<M: Memory> NoveCore<M> {
                 displace!(self, Displacement::Shift(Direction::Left), acc)
             }
             ASL => displace!(self, Displacement::Shift(Direction::Left), mem:addr),
-            BCC => self.branch_if(self.ps.is_lowered(Flag::Carry), addr),
-            BCS => self.branch_if(self.ps.is_raised(Flag::Carry), addr),
-            BEQ => self.branch_if(self.ps.is_raised(Flag::Zero), addr),
+            BCC => self.branch_if(self.ps.is_lowered(StatusFlag::Carry), addr),
+            BCS => self.branch_if(self.ps.is_raised(StatusFlag::Carry), addr),
+            BEQ => self.branch_if(self.ps.is_raised(StatusFlag::Zero), addr),
             BIT => self.bit_test(self.memory.read(addr)),
-            BMI => self.branch_if(self.ps.is_raised(Flag::Negative), addr),
-            BNE => self.branch_if(self.ps.is_lowered(Flag::Zero), addr),
-            BPL => self.branch_if(self.ps.is_lowered(Flag::Negative), addr),
-            BVC => self.branch_if(self.ps.is_lowered(Flag::Overflow), addr),
-            BVS => self.branch_if(self.ps.is_raised(Flag::Overflow), addr),
-            CLC => self.ps.set_bit(Flag::Carry, false),
-            CLD => self.ps.set_bit(Flag::Decimal, false),
-            CLI => self.ps.set_bit(Flag::Interrupt, false),
-            CLV => self.ps.set_bit(Flag::Overflow, false),
+            BMI => self.branch_if(self.ps.is_raised(StatusFlag::Negative), addr),
+            BNE => self.branch_if(self.ps.is_lowered(StatusFlag::Zero), addr),
+            BPL => self.branch_if(self.ps.is_lowered(StatusFlag::Negative), addr),
+            BVC => self.branch_if(self.ps.is_lowered(StatusFlag::Overflow), addr),
+            BVS => self.branch_if(self.ps.is_raised(StatusFlag::Overflow), addr),
+            CLC => self.ps.set_bit(StatusFlag::Carry, false),
+            CLD => self.ps.set_bit(StatusFlag::Decimal, false),
+            CLI => self.ps.set_bit(StatusFlag::Interrupt, false),
+            CLV => self.ps.set_bit(StatusFlag::Overflow, false),
             CMP => compare!(self, a, addr),
             CPX => compare!(self, x, addr),
             CPY => compare!(self, y, addr),
@@ -182,27 +182,27 @@ impl<M: Memory> NoveCore<M> {
             }
             PLP => self.pull_ps(),
             RLA => {
-                displace!(self, Displacement::Rotation(Direction::Left, self.ps.is_raised(Flag::Carry)), mem:addr);
+                displace!(self, Displacement::Rotation(Direction::Left, self.ps.is_raised(StatusFlag::Carry)), mem:addr);
                 op_and_assign!(self, a.bitand_assign, self.memory.read(addr));
             }
             ROL if opcode.addressing_mode == AddressingMode::ACC => displace!(
                 self,
-                Displacement::Rotation(Direction::Left, self.ps.is_raised(Flag::Carry)),
+                Displacement::Rotation(Direction::Left, self.ps.is_raised(StatusFlag::Carry)),
                 acc
             ),
             ROL => {
-                displace!(self, Displacement::Rotation(Direction::Left, self.ps.is_raised(Flag::Carry)), mem:addr)
+                displace!(self, Displacement::Rotation(Direction::Left, self.ps.is_raised(StatusFlag::Carry)), mem:addr)
             }
             ROR if opcode.addressing_mode == AddressingMode::ACC => displace!(
                 self,
-                Displacement::Rotation(Direction::Right, self.ps.is_raised(Flag::Carry)),
+                Displacement::Rotation(Direction::Right, self.ps.is_raised(StatusFlag::Carry)),
                 acc
             ),
             ROR => {
-                displace!(self, Displacement::Rotation(Direction::Right, self.ps.is_raised(Flag::Carry)), mem:addr)
+                displace!(self, Displacement::Rotation(Direction::Right, self.ps.is_raised(StatusFlag::Carry)), mem:addr)
             }
             RRA => {
-                displace!(self, Displacement::Rotation(Direction::Right, self.ps.is_raised(Flag::Carry)), mem:addr);
+                displace!(self, Displacement::Rotation(Direction::Right, self.ps.is_raised(StatusFlag::Carry)), mem:addr);
                 let sum = self.adc(self.memory.read(addr));
                 op_and_assign!(self, a.assign, sum);
             }
@@ -217,9 +217,9 @@ impl<M: Memory> NoveCore<M> {
                 let diff = self.sbc(self.memory.read(addr));
                 op_and_assign!(self, a.assign, diff);
             }
-            SEC => self.ps.set_bit(Flag::Carry, true),
-            SED => self.ps.set_bit(Flag::Decimal, true),
-            SEI => self.ps.set_bit(Flag::Interrupt, true),
+            SEC => self.ps.set_bit(StatusFlag::Carry, true),
+            SED => self.ps.set_bit(StatusFlag::Decimal, true),
+            SEI => self.ps.set_bit(StatusFlag::Interrupt, true),
             SLO => {
                 displace!(self, Displacement::Shift(Direction::Left), mem:addr);
                 op_and_assign!(self, a.bitor_assign, self.memory.read(addr))
@@ -316,12 +316,12 @@ impl<M: Memory> NoveCore<M> {
     fn adc(&mut self, m: u8) -> u8 {
         let a = self.a.get();
 
-        let first = self.ps.get_bit(Flag::Carry).overflowing_add(a);
+        let first = self.ps.get_bit(StatusFlag::Carry).overflowing_add(a);
         let (result, carry) = first.0.overflowing_add(m);
 
-        self.ps.set_bit(Flag::Carry, first.1 || carry);
+        self.ps.set_bit(StatusFlag::Carry, first.1 || carry);
         self.ps.set_bit(
-            Flag::Overflow,
+            StatusFlag::Overflow,
             ((a & m & !result) | (!a & !m & result)) & OVERFLOW_MASK != 0,
         );
 
@@ -367,27 +367,27 @@ impl<M: Memory> NoveCore<M> {
     #[inline]
     fn update_z(&mut self, value: u8) {
         if value == 0 {
-            self.ps.raise(Flag::Zero);
+            self.ps.raise(StatusFlag::Zero);
         } else {
-            self.ps.low(Flag::Zero);
+            self.ps.low(StatusFlag::Zero);
         }
     }
 
     #[inline]
     fn update_n(&mut self, value: u8) {
         if value & 0b1000_0000 != 0 {
-            self.ps.raise(Flag::Negative)
+            self.ps.raise(StatusFlag::Negative)
         } else {
-            self.ps.low(Flag::Negative);
+            self.ps.low(StatusFlag::Negative);
         }
     }
 
     #[inline]
     fn update_v(&mut self, value: u8) {
         if value & 0b0100_0000 != 0 {
-            self.ps.raise(Flag::Overflow)
+            self.ps.raise(StatusFlag::Overflow)
         } else {
-            self.ps.low(Flag::Overflow);
+            self.ps.low(StatusFlag::Overflow);
         }
     }
 
@@ -468,13 +468,13 @@ mod test {
     const X: u8 = 0xA2;
     const Y: u8 = 0xA0;
 
-    const C: u8 = Flag::Carry as u8;
-    const I: u8 = Flag::Interrupt as u8;
-    const D: u8 = Flag::Decimal as u8;
-    const N: u8 = Flag::Negative as u8;
-    const O: u8 = Flag::One as u8;
-    const Z: u8 = Flag::Zero as u8;
-    const V: u8 = Flag::Overflow as u8;
+    const C: u8 = StatusFlag::Carry as u8;
+    const I: u8 = StatusFlag::Interrupt as u8;
+    const D: u8 = StatusFlag::Decimal as u8;
+    const N: u8 = StatusFlag::Negative as u8;
+    const O: u8 = StatusFlag::One as u8;
+    const Z: u8 = StatusFlag::Zero as u8;
+    const V: u8 = StatusFlag::Overflow as u8;
 
     const SET_C: u8 = 0x38;
     const PUSH_A: u8 = 0x48;
@@ -589,28 +589,28 @@ mod test {
     #[test]
     fn clc() {
         let mut core = NoveCore::default();
-        core.ps.set_bit(Flag::Carry, true);
+        core.ps.set_bit(StatusFlag::Carry, true);
         test!(&mut core, rom!(A, 1, X, 1, Y, 1, 0x18), a:1; pc: +1, ps:0);
     }
 
     #[test]
     fn cld() {
         let mut core = NoveCore::default();
-        core.ps.set_bit(Flag::Decimal, true);
+        core.ps.set_bit(StatusFlag::Decimal, true);
         test!(&mut core, rom!(A, 1, X, 1, Y, 1, 0xd8), a:1; pc: +1, ps:0);
     }
 
     #[test]
     fn cli() {
         let mut core = NoveCore::default();
-        core.ps.set_bit(Flag::Interrupt, true);
+        core.ps.set_bit(StatusFlag::Interrupt, true);
         test!(&mut core, rom!(A, 1, X, 1, Y, 1, 0x58), a:1; pc: +1, ps:0);
     }
 
     #[test]
     fn clv() {
         let mut core = NoveCore::default();
-        core.ps.set_bit(Flag::Overflow, true);
+        core.ps.set_bit(StatusFlag::Overflow, true);
         test!(&mut core, rom!(A, 1, X, 1, Y, 1, 0xb8), a:1; pc: +1, ps:0);
     }
 
@@ -920,23 +920,23 @@ mod test {
 
         core.a.assign(0b0000_0000);
         assert_eq!(core.adc(0b0101_1010), 0b0101_1010);
-        assert_eq!(core.ps.get_bit(Flag::Carry), 0);
-        assert_eq!(core.ps.get_bit(Flag::Overflow), 0);
+        assert_eq!(core.ps.get_bit(StatusFlag::Carry), 0);
+        assert_eq!(core.ps.get_bit(StatusFlag::Overflow), 0);
 
         core.a.assign(0b0101_1010);
         assert_eq!(core.adc(0b0101_1010), 0b1011_0100);
-        assert_eq!(core.ps.get_bit(Flag::Carry), 0);
-        assert_eq!(core.ps.get_bit(Flag::Overflow), 1);
+        assert_eq!(core.ps.get_bit(StatusFlag::Carry), 0);
+        assert_eq!(core.ps.get_bit(StatusFlag::Overflow), 1);
 
         core.a.assign(0b1011_0100);
         assert_eq!(core.adc(0b1011_0100), 0b0110_1000);
-        assert_eq!(core.ps.get_bit(Flag::Carry), 1);
-        assert_eq!(core.ps.get_bit(Flag::Overflow), 1);
+        assert_eq!(core.ps.get_bit(StatusFlag::Carry), 1);
+        assert_eq!(core.ps.get_bit(StatusFlag::Overflow), 1);
 
         core.a.assign(0b0111_1000);
         assert_eq!(core.adc(0b1100_0000), 0b0011_1001);
-        assert_eq!(core.ps.get_bit(Flag::Carry), 1);
-        assert_eq!(core.ps.get_bit(Flag::Overflow), 0);
+        assert_eq!(core.ps.get_bit(StatusFlag::Carry), 1);
+        assert_eq!(core.ps.get_bit(StatusFlag::Overflow), 0);
     }
 
     #[test]
@@ -944,28 +944,28 @@ mod test {
         let mut core = Core6502::new();
 
         core.a.assign(8); // 8 - 6 = 2
-        core.ps.set_bit(Flag::Carry, true);
+        core.ps.set_bit(StatusFlag::Carry, true);
         assert_eq!(core.sbc(6), 2);
-        assert_eq!(core.ps.get_bit(Flag::Carry), 1);
-        assert_eq!(core.ps.get_bit(Flag::Overflow), 0);
+        assert_eq!(core.ps.get_bit(StatusFlag::Carry), 1);
+        assert_eq!(core.ps.get_bit(StatusFlag::Overflow), 0);
 
         core.a.assign(8); // 8 - 10 = -2
-        core.ps.set_bit(Flag::Carry, true);
+        core.ps.set_bit(StatusFlag::Carry, true);
         assert_eq!(core.sbc(10), 0_u8.wrapping_sub(2));
-        assert_eq!(core.ps.get_bit(Flag::Carry), 0);
-        assert_eq!(core.ps.get_bit(Flag::Overflow), 0);
+        assert_eq!(core.ps.get_bit(StatusFlag::Carry), 0);
+        assert_eq!(core.ps.get_bit(StatusFlag::Overflow), 0);
 
         core.a.assign(64); // 64 - (-128) = -64 (OV)
-        core.ps.set_bit(Flag::Carry, true);
+        core.ps.set_bit(StatusFlag::Carry, true);
         assert_eq!(core.sbc(0_u8.wrapping_sub(128)), 0_u8.wrapping_sub(64));
-        assert_eq!(core.ps.get_bit(Flag::Carry), 0);
-        assert_eq!(core.ps.get_bit(Flag::Overflow), 1);
+        assert_eq!(core.ps.get_bit(StatusFlag::Carry), 0);
+        assert_eq!(core.ps.get_bit(StatusFlag::Overflow), 1);
 
         core.a.assign(8); // 8 - 6 - C = 2
-        core.ps.set_bit(Flag::Carry, false);
+        core.ps.set_bit(StatusFlag::Carry, false);
         assert_eq!(core.sbc(6), 1);
-        assert_eq!(core.ps.get_bit(Flag::Carry), 1);
-        assert_eq!(core.ps.get_bit(Flag::Overflow), 0);
+        assert_eq!(core.ps.get_bit(StatusFlag::Carry), 1);
+        assert_eq!(core.ps.get_bit(StatusFlag::Overflow), 0);
     }
 
     #[test]

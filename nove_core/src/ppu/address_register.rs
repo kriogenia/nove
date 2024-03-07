@@ -1,6 +1,6 @@
 const LIMIT_ADDR: u16 = 0x3fff;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct AddressRegister {
     hi: u8,
     lo: u8,
@@ -60,18 +60,9 @@ impl AddressRegister {
     }
 }
 
-impl Default for AddressRegister {
-    fn default() -> Self {
-        Self {
-            hi: Default::default(),
-            lo: Default::default(),
-            ptr: BytePointer::Hi,
-        }
-    }
-}
-
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Default, PartialEq)]
 enum BytePointer {
+    #[default]
     Hi,
     Lo,
 }

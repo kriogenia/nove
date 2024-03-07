@@ -2,8 +2,8 @@ use std::fmt::Debug;
 use std::marker::PhantomData;
 use std::ops::Not;
 
-#[derive(Default, Debug)]
-pub struct FlagRegister<F: Into<u8>>(pub u8, PhantomData<F>);
+#[derive(Default)]
+pub struct FlagRegister<F: Into<u8>>(pub u8, pub PhantomData<F>);
 
 impl<F: Into<u8>> FlagRegister<F> {
     pub fn set(&mut self, val: u8) {

@@ -1,4 +1,5 @@
 use crate::flag_register::FlagRegister;
+use std::fmt::{Debug, Formatter};
 
 #[derive(Debug, Default, PartialEq)]
 pub enum ControlFlags {
@@ -25,5 +26,12 @@ impl ControlRegister {
         } else {
             0x20
         }
+    }
+}
+
+impl Debug for ControlRegister {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "\n\t\t  VPHBSINN")?;
+        writeln!(f, "\t\t{:#010b}", self.0)
     }
 }
