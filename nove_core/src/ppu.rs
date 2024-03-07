@@ -11,14 +11,6 @@ const VRAM_SIZE: usize = 2048; // 2 KiB
 const OAM_SIZE: usize = 256;
 const NAMETABLE_SIZE: u16 = 1024; // 1KiB
 
-const LIMIT_ADDR: u16 = 0x3fff;
-
-const CHROM_START_ADDR: u16 = 0x0000;
-const VRAM_START_ADDR: u16 = 0x2000;
-const PALETTE_START_ADDR: u16 = 0x3f00;
-const CHROM_END_ADDR: u16 = VRAM_START_ADDR - 1;
-const VRAM_END_ADDR: u16 = 0x2fff;
-
 pub struct PPU {
     chrom: Program,
     addr: AddressRegister,
@@ -47,12 +39,13 @@ impl PPU {
     pub fn read_data(&mut self) -> u8 {
         self.ctrl.vram_add_inc();
         let addr = self.addr.get();
+        use crate::addresses::ppu::*;
         match addr {
-            CHROM_START_ADDR..=CHROM_END_ADDR => self.read_and_store(self.chrom[addr as usize]),
-            VRAM_START_ADDR..=VRAM_END_ADDR => {
-                self.read_and_store(self.vram[self.mirror_vram_addr(addr) as usize])
+            CHROM_START..=CHROM_END => self.read_and_store(self.chrom[addr as usize]),
+            VRAM_START..=VRAM_END => {
+                self.read_and_store(self.vram[self.mirror_vram(addr) as usize])
             }
-            PALETTE_START_ADDR..=LIMIT_ADDR => todo!("read from palette"),
+            PALETTE_START..=LIMIT => todo!("read from palette"),
             _ => panic!("invalid access to mirrored space: {}", self.addr.get()),
         }
     }
@@ -71,16 +64,16 @@ impl PPU {
         self.ctrl.set(val)
     }
 
-    fn mirror_vram_addr(&self, addr: u16) -> u16 {
-        let vram_addr = (addr & VRAM_END_ADDR) - VRAM_START_ADDR;
-        let name_table = vram_addr / NAMETABLE_SIZE;
-        vram_addr
-            - match (&self.mirroring, name_table) {
-                (Mirroring::Vertical, 2) | (Mirroring::Vertical, 3) => 2 * NAMETABLE_SIZE,
-                (Mirroring::Horizontal, 1) | (Mirroring::Horizontal, 2) => NAMETABLE_SIZE,
-                (Mirroring::Horizontal, 3) => 2 * NAMETABLE_SIZE,
-                _ => 0,
-            }
+    fn mirror_vram(&self, addr: u16) -> u16 {
+        use crate::addresses::ppu::{VRAM_END, VRAM_START};
+        let vram = (addr & VRAM_END) - VRAM_START;
+        let name_table = vram / NAMETABLE_SIZE;
+        vram - match (&self.mirroring, name_table) {
+            (Mirroring::Vertical, 2) | (Mirroring::Vertical, 3) => 2 * NAMETABLE_SIZE,
+            (Mirroring::Horizontal, 1) | (Mirroring::Horizontal, 2) => NAMETABLE_SIZE,
+            (Mirroring::Horizontal, 3) => 2 * NAMETABLE_SIZE,
+            _ => 0,
+        }
     }
 }
 

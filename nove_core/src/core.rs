@@ -13,8 +13,8 @@ use crate::instruction::addressing_mode::AddressingMode;
 use crate::instruction::{mnemonic::Mnemonic, OpCode, OPCODES_MAP};
 use crate::memory::bus::Bus;
 use crate::memory::cpu_mem::CpuMem;
-use crate::memory::{Memory, PC_START_ADDR};
-use crate::Program;
+use crate::memory::Memory;
+use crate::{addresses, Program};
 use std::fmt::{Debug, Formatter};
 use std::ops::{AddAssign, BitAndAssign, BitOrAssign, BitXorAssign, SubAssign};
 
@@ -89,7 +89,7 @@ macro_rules! update_mem {
 
 impl<M: Memory> NoveCore<M> {
     pub fn reset(&mut self) {
-        self.pc = self.memory.read_u16(PC_START_ADDR);
+        self.pc = self.memory.read_u16(addresses::PC_START);
         self.sp = Default::default();
         self.a = Default::default();
         self.x = Default::default();
@@ -460,9 +460,8 @@ impl<M> Debug for NoveCore<M> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::memory;
 
-    const START_ADDR: u16 = memory::PRG_ROM_START_ADDR;
+    const START_ADDR: u16 = addresses::rom::PRG_ROM_START;
 
     const A: u8 = 0xA9;
     const X: u8 = 0xA2;
@@ -487,7 +486,7 @@ mod test {
             $({
                 assert_eq!($core.$reg, $val);
             })+
-            assert_eq!($core.pc, memory::PRG_ROM_START_ADDR as u16 + $pc + 7);
+            assert_eq!($core.pc, crate::addresses::rom::PRG_ROM_START as u16 + $pc + 7);
             $(assert_eq!($core.ps.0, $ps);)*
         };
         ($core:expr, $rom:expr, $($addr:literal: $val:literal),*; pc: +$pc:literal $(, ps: $ps:expr)*) => {
@@ -495,7 +494,7 @@ mod test {
             $({
                 assert_eq!($core.memory.read_u16($addr), $val);
             })*
-            assert_eq!($core.pc, memory::PRG_ROM_START_ADDR as u16 + $pc + 7);
+            assert_eq!($core.pc, crate::addresses::rom::PRG_ROM_START as u16 + $pc + 7);
             $(assert_eq!($core.ps.0, $ps);)*
         };
         ($core:expr, $rom:expr; pc: $pc:expr $(, ps: $ps:expr)*) => {

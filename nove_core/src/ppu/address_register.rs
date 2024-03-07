@@ -52,8 +52,8 @@ impl AddressRegister {
     }
 
     fn mirror_down(&mut self) {
-        if self.get() > super::LIMIT_ADDR {
-            self.set(self.get() & super::LIMIT_ADDR);
+        if self.get() > crate::addresses::ppu::LIMIT {
+            self.set(self.get() & crate::addresses::ppu::LIMIT);
         }
     }
 }
@@ -68,6 +68,7 @@ enum BytePointer {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::addresses::ppu;
 
     #[test]
     fn set() {
@@ -106,7 +107,7 @@ mod test {
         assert_eq!(0x1240, reg.get());
         reg.inc(0xc0);
         assert_eq!(0x1300, reg.get());
-        reg.set(super::super::LIMIT_ADDR);
+        reg.set(ppu::LIMIT);
         reg.inc(3);
         assert_eq!(0x0002, reg.get());
     }

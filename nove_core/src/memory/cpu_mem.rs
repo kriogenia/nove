@@ -1,4 +1,5 @@
-use crate::memory::{Memory, MEMORY_SIZE, PC_START_ADDR, PRG_ROM_START_ADDR};
+use crate::addresses::rom;
+use crate::memory::{Memory, MEMORY_SIZE};
 use crate::Program;
 
 #[derive(Debug)]
@@ -12,9 +13,10 @@ impl Default for CpuMem {
 
 impl CpuMem {
     pub fn load_rom(&mut self, rom: Program) {
-        let end = PRG_ROM_START_ADDR as usize + rom.len();
-        self.0[PRG_ROM_START_ADDR as usize..end].copy_from_slice(&rom[..]);
-        self.write_u16(PC_START_ADDR, PRG_ROM_START_ADDR);
+        use crate::addresses::PC_START;
+        let end = rom::PRG_ROM_START as usize + rom.len();
+        self.0[rom::PRG_ROM_START as usize..end].copy_from_slice(&rom[..]);
+        self.write_u16(PC_START, rom::PRG_ROM_START);
     }
 }
 
