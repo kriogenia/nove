@@ -1,8 +1,8 @@
 use crate::addresses::*;
 use crate::cartridge::Rom;
 use crate::memory::Memory;
-use crate::ppu::ppu_register::{RegRead, RegWrite};
 use crate::ppu::Ppu;
+use crate::register::{RegRead, RegWrite};
 use crate::Program;
 use std::cell::RefCell;
 
@@ -38,10 +38,11 @@ impl Memory for Bus {
     fn read(&self, addr: u16) -> u8 {
         match addr {
             ram::START..=ram::MIRRORS_END => self.vram[addr as usize & 0b00000111_11111111],
-            ppu::CTRL | ppu::MASK | 0x2003 | 0x2005 | ppu::ADDR | 0x4014 => {
+            ppu::CTRL | ppu::MASK | ppu::OAM_ADDR | 0x2005 | ppu::ADDR | 0x4014 => {
                 panic!("invalid attempt to read from write-only PPU address {addr:x}");
             }
-            ppu::STATUS => self.ppu.borrow_mut().status.read(),
+            ppu::STATUS => self.ppu.borrow().status.read(),
+            ppu::OAM_DATA => self.ppu.borrow().oam.read(),
             ppu::DATA => self.ppu.borrow_mut().read_data(),
             ppu::REGISTERS_START..=ppu::REGISTERS_MIRRORS_END => self.read(addr & ppu::DATA),
             rom::PRG_ROM_START..=rom::PRG_ROM_END => self.read_rom(addr),
@@ -54,6 +55,9 @@ impl Memory for Bus {
             ram::START..=ram::MIRRORS_END => self.vram[addr as usize & 0b11111111111] = value,
             ppu::CTRL => self.ppu.borrow_mut().ctrl.write(value),
             ppu::MASK => self.ppu.borrow_mut().mask.write(value),
+            ppu::STATUS => panic!("attempt to write to PPU status register"),
+            ppu::OAM_ADDR => self.ppu.borrow_mut().oam.addr.write(value),
+            ppu::OAM_DATA => self.ppu.borrow_mut().oam.write(value),
             ppu::ADDR => self.ppu.borrow_mut().addr.write(value),
             ppu::DATA => todo!("write to ppu data"),
             ppu::REGISTERS_START..=ppu::REGISTERS_MIRRORS_END => {

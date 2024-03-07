@@ -1,5 +1,5 @@
 use crate::flag_register::FlagRegister;
-use crate::ppu::ppu_register::RegRead;
+use crate::register::RegRead;
 use std::fmt::{Debug, Formatter};
 
 pub type StatusRegister = FlagRegister<PpuStatusFlag>;

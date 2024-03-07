@@ -68,3 +68,23 @@ impl BitAnd<u8> for &Register {
         self.0 & rhs
     }
 }
+
+pub trait RegWrite {
+    fn write(&mut self, val: u8);
+}
+
+pub trait RegRead {
+    fn read(&self) -> u8;
+}
+
+impl RegRead for Register {
+    fn read(&self) -> u8 {
+        self.get()
+    }
+}
+
+impl RegWrite for Register {
+    fn write(&mut self, val: u8) {
+        self.assign(val)
+    }
+}

@@ -1,12 +1,10 @@
 mod ops;
 mod processor_status;
-mod register;
 mod stack_pointer;
 
 use crate::cartridge::Rom;
 use crate::core::ops::{Direction, Displacement};
 use crate::core::processor_status::{ProcessorStatus, StatusFlag, OVERFLOW_MASK};
-use crate::core::register::Register;
 use crate::core::stack_pointer::StackPointer;
 use crate::exception::NoveError;
 use crate::instruction::addressing_mode::AddressingMode;
@@ -14,6 +12,7 @@ use crate::instruction::{mnemonic::Mnemonic, OpCode, OPCODES_MAP};
 use crate::memory::bus::Bus;
 use crate::memory::cpu_mem::CpuMem;
 use crate::memory::Memory;
+use crate::register::Register;
 use crate::{addresses, Program};
 use std::fmt::{Debug, Formatter};
 use std::ops::{AddAssign, BitAndAssign, BitOrAssign, BitXorAssign, SubAssign};

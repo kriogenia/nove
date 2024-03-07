@@ -1,4 +1,4 @@
-use crate::ppu::ppu_register::RegWrite;
+use crate::register::RegWrite;
 
 #[derive(Debug, Default)]
 pub struct AddressRegister {
@@ -8,10 +8,6 @@ pub struct AddressRegister {
 }
 
 impl AddressRegister {
-    pub fn new() -> Self {
-        Default::default()
-    }
-
     pub fn set(&mut self, val: u16) {
         let [hi, lo] = u16::to_be_bytes(val);
         self.hi = hi;
@@ -80,7 +76,7 @@ mod test {
 
     #[test]
     fn set() {
-        let mut reg = AddressRegister::new();
+        let mut reg = AddressRegister::default();
         reg.set(0x1234);
         assert_eq!(0x12, reg.hi);
         assert_eq!(0x34, reg.lo);
@@ -98,7 +94,7 @@ mod test {
 
     #[test]
     fn update() {
-        let mut reg = AddressRegister::new();
+        let mut reg = AddressRegister::default();
         reg.update(0x12);
         assert_eq!(0x1200, reg.get());
         reg.update(0x34);
@@ -109,7 +105,7 @@ mod test {
 
     #[test]
     fn inc() {
-        let mut reg = AddressRegister::new();
+        let mut reg = AddressRegister::default();
         reg.set(0x1234);
         reg.inc(0x0c);
         assert_eq!(0x1240, reg.get());
@@ -122,7 +118,7 @@ mod test {
 
     #[test]
     fn reset() {
-        let mut reg = AddressRegister::new();
+        let mut reg = AddressRegister::default();
         reg.update(0x12);
         assert_eq!(BytePointer::Lo, reg.ptr);
         reg.reset();

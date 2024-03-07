@@ -1,5 +1,5 @@
 use crate::flag_register::FlagRegister;
-use crate::ppu::ppu_register::RegWrite;
+use crate::register::RegWrite;
 use std::fmt::{Debug, Formatter};
 
 /*
