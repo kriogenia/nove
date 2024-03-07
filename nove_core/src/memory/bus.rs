@@ -1,8 +1,9 @@
 use crate::addresses::*;
 use crate::cartridge::Rom;
 use crate::memory::Memory;
+use crate::ppu::ppu_register::{RegRead, RegWrite};
 use crate::ppu::Ppu;
-use crate::{Program, RegWrite};
+use crate::Program;
 use std::cell::RefCell;
 
 const VRAM_SIZE: usize = 2048;
@@ -40,6 +41,7 @@ impl Memory for Bus {
             ppu::CTRL | ppu::MASK | 0x2003 | 0x2005 | ppu::ADDR | 0x4014 => {
                 panic!("invalid attempt to read from write-only PPU address {addr:x}");
             }
+            ppu::STATUS => self.ppu.borrow_mut().status.read(),
             ppu::DATA => self.ppu.borrow_mut().read_data(),
             ppu::REGISTERS_START..=ppu::REGISTERS_MIRRORS_END => self.read(addr & ppu::DATA),
             rom::PRG_ROM_START..=rom::PRG_ROM_END => self.read_rom(addr),

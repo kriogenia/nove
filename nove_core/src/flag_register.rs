@@ -1,4 +1,3 @@
-use crate::RegWrite;
 use std::fmt::Formatter;
 use std::marker::PhantomData;
 use std::ops::Not;
@@ -46,11 +45,5 @@ impl<F: Into<u8>> FlagRegister<F> {
     pub(crate) fn print(&self, f: &mut Formatter<'_>, cheatsheet: &str) -> std::fmt::Result {
         writeln!(f, "\n\t\t  {cheatsheet}")?;
         writeln!(f, "\t\t{:#010b}", self.0)
-    }
-}
-
-impl<F: Into<u8>> RegWrite for FlagRegister<F> {
-    fn write(&mut self, val: u8) {
-        self.set(val)
     }
 }

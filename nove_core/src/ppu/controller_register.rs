@@ -1,4 +1,5 @@
 use crate::flag_register::FlagRegister;
+use crate::ppu::ppu_register::RegWrite;
 use std::fmt::{Debug, Formatter};
 
 /*
@@ -21,8 +22,7 @@ use std::fmt::{Debug, Formatter};
 */
 #[derive(Debug, Default)]
 pub enum ControlFlags {
-    Nametable1 = 0b0000_0001,
-    Nametable2 = 0b0000_0010,
+    Nametable = 0b0000_0011,
     #[default]
     VramAddrIncrement = 0b0000_0100,
     SpritePatternAddr = 0b0000_1000,
@@ -51,6 +51,12 @@ impl ControllerRegister {
         } else {
             0x20
         }
+    }
+}
+
+impl RegWrite for ControllerRegister {
+    fn write(&mut self, val: u8) {
+        self.set(val)
     }
 }
 

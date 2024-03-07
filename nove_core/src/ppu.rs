@@ -2,11 +2,14 @@ use crate::cartridge::Mirroring;
 use crate::ppu::address_register::AddressRegister;
 use crate::ppu::controller_register::ControllerRegister;
 use crate::ppu::mask_register::MaskRegister;
+use crate::ppu::status_register::StatusRegister;
 use crate::Program;
 
 mod address_register;
 mod controller_register;
 mod mask_register;
+pub mod ppu_register;
+mod status_register;
 
 const PALETTE_SIZE: usize = 32;
 const VRAM_SIZE: usize = 2048; // 2 KiB
@@ -17,6 +20,7 @@ pub struct Ppu {
     chrom: Program,
     pub ctrl: ControllerRegister, // 0x2000
     pub mask: MaskRegister,       // 0x2001
+    pub status: StatusRegister,   // 0x2002
     pub addr: AddressRegister,    // 0x2006
     palette: [u8; PALETTE_SIZE],
     vram: [u8; VRAM_SIZE],
@@ -29,9 +33,10 @@ impl Ppu {
     pub fn new(chrom: Program, mirroring: Mirroring) -> Self {
         Self {
             chrom,
-            addr: Default::default(),
-            mask: Default::default(),
             ctrl: Default::default(),
+            mask: Default::default(),
+            status: Default::default(),
+            addr: Default::default(),
             palette: Default::default(),
             vram: [Default::default(); VRAM_SIZE],
             oam: [Default::default(); OAM_SIZE],
@@ -76,8 +81,8 @@ impl Ppu {
 #[cfg(test)]
 mod test {
     use crate::cartridge::Mirroring;
+    use crate::ppu::ppu_register::RegWrite;
     use crate::ppu::Ppu;
-    use crate::RegWrite;
 
     #[test]
     fn read_chrom() {

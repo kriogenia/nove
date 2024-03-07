@@ -1,4 +1,5 @@
 use crate::flag_register::FlagRegister;
+use crate::ppu::ppu_register::RegWrite;
 use std::fmt::{Debug, Formatter};
 
 pub type MaskRegister = FlagRegister<MaskFlag>;
@@ -33,6 +34,12 @@ pub enum MaskFlag {
 impl From<MaskFlag> for u8 {
     fn from(value: MaskFlag) -> Self {
         value as u8
+    }
+}
+
+impl RegWrite for MaskRegister {
+    fn write(&mut self, val: u8) {
+        self.set(val)
     }
 }
 

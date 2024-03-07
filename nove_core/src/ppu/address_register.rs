@@ -1,4 +1,4 @@
-use crate::RegWrite;
+use crate::ppu::ppu_register::RegWrite;
 
 #[derive(Debug, Default)]
 pub struct AddressRegister {

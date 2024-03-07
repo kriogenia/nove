@@ -8,7 +8,3 @@ pub mod memory;
 mod ppu;
 
 pub type Program = Vec<u8>;
-
-trait RegWrite {
-    fn write(&mut self, val: u8);
-}

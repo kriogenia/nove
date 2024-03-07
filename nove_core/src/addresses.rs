@@ -3,6 +3,7 @@ pub mod ppu {
 
     pub const CTRL: u16 = 0x2000;
     pub const MASK: u16 = 0x2001;
+    pub const STATUS: u16 = 0x2002;
     pub const ADDR: u16 = 0x2006;
     pub const DATA: u16 = 0x2007;
 
