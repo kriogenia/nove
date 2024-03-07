@@ -1,3 +1,5 @@
+use crate::RegWrite;
+
 #[derive(Debug, Default)]
 pub struct AddressRegister {
     hi: u8,
@@ -55,6 +57,12 @@ impl AddressRegister {
         if self.get() > crate::addresses::ppu::LIMIT {
             self.set(self.get() & crate::addresses::ppu::LIMIT);
         }
+    }
+}
+
+impl RegWrite for AddressRegister {
+    fn write(&mut self, val: u8) {
+        self.update(val)
     }
 }
 

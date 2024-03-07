@@ -1,3 +1,4 @@
+use crate::RegWrite;
 use std::marker::PhantomData;
 use std::ops::Not;
 
@@ -39,5 +40,11 @@ impl<F: Into<u8>> FlagRegister<F> {
 
     pub fn is_lowered(&self, flag: F) -> bool {
         !self.is_raised(flag)
+    }
+}
+
+impl<F: Into<u8>> RegWrite for FlagRegister<F> {
+    fn write(&mut self, val: u8) {
+        self.set(val)
     }
 }

@@ -13,8 +13,8 @@ const NAMETABLE_SIZE: u16 = 1024; // 1KiB
 
 pub struct Ppu {
     chrom: Program,
-    addr: AddressRegister,
-    ctrl: ControlRegister,
+    pub addr: AddressRegister,
+    pub ctrl: ControlRegister,
     palette: [u8; PALETTE_SIZE],
     vram: [u8; VRAM_SIZE],
     oam: [u8; OAM_SIZE],
@@ -56,14 +56,6 @@ impl Ppu {
         prev
     }
 
-    pub fn write_addr(&mut self, val: u8) {
-        self.addr.update(val);
-    }
-
-    pub fn write_ctrl(&mut self, val: u8) {
-        self.ctrl.set(val)
-    }
-
     fn mirror_vram(&self, addr: u16) -> u16 {
         use crate::addresses::ppu::{VRAM_END, VRAM_START};
         let vram = (addr & VRAM_END) - VRAM_START;
@@ -81,6 +73,7 @@ impl Ppu {
 mod test {
     use crate::cartridge::Mirroring;
     use crate::ppu::Ppu;
+    use crate::RegWrite;
 
     #[test]
     fn read_chrom() {
@@ -117,8 +110,8 @@ mod test {
     }
 
     fn assert_read(ppu: &mut Ppu, hi: u8, lo: u8, val: u8) {
-        ppu.write_addr(hi);
-        ppu.write_addr(lo);
+        ppu.addr.write(hi);
+        ppu.addr.write(lo);
         assert_ne!(val, ppu.read_data());
         assert_eq!(val, ppu.read_data());
     }

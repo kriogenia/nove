@@ -2,7 +2,7 @@ use crate::addresses::*;
 use crate::cartridge::Rom;
 use crate::memory::Memory;
 use crate::ppu::Ppu;
-use crate::Program;
+use crate::{Program, RegWrite};
 use std::cell::RefCell;
 
 const VRAM_SIZE: usize = 2048;
@@ -50,8 +50,8 @@ impl Memory for Bus {
     fn write(&mut self, addr: u16, value: u8) {
         match addr {
             ram::START..=ram::MIRRORS_END => self.vram[addr as usize & 0b11111111111] = value,
-            ppu::CTRL => self.ppu.borrow_mut().write_ctrl(value),
-            ppu::ADDR => self.ppu.borrow_mut().write_addr(value),
+            ppu::CTRL => self.ppu.borrow_mut().ctrl.write(value),
+            ppu::ADDR => self.ppu.borrow_mut().addr.write(value),
             ppu::DATA => todo!("write to ppu data"),
             ppu::REGISTERS_START..=ppu::REGISTERS_MIRRORS_END => {
                 todo!("PPU is not supported yet")
