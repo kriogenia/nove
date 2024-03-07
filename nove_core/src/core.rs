@@ -211,6 +211,10 @@ impl<M: Memory> NoveCore<M> {
             SEC => self.ps.set_bit(Flag::Carry, true),
             SED => self.ps.set_bit(Flag::Decimal, true),
             SEI => self.ps.set_bit(Flag::Interrupt, true),
+            SLO => {
+                displace!(self, Displacement::Shift(Direction::Left), mem:addr);
+                op_and_assign!(self, a.bitor_assign, self.memory.read(addr))
+            }
             STA => self.memory.write(addr, self.a.get()),
             STX => self.memory.write(addr, self.x.get()),
             STY => self.memory.write(addr, self.y.get()),
@@ -812,6 +816,13 @@ mod test {
     fn sei() {
         let mut core = Core6502::new();
         test!(&mut core, rom!(A, 1, X, 1, Y, 1; 0x78),; pc: +1, ps: I);
+    }
+
+    #[test]
+    fn slo() {
+        let mut core = preloaded_core();
+        test!(&mut core, rom!(A, 0b1010, X, 0x00, Y, 0x00; 0x07, 0x05), a:0b0001_1110; pc: +2, ps: 0);
+        assert_eq!(0b0001_0100, core.memory.read(0x05));
     }
 
     #[test]

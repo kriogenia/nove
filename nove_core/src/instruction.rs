@@ -288,6 +288,14 @@ lazy_static! {
 
         OpCode::new(SEI, 0x78, 1, 2, IMP),
 
+        OpCode::unofficial(SLO, 0x0f, 3, 6, ABS),
+        OpCode::unofficial(SLO, 0x1f, 3, 7, ABX),
+        OpCode::unofficial(SLO, 0x1b, 3, 7, ABY),
+        OpCode::unofficial(SLO, 0x03, 2, 8, IDX),
+        OpCode::unofficial(SLO, 0x13, 2, 8, IDY),
+        OpCode::unofficial(SLO, 0x07, 2, 5, ZPG),
+        OpCode::unofficial(SLO, 0x17, 2, 6, ZPX),
+
         OpCode::new(STA, 0x8d, 3, 4, ABS),
         OpCode::new(STA, 0x9d, 3, 5, ABX),
         OpCode::new(STA, 0x99, 3, 5, ABY),

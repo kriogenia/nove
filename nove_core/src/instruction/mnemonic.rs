@@ -391,6 +391,14 @@ pub enum Mnemonic {
     ///
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#SEI
     SEI,
+    /// Shift Left and OR
+    ///
+    /// A,N,Z,C = M <<1 | A
+    ///
+    /// Shift left one bit in memory, then OR accumulator with memory.
+    ///
+    /// _Unofficial_
+    SLO,
     /// Store Accumulator
     ///
     /// M = A
