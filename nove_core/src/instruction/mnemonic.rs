@@ -321,6 +321,12 @@ pub enum Mnemonic {
     ///
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#PLP
     PLP,
+    /// Rotate Left and AND
+    ///
+    /// Rotate one bit left in memory, then AND accumulator with memory
+    ///
+    /// _Unofficial_
+    RLA,
     /// Rotate Left
     ///
     /// Move each of the bits one place to the left.

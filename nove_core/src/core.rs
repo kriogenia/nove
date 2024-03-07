@@ -181,6 +181,10 @@ impl<M: Memory> NoveCore<M> {
                 op_and_assign!(self, a.assign, val)
             }
             PLP => self.pull_ps(),
+            RLA => {
+                displace!(self, Displacement::Rotation(Direction::Left, self.ps.is_raised(Flag::Carry)), mem:addr);
+                op_and_assign!(self, a.bitand_assign, self.memory.read(addr));
+            }
             ROL if opcode.addressing_mode == AddressingMode::ACC => displace!(
                 self,
                 Displacement::Rotation(Direction::Left, self.ps.is_raised(Flag::Carry)),
@@ -758,6 +762,12 @@ mod test {
     fn plp() {
         let mut core = Core6502::default();
         test!(&mut core, rom!(A, 0b1011_0000, X, 0, Y, 0, 0x48; 0x28),; pc: +2, ps: N+O);
+    }
+
+    #[test]
+    fn rla() {
+        let mut core = preloaded_core();
+        test!(&mut core, rom!(A, 0b1011, X, 0, Y, 0, SET_C; 0x27, 0x05), a:0b0001; pc: +3, ps: 0);
     }
 
     #[test]

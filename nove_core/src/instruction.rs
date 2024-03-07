@@ -251,6 +251,14 @@ lazy_static! {
 
         OpCode::new(PLP, 0x28, 1, 4, IMP),
 
+        OpCode::unofficial(RLA, 0x2f, 3, 6, ABS),
+        OpCode::unofficial(RLA, 0x3f, 3, 7, ABX),
+        OpCode::unofficial(RLA, 0x3b, 3, 7, ABY),
+        OpCode::unofficial(RLA, 0x23, 2, 8, IDX),
+        OpCode::unofficial(RLA, 0x33, 2, 8, IDY),
+        OpCode::unofficial(RLA, 0x27, 2, 5, ZPG),
+        OpCode::unofficial(RLA, 0x37, 2, 6, ZPX),
+
         OpCode::new(ROL, 0x2a, 1, 2, ACC),
         OpCode::new(ROL, 0x2e, 3, 6, ABS),
         OpCode::new(ROL, 0x3e, 3, 7, ABX),
