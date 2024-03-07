@@ -155,6 +155,7 @@ impl<M: Memory> NoveCore<M> {
             INC => update_mem!(self, addr, wrapping_add),
             INX => op_and_assign!(self, x.add_assign, 1),
             INY => op_and_assign!(self, y.add_assign, 1),
+            ISB => self.isb(addr),
             JMP => self.pc = addr,
             JSR => {
                 self.stack_push_u16(self.pc.wrapping_add(1));
@@ -316,9 +317,11 @@ impl<M: Memory> NoveCore<M> {
         self.update_v(value);
     }
 
-    fn pull_ps(&mut self) {
-        let val = self.stack_pull();
-        self.ps.set_from_pull(val);
+    fn isb(&mut self, addr: u16) {
+        let result = self.memory.read(addr).wrapping_add(1);
+        self.memory.write(addr, result);
+        let diff = self.sbc(result);
+        op_and_assign!(self, a.assign, diff);
     }
 
     fn sbc(&mut self, m: u8) -> u8 {
@@ -330,6 +333,12 @@ impl<M: Memory> NoveCore<M> {
         if condition {
             self.pc = addr
         }
+    }
+
+    #[inline]
+    fn pull_ps(&mut self) {
+        let val = self.stack_pull();
+        self.ps.set_from_pull(val);
     }
 
     #[inline]
@@ -657,6 +666,12 @@ mod test {
     fn iny() {
         let mut core = NoveCore::default();
         test!(&mut core, rom!(A, 0, X, 0, Y, 0x05; 0xc8), y:0x06; pc: +1, ps: 0);
+    }
+
+    #[test]
+    fn isb() {
+        let mut core = preloaded_core();
+        test!(&mut core, rom!(A, 0x1c, X, 0x00, Y, 0x00; 0xe7, 0x05), a:0x10; pc: +2, ps: C);
     }
 
     #[test]

@@ -160,6 +160,14 @@ lazy_static! {
 
         OpCode::new(INY, 0xc8, 1, 2, IMP),
 
+        OpCode::unofficial(ISB, 0xef, 3, 6, ABS),
+        OpCode::unofficial(ISB, 0xff, 3, 7, ABX),
+        OpCode::unofficial(ISB, 0xfb, 3, 7, ABY),
+        OpCode::unofficial(ISB, 0xe3, 2, 8, IDX),
+        OpCode::unofficial(ISB, 0xf3, 2, 8, IDY),
+        OpCode::unofficial(ISB, 0xe7, 2, 5, ZPG),
+        OpCode::unofficial(ISB, 0xf7, 2, 6, ZPX),
+
         OpCode::new(JMP, 0x4c, 1, 3, ABS), // setting 1 byte to evade JMP to advance the pc
         OpCode::new(JMP, 0x6c, 1, 5, IND),
 

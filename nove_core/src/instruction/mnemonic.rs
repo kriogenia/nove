@@ -220,6 +220,14 @@ pub enum Mnemonic {
     ///
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#INY
     INY,
+    /// Increment and subtract
+    ///
+    /// M,N,V,Z,C = M + 1
+    ///
+    /// Increase memory by one, then subtract memory from accumulator (with borrow)
+    ///
+    /// _Unofficial_
+    ISB,
     /// Jump
     ///
     /// Sets the program counter to the address specified by the operand.
