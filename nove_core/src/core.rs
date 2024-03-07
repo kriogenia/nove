@@ -201,6 +201,11 @@ impl<M: Memory> NoveCore<M> {
             ROR => {
                 displace!(self, Displacement::Rotation(Direction::Right, self.ps.is_raised(Flag::Carry)), mem:addr)
             }
+            RRA => {
+                displace!(self, Displacement::Rotation(Direction::Right, self.ps.is_raised(Flag::Carry)), mem:addr);
+                let sum = self.adc(self.memory.read(addr));
+                op_and_assign!(self, a.assign, sum);
+            }
             RTI => {
                 self.pull_ps();
                 let val = self.stack_pull_u16();
@@ -772,6 +777,7 @@ mod test {
     fn rla() {
         let mut core = preloaded_core();
         test!(&mut core, rom!(A, 0b1011, X, 0, Y, 0, SET_C; 0x27, 0x05), a:0b0001; pc: +3, ps: 0);
+        assert_eq!(0b0001_0101, core.memory.read(0x05));
     }
 
     #[test]
@@ -786,6 +792,13 @@ mod test {
         let mut core = preloaded_core();
         test!(&mut core, rom!(A, 0b0001_0100, X, 0, Y, 0; 0x6a), a:0b0000_1010; pc: +1, ps: 0);
         test!(&mut core, rom!(A, 0b1001_0101, X, 0, Y, 0, 0x6a), a:0b0100_1010; pc: +1, ps: C);
+    }
+
+    #[test]
+    fn rra() {
+        let mut core = preloaded_core();
+        test!(&mut core, rom!(A, 0b0100, X, 0, Y, 0, SET_C; 0x67, 0x05), a:0b1000_1001; pc: +3, ps: N);
+        assert_eq!(0b1000_0101, core.memory.read(0x05));
     }
 
     #[test]

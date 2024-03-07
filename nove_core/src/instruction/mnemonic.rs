@@ -341,6 +341,12 @@ pub enum Mnemonic {
     ///
     /// https://www.nesdev.org/obelisk-6502-guide/reference.html#ROR
     ROR,
+    /// Rotate Right and Add to Accumulator
+    ///
+    /// Rotate one bit right in memory, then add memory to accumulator (with carry)
+    ///
+    /// _Unofficial_
+    RRA,
     /// Return from Interrupt
     ///
     /// The RTI instruction is used at the end of an interrupt processing routine.
