@@ -11,7 +11,7 @@ const VRAM_SIZE: usize = 2048; // 2 KiB
 const OAM_SIZE: usize = 256;
 const NAMETABLE_SIZE: u16 = 1024; // 1KiB
 
-pub struct PPU {
+pub struct Ppu {
     chrom: Program,
     addr: AddressRegister,
     ctrl: ControlRegister,
@@ -22,7 +22,7 @@ pub struct PPU {
     internal_data_buffer: u8,
 }
 
-impl PPU {
+impl Ppu {
     pub fn new(chrom: Program, mirroring: Mirroring) -> Self {
         Self {
             chrom,
@@ -80,17 +80,17 @@ impl PPU {
 #[cfg(test)]
 mod test {
     use crate::cartridge::Mirroring;
-    use crate::ppu::PPU;
+    use crate::ppu::Ppu;
 
     #[test]
     fn read_chrom() {
-        let mut ppu = PPU::new(vec![0, 1, 2, 3], Mirroring::Horizontal);
+        let mut ppu = Ppu::new(vec![0, 1, 2, 3], Mirroring::Horizontal);
         assert_read(&mut ppu, 0x00, 0x01, 1);
     }
 
     #[test]
     fn read_vram_horizontal() {
-        let mut ppu = PPU::new(vec![], Mirroring::Horizontal);
+        let mut ppu = Ppu::new(vec![], Mirroring::Horizontal);
         ppu.vram[0x0002] = 3;
         ppu.vram[0x0020] = 4;
         ppu.vram[0x0402] = 5;
@@ -104,7 +104,7 @@ mod test {
 
     #[test]
     fn read_vram_vertical() {
-        let mut ppu = PPU::new(vec![], Mirroring::Vertical);
+        let mut ppu = Ppu::new(vec![], Mirroring::Vertical);
         ppu.vram[0x0002] = 3;
         ppu.vram[0x0020] = 4;
         ppu.vram[0x0402] = 5;
@@ -116,7 +116,7 @@ mod test {
         assert_read(&mut ppu, 0x2c, 0x20, 6);
     }
 
-    fn assert_read(ppu: &mut PPU, hi: u8, lo: u8, val: u8) {
+    fn assert_read(ppu: &mut Ppu, hi: u8, lo: u8, val: u8) {
         ppu.write_addr(hi);
         ppu.write_addr(lo);
         assert_ne!(val, ppu.read_data());

@@ -1,7 +1,7 @@
 use crate::addresses::*;
 use crate::cartridge::Rom;
 use crate::memory::Memory;
-use crate::ppu::PPU;
+use crate::ppu::Ppu;
 use crate::Program;
 use std::cell::RefCell;
 
@@ -11,12 +11,12 @@ const HALF_ROM_SIZE: usize = 0x4000;
 pub struct Bus {
     vram: [u8; VRAM_SIZE],
     prg_rom: Program,
-    ppu: RefCell<PPU>,
+    ppu: RefCell<Ppu>,
 }
 
 impl Bus {
     pub fn new(rom: Rom) -> Self {
-        let ppu = PPU::new(rom.chr_rom, rom.screen_mirroring);
+        let ppu = Ppu::new(rom.chr_rom, rom.screen_mirroring);
         Self {
             vram: [Default::default(); VRAM_SIZE],
             prg_rom: rom.prg_rom,
