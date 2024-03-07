@@ -8,7 +8,7 @@ const PRG_ROM_PAGE_SIZE: usize = 16384; // 16kB
 const CHR_ROM_PAGE_SIZE: usize = 8192; //  8kB
 
 #[derive(Debug, PartialEq)]
-enum Mirroring {
+pub(crate) enum Mirroring {
     Vertical,
     Horizontal,
     FourScreen,

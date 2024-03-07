@@ -1,5 +1,3 @@
-const LIMIT_ADDR: u16 = 0x3fff;
-
 #[derive(Debug, Default)]
 pub struct AddressRegister {
     hi: u8,
@@ -54,8 +52,8 @@ impl AddressRegister {
     }
 
     fn mirror_down(&mut self) {
-        if self.get() > LIMIT_ADDR {
-            self.set(self.get() & LIMIT_ADDR);
+        if self.get() > super::LIMIT_ADDR {
+            self.set(self.get() & super::LIMIT_ADDR);
         }
     }
 }
@@ -81,7 +79,7 @@ mod test {
 
     #[test]
     fn get() {
-        let mut reg = AddressRegister {
+        let reg = AddressRegister {
             hi: 0x12,
             lo: 0x34,
             ptr: BytePointer::Hi,
@@ -108,7 +106,7 @@ mod test {
         assert_eq!(0x1240, reg.get());
         reg.inc(0xc0);
         assert_eq!(0x1300, reg.get());
-        reg.set(LIMIT_ADDR);
+        reg.set(super::super::LIMIT_ADDR);
         reg.inc(3);
         assert_eq!(0x0002, reg.get());
     }

@@ -28,7 +28,7 @@ impl From<StatusFlag> for u8 {
 
 impl ProcessorStatus {
     pub fn new() -> Self {
-        Self::default()
+        Self(INIT, PhantomData)
     }
 
     /// Returns the status of the CPU as a byte with the B flag up.
@@ -46,7 +46,7 @@ impl ProcessorStatus {
 
 impl Default for ProcessorStatus {
     fn default() -> Self {
-        Self(INIT, PhantomData)
+        Self(0, PhantomData)
     }
 }
 
