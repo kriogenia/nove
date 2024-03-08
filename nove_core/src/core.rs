@@ -9,13 +9,16 @@ use crate::core::stack_pointer::StackPointer;
 use crate::exception::NoveError;
 use crate::instruction::addressing_mode::AddressingMode;
 use crate::instruction::{mnemonic::Mnemonic, OpCode, OPCODES_MAP};
+use crate::interrupt::InterruptFlag;
 use crate::memory::bus::Bus;
 use crate::memory::cpu_mem::CpuMem;
 use crate::memory::Memory;
 use crate::register::Register;
 use crate::{addresses, Program};
+use std::cell::RefCell;
 use std::fmt::{Debug, Formatter};
 use std::ops::{AddAssign, BitAndAssign, BitOrAssign, BitXorAssign, SubAssign};
+use std::rc::Rc;
 
 pub type Core6502 = NoveCore<CpuMem>;
 pub type NesNoveCore = NoveCore<Bus>;
@@ -36,6 +39,8 @@ pub struct NoveCore<M> {
     pub ps: ProcessorStatus,
     /// Memory Map
     pub memory: M,
+
+    interruption: Rc<RefCell<InterruptFlag>>,
 }
 
 /// Helper macro for debugging, easies the printing of hex values
@@ -108,6 +113,8 @@ impl<M: Memory> NoveCore<M> {
     }
 
     pub fn tick(&mut self) -> Result<bool, NoveError> {
+        self.handle_interrupt();
+
         let byte = self.memory.read(self.pc);
         self.pc += 1;
 
@@ -314,6 +321,13 @@ impl<M: Memory> NoveCore<M> {
         self.memory.read_u16(self.sp.get().wrapping_sub(1))
     }
 
+    fn handle_interrupt(&mut self) {
+        if *self.interruption.borrow() == InterruptFlag::NMI {
+            // todo handle interrupt
+            *self.interruption.borrow_mut() = InterruptFlag::None
+        }
+    }
+
     fn adc(&mut self, m: u8) -> u8 {
         let a = self.a.get();
 
@@ -405,6 +419,7 @@ impl<M: Memory> NoveCore<M> {
 
 impl NesNoveCore {
     pub fn new(rom: Rom) -> Self {
+        let interruption = Rc::new(RefCell::new(InterruptFlag::None));
         Self {
             pc: Default::default(),
             sp: Default::default(),
@@ -412,7 +427,8 @@ impl NesNoveCore {
             x: Default::default(),
             y: Default::default(),
             ps: Default::default(),
-            memory: Bus::new(rom),
+            memory: Bus::new(rom, interruption.clone()),
+            interruption,
         }
     }
 }

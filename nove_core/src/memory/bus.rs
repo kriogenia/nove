@@ -1,10 +1,12 @@
 use crate::addresses::*;
 use crate::cartridge::Rom;
+use crate::interrupt::InterruptFlag;
 use crate::memory::Memory;
 use crate::ppu::Ppu;
 use crate::register::{RegRead, RegWrite};
 use crate::Program;
 use std::cell::RefCell;
+use std::rc::Rc;
 
 const VRAM_SIZE: usize = 2048;
 const HALF_ROM_SIZE: usize = 0x4000;
@@ -19,8 +21,8 @@ pub struct Bus {
 }
 
 impl Bus {
-    pub fn new(rom: Rom) -> Self {
-        let ppu = Ppu::new(rom.chr_rom, rom.screen_mirroring);
+    pub fn new(rom: Rom, interruption: Rc<RefCell<InterruptFlag>>) -> Self {
+        let ppu = Ppu::new(rom.chr_rom, rom.screen_mirroring, interruption.clone());
         Self {
             vram: [Default::default(); VRAM_SIZE],
             prg_rom: rom.prg_rom,

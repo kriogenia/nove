@@ -1,5 +1,6 @@
 use crate::addresses::ppu::{CHROM_END, CHROM_START, LIMIT, PALETTE_START, VRAM_END, VRAM_START};
 use crate::cartridge::Mirroring;
+use crate::interrupt::InterruptFlag;
 use crate::ppu::address_register::AddressRegister;
 use crate::ppu::controller_register::{ControlFlags, ControllerRegister};
 use crate::ppu::mask_register::MaskRegister;
@@ -10,6 +11,8 @@ use crate::ppu::status_register::{PpuStatusFlag, StatusRegister};
 #[cfg(test)]
 use crate::register::RegWrite;
 use crate::Program;
+use std::cell::RefCell;
+use std::rc::Rc;
 
 mod address_register;
 mod controller_register;
@@ -40,10 +43,15 @@ pub struct Ppu {
     internal_data_buffer: u8,
     scanline: u16,
     cycles: usize,
+    cpu_interrupt: Rc<RefCell<InterruptFlag>>,
 }
 
 impl Ppu {
-    pub fn new(chrom: Program, mirroring: Mirroring) -> Self {
+    pub fn new(
+        chrom: Program,
+        mirroring: Mirroring,
+        cpu_interrupt: Rc<RefCell<InterruptFlag>>,
+    ) -> Self {
         Self {
             chrom,
             ctrl: Default::default(),
@@ -58,6 +66,7 @@ impl Ppu {
             internal_data_buffer: Default::default(),
             scanline: Default::default(),
             cycles: Default::default(),
+            cpu_interrupt,
         }
     }
 
@@ -68,8 +77,7 @@ impl Ppu {
             self.scanline += 1;
 
             if self.scanline == NMI_SCANLINES && self.ctrl.is_raised(ControlFlags::GenerateNMI) {
-                self.status.raise(PpuStatusFlag::VerticalBlankStarted);
-                todo!("trigger nmi interrupt")
+                *self.cpu_interrupt.borrow_mut() = InterruptFlag::NMI;
             }
 
             if self.scanline >= SCANLINES_PER_FRAME {
@@ -133,11 +141,15 @@ impl Ppu {
 #[cfg(test)]
 mod test {
     use crate::cartridge::Mirroring;
-    use crate::ppu::Ppu;
+    use crate::interrupt::InterruptFlag;
+    use crate::ppu::controller_register::ControlFlags;
+    use crate::ppu::{Ppu, NMI_SCANLINES, SCANLINE_CYCLES};
+    use std::cell::RefCell;
+    use std::rc::Rc;
 
     #[test]
     fn read_chrom() {
-        let mut ppu = Ppu::new(vec![0, 1, 2, 3], Mirroring::Horizontal);
+        let mut ppu = Ppu::new(vec![0, 1, 2, 3], Mirroring::Horizontal, Default::default());
         assert_read(&mut ppu, 0x00, 0x01, 1);
     }
 
@@ -166,7 +178,7 @@ mod test {
 
     #[test]
     fn read_palette() {
-        let mut ppu = Ppu::new(vec![], Mirroring::Horizontal);
+        let mut ppu = Ppu::new(vec![], Mirroring::Horizontal, Default::default());
         ppu.palette.0[0x12] = 0x34;
         ppu.palette.0[0x04] = 0x56;
 
@@ -197,7 +209,7 @@ mod test {
 
     #[test]
     fn write_palette() {
-        let mut ppu = Ppu::new(vec![], Mirroring::Horizontal);
+        let mut ppu = Ppu::new(vec![], Mirroring::Horizontal, Default::default());
         ppu.set_addr(0x3f, 0x13);
         ppu.write_to_data(0x12);
         assert_eq!(ppu.palette.0[0x13], 0x12);
@@ -205,6 +217,19 @@ mod test {
         ppu.write_to_data(0x89);
         assert_eq!(ppu.palette.0[0x08], 0x89);
         assert_ne!(ppu.palette.0[0x18], 0x89);
+    }
+
+    #[test]
+    fn nmi_interrupt() {
+        let interrupt: Rc<RefCell<InterruptFlag>> = Default::default();
+        let mut ppu = Ppu::new(vec![], Mirroring::Horizontal, interrupt.clone());
+        ppu.ctrl.raise(ControlFlags::GenerateNMI);
+
+        assert_eq!(*interrupt.borrow(), InterruptFlag::None);
+        for _ in 0..(SCANLINE_CYCLES * NMI_SCANLINES as usize) {
+            ppu.tick();
+        }
+        assert_eq!(*interrupt.borrow(), InterruptFlag::NMI);
     }
 
     fn assert_read(ppu: &mut Ppu, hi: u8, lo: u8, val: u8) {
@@ -221,7 +246,7 @@ mod test {
     }
 
     fn preloaded_ppu(mirroring: Mirroring) -> Ppu {
-        let mut ppu = Ppu::new(vec![], mirroring);
+        let mut ppu = Ppu::new(vec![], mirroring, Default::default());
         ppu.vram[0x0002] = 3;
         ppu.vram[0x0020] = 4;
         ppu.vram[0x0402] = 5;
