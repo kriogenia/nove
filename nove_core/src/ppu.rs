@@ -1,3 +1,4 @@
+use crate::addresses::ppu::{CHROM_END, CHROM_START, LIMIT, PALETTE_START, VRAM_END, VRAM_START};
 use crate::cartridge::Mirroring;
 use crate::ppu::address_register::AddressRegister;
 use crate::ppu::controller_register::ControllerRegister;
@@ -50,7 +51,7 @@ impl Ppu {
     }
 
     pub fn read_data(&mut self) -> u8 {
-        self.ctrl.vram_add_inc();
+        //self.ctrl.vram_add_inc();
         let addr = self.addr.get();
         use crate::addresses::ppu::*;
         match addr {
@@ -59,8 +60,19 @@ impl Ppu {
                 self.read_and_store(self.vram[self.mirror_vram(addr) as usize])
             }
             PALETTE_START..=LIMIT => todo!("read from palette"),
-            _ => panic!("invalid access to mirrored space: {}", self.addr.get()),
+            _ => panic!("invalid PPU read access to {}", self.addr.get()),
         }
+    }
+
+    pub fn write_to_data(&mut self, value: u8) {
+        let addr = self.addr.get();
+        match addr {
+            CHROM_START..=CHROM_END => { /* ignore attempt to right on CHR ROM space */ }
+            VRAM_START..=VRAM_END => self.vram[self.mirror_vram(addr) as usize] = value,
+            PALETTE_START..=LIMIT => todo!("write to palette"),
+            _ => panic!("invalid PPU write access to {}", addr),
+        }
+        //self.ctrl.vram_add_inc();
     }
 
     fn read_and_store(&mut self, val: u8) -> u8 {
@@ -70,7 +82,6 @@ impl Ppu {
     }
 
     fn mirror_vram(&self, addr: u16) -> u16 {
-        use crate::addresses::ppu::{VRAM_END, VRAM_START};
         let vram = (addr & VRAM_END) - VRAM_START;
         let name_table = vram / NAMETABLE_SIZE;
         vram - match (&self.mirroring, name_table) {
@@ -96,7 +107,7 @@ mod test {
 
     #[test]
     fn read_vram_horizontal() {
-        let mut ppu = Ppu::new(vec![], Mirroring::Horizontal);
+        let mut ppu = preloaded_ppu(Mirroring::Horizontal);
         ppu.vram[0x0002] = 3;
         ppu.vram[0x0020] = 4;
         ppu.vram[0x0402] = 5;
@@ -110,16 +121,29 @@ mod test {
 
     #[test]
     fn read_vram_vertical() {
-        let mut ppu = Ppu::new(vec![], Mirroring::Vertical);
-        ppu.vram[0x0002] = 3;
-        ppu.vram[0x0020] = 4;
-        ppu.vram[0x0402] = 5;
-        ppu.vram[0x0420] = 6;
-
+        let mut ppu = preloaded_ppu(Mirroring::Vertical);
         assert_read(&mut ppu, 0x20, 0x02, 3);
         assert_read(&mut ppu, 0x24, 0x02, 5);
         assert_read(&mut ppu, 0x28, 0x20, 4);
         assert_read(&mut ppu, 0x2c, 0x20, 6);
+    }
+
+    #[test]
+    fn write_vram_horizontal() {
+        let mut ppu = preloaded_ppu(Mirroring::Horizontal);
+        assert_write(&mut ppu, 0x20, 0x02, 1);
+        assert_write(&mut ppu, 0x24, 0x20, 2);
+        assert_write(&mut ppu, 0x28, 0x02, 3);
+        assert_write(&mut ppu, 0x2c, 0x20, 4);
+    }
+
+    #[test]
+    fn write_vram_vertical() {
+        let mut ppu = preloaded_ppu(Mirroring::Vertical);
+        assert_write(&mut ppu, 0x20, 0x02, 1);
+        assert_write(&mut ppu, 0x24, 0x02, 2);
+        assert_write(&mut ppu, 0x28, 0x20, 3);
+        assert_write(&mut ppu, 0x2c, 0x20, 4);
     }
 
     fn assert_read(ppu: &mut Ppu, hi: u8, lo: u8, val: u8) {
@@ -127,5 +151,22 @@ mod test {
         ppu.addr.write(lo);
         assert_ne!(val, ppu.read_data());
         assert_eq!(val, ppu.read_data());
+    }
+
+    fn assert_write(ppu: &mut Ppu, hi: u8, lo: u8, val: u8) {
+        ppu.addr.write(hi);
+        ppu.addr.write(lo);
+        ppu.write_to_data(val);
+        assert_ne!(ppu.read_data(), val);
+        assert_eq!(ppu.read_data(), val);
+    }
+
+    fn preloaded_ppu(mirroring: Mirroring) -> Ppu {
+        let mut ppu = Ppu::new(vec![], mirroring);
+        ppu.vram[0x0002] = 3;
+        ppu.vram[0x0020] = 4;
+        ppu.vram[0x0402] = 5;
+        ppu.vram[0x0420] = 6;
+        ppu
     }
 }

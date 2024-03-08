@@ -60,7 +60,7 @@ impl Memory for Bus {
             ppu::OAM_DATA => self.ppu.borrow_mut().oam.write(value),
             ppu::SCROLL => self.ppu.borrow_mut().scroll.write(value),
             ppu::ADDR => self.ppu.borrow_mut().addr.write(value),
-            ppu::DATA => todo!("write to ppu data"),
+            ppu::DATA => self.ppu.borrow_mut().write_to_data(value),
             ppu::REGISTERS_START..=ppu::REGISTERS_MIRRORS_END => {
                 todo!("PPU is not supported yet")
             }
