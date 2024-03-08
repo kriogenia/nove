@@ -27,17 +27,17 @@ impl AddressRegister {
         self.swap();
     }
 
+    #[allow(dead_code)]
     pub fn inc(&mut self, val: u8) {
-        self.lo = match self.lo.overflowing_add(val) {
-            (res, true) => {
-                self.hi = self.hi.wrapping_add(1);
-                res
-            }
-            (res, false) => res,
-        };
+        let (res, ov) = self.lo.overflowing_add(val);
+        if ov {
+            self.hi = self.hi.wrapping_add(1);
+        }
+        self.lo = res;
         self.mirror_down();
     }
 
+    #[allow(dead_code)]
     pub fn reset(&mut self) {
         self.ptr = BytePointer::Hi;
     }
