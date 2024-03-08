@@ -3,6 +3,7 @@ use crate::ppu::address_register::AddressRegister;
 use crate::ppu::controller_register::ControllerRegister;
 use crate::ppu::mask_register::MaskRegister;
 use crate::ppu::oam::Oam;
+use crate::ppu::scroll_register::ScrollRegister;
 use crate::ppu::status_register::StatusRegister;
 use crate::Program;
 
@@ -10,6 +11,7 @@ mod address_register;
 mod controller_register;
 mod mask_register;
 mod oam;
+mod scroll_register;
 mod status_register;
 
 const PALETTE_SIZE: usize = 32;
@@ -21,7 +23,8 @@ pub struct Ppu {
     pub ctrl: ControllerRegister, // 0x2000
     pub mask: MaskRegister,       // 0x2001
     pub status: StatusRegister,   // 0x2002
-    pub oam: Oam,                 // 0x2003
+    pub oam: Oam,                 // 0x2003, 0x2004
+    pub scroll: ScrollRegister,   // 0x2005
     pub addr: AddressRegister,    // 0x2006
     palette: [u8; PALETTE_SIZE],
     vram: [u8; VRAM_SIZE],
@@ -36,10 +39,11 @@ impl Ppu {
             ctrl: Default::default(),
             mask: Default::default(),
             status: Default::default(),
+            oam: Default::default(),
+            scroll: Default::default(),
             addr: Default::default(),
             palette: Default::default(),
             vram: [Default::default(); VRAM_SIZE],
-            oam: Default::default(),
             mirroring,
             internal_data_buffer: Default::default(),
         }

@@ -6,6 +6,7 @@ pub mod ppu {
     pub const STATUS: u16 = 0x2002;
     pub const OAM_ADDR: u16 = 0x2003;
     pub const OAM_DATA: u16 = 0x2004;
+    pub const SCROLL: u16 = 0x2005;
     pub const ADDR: u16 = 0x2006;
     pub const DATA: u16 = 0x2007;
 
