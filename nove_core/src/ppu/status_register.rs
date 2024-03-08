@@ -31,7 +31,7 @@ pub enum PpuStatusFlag {
     #[default]
     SpriteOV = 0b0010_0000,
     Sprite0Hit = 0b0100_0000,
-    VerticalBlank = 0b1000_0000,
+    VerticalBlankStarted = 0b1000_0000,
 }
 
 impl From<PpuStatusFlag> for u8 {

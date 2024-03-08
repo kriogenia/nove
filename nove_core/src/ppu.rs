@@ -1,12 +1,12 @@
 use crate::addresses::ppu::{CHROM_END, CHROM_START, LIMIT, PALETTE_START, VRAM_END, VRAM_START};
 use crate::cartridge::Mirroring;
 use crate::ppu::address_register::AddressRegister;
-use crate::ppu::controller_register::ControllerRegister;
+use crate::ppu::controller_register::{ControlFlags, ControllerRegister};
 use crate::ppu::mask_register::MaskRegister;
 use crate::ppu::oam::Oam;
 use crate::ppu::palette_table::PaletteTable;
 use crate::ppu::scroll_register::ScrollRegister;
-use crate::ppu::status_register::StatusRegister;
+use crate::ppu::status_register::{PpuStatusFlag, StatusRegister};
 #[cfg(test)]
 use crate::register::RegWrite;
 use crate::Program;
@@ -22,6 +22,10 @@ mod status_register;
 const VRAM_SIZE: usize = 2048; // 2 KiB
 const NAMETABLE_SIZE: u16 = 1024; // 1KiB
 
+const SCANLINE_CYCLES: usize = 341;
+const NMI_SCANLINES: u16 = 241;
+const SCANLINES_PER_FRAME: u16 = 262;
+
 pub struct Ppu {
     chrom: Program,
     pub ctrl: ControllerRegister, // 0x2000
@@ -34,6 +38,8 @@ pub struct Ppu {
     vram: [u8; VRAM_SIZE],
     mirroring: Mirroring,
     internal_data_buffer: u8,
+    scanline: u16,
+    cycles: usize,
 }
 
 impl Ppu {
@@ -50,7 +56,29 @@ impl Ppu {
             vram: [Default::default(); VRAM_SIZE],
             mirroring,
             internal_data_buffer: Default::default(),
+            scanline: Default::default(),
+            cycles: Default::default(),
         }
+    }
+
+    pub fn tick(&mut self) -> bool {
+        self.cycles += 1;
+        if self.cycles >= SCANLINE_CYCLES {
+            self.cycles = 0;
+            self.scanline += 1;
+
+            if self.scanline == NMI_SCANLINES && self.ctrl.is_raised(ControlFlags::GenerateNMI) {
+                self.status.raise(PpuStatusFlag::VerticalBlankStarted);
+                todo!("trigger nmi interrupt")
+            }
+
+            if self.scanline >= SCANLINES_PER_FRAME {
+                self.scanline = 0;
+                self.status.low(PpuStatusFlag::VerticalBlankStarted);
+                return true;
+            }
+        }
+        return false;
     }
 
     pub fn read_data(&mut self) -> u8 {

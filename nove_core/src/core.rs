@@ -239,6 +239,8 @@ impl<M: Memory> NoveCore<M> {
         }
 
         self.update_pc(opcode);
+        self.memory.tick(opcode.cycles as usize);
+        // todo handle variable cycles
         Ok(true)
     }
 

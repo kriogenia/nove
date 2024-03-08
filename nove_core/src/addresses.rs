@@ -9,6 +9,7 @@ pub mod ppu {
     pub const SCROLL: u16 = 0x2005;
     pub const ADDR: u16 = 0x2006;
     pub const DATA: u16 = 0x2007;
+    pub const OAM_DMA: u16 = 0x4014;
 
     pub const REGISTERS_START: u16 = 0x2008;
     pub const REGISTERS_MIRRORS_END: u16 = 0x3fff;
