@@ -133,15 +133,15 @@ impl<M: Memory> NoveCore<M> {
                 displace!(self, Displacement::Shift(Direction::Left), acc)
             }
             ASL => displace!(self, Displacement::Shift(Direction::Left), mem:addr),
-            BCC => self.branch_if(self.ps.is_lowered(StatusFlag::Carry), addr),
-            BCS => self.branch_if(self.ps.is_raised(StatusFlag::Carry), addr),
-            BEQ => self.branch_if(self.ps.is_raised(StatusFlag::Zero), addr),
+            BCC => self.branch_if(self.ps.is_lowered(StatusFlag::Carry), addr, page_crossed),
+            BCS => self.branch_if(self.ps.is_raised(StatusFlag::Carry), addr, page_crossed),
+            BEQ => self.branch_if(self.ps.is_raised(StatusFlag::Zero), addr, page_crossed),
             BIT => self.bit_test(self.memory.read(addr)),
-            BMI => self.branch_if(self.ps.is_raised(StatusFlag::Negative), addr),
-            BNE => self.branch_if(self.ps.is_lowered(StatusFlag::Zero), addr),
-            BPL => self.branch_if(self.ps.is_lowered(StatusFlag::Negative), addr),
-            BVC => self.branch_if(self.ps.is_lowered(StatusFlag::Overflow), addr),
-            BVS => self.branch_if(self.ps.is_raised(StatusFlag::Overflow), addr),
+            BMI => self.branch_if(self.ps.is_raised(StatusFlag::Negative), addr, page_crossed),
+            BNE => self.branch_if(self.ps.is_lowered(StatusFlag::Zero), addr, page_crossed),
+            BPL => self.branch_if(self.ps.is_lowered(StatusFlag::Negative), addr, page_crossed),
+            BVC => self.branch_if(self.ps.is_lowered(StatusFlag::Overflow), addr, page_crossed),
+            BVS => self.branch_if(self.ps.is_raised(StatusFlag::Overflow), addr, page_crossed),
             CLC => self.ps.set_bit(StatusFlag::Carry, false),
             CLD => self.ps.set_bit(StatusFlag::Decimal, false),
             CLI => self.ps.set_bit(StatusFlag::Interrupt, false),
@@ -257,7 +257,10 @@ impl<M: Memory> NoveCore<M> {
         use AddressingMode::*;
         match mode {
             IMM => (self.pc, false),
-            REL => (self.pc.wrapping_add(self.next_byte() as i8 as u16), false),
+            REL => {
+                let addr = self.pc.wrapping_add(self.next_byte() as i8 as u16);
+                (addr, page_crossed(addr, self.pc.wrapping_add(1)))
+            }
             ZPG => (self.next_byte() as u16, false),
             ZPX => (self.next_byte().wrapping_add(self.x.get()) as u16, false),
             ZPY => (self.next_byte().wrapping_add(self.y.get()) as u16, false),
@@ -354,8 +357,12 @@ impl<M: Memory> NoveCore<M> {
     }
 
     #[inline]
-    fn branch_if(&mut self, condition: bool, addr: u16) {
+    fn branch_if(&mut self, condition: bool, addr: u16, page_crossed: bool) {
         if condition {
+            self.memory.tick(1);
+            if page_crossed {
+                self.memory.tick(1);
+            }
             self.pc = addr
         }
     }
