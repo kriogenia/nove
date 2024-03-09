@@ -523,7 +523,6 @@ version = "0.2.0"
 dependencies = [
  "nove_core",
  "quicli",
- "rand",
  "sdl2 0.36.0",
  "structopt 0.3.26",
 ]
