@@ -8,7 +8,7 @@ use crate::ppu::oam::Oam;
 use crate::ppu::palette_table::PaletteTable;
 use crate::ppu::scroll_register::ScrollRegister;
 use crate::ppu::status_register::{PpuStatusFlag, StatusRegister};
-use crate::register::RegWrite;
+use crate::register::{RegRead, RegWrite};
 use crate::Program;
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -71,16 +71,25 @@ impl Ppu {
 
     pub fn tick(&mut self) -> bool {
         self.cycles += 1;
-        if self.cycles >= SCANLINE_CYCLES {
+        if self.cycles == SCANLINE_CYCLES {
             self.cycles = 0;
             self.scanline += 1;
 
-            if self.scanline == NMI_SCANLINES && self.ctrl.is_raised(ControlFlags::GenerateNMI) {
-                self.nmi_interruption();
+            if self.scanline == NMI_SCANLINES {
+                // todo move to function (trigger_scanline)
+                self.status.raise(PpuStatusFlag::VerticalBlankStarted);
+                self.status.low(PpuStatusFlag::Sprite0Hit);
+                if self.ctrl.is_raised(ControlFlags::GenerateNMI) {
+                    self.nmi_interruption(true);
+                }
+                return false;
             }
 
-            if self.scanline >= SCANLINES_PER_FRAME {
+            if self.scanline == SCANLINES_PER_FRAME {
+                // todo move to function (attempt_close_scanline)
                 self.scanline = 0;
+                self.nmi_interruption(false);
+                self.status.low(PpuStatusFlag::Sprite0Hit);
                 self.status.low(PpuStatusFlag::VerticalBlankStarted);
                 return true;
             }
@@ -89,8 +98,8 @@ impl Ppu {
     }
 
     pub fn read_data(&mut self) -> u8 {
-        //self.ctrl.vram_add_inc();
         let addr = self.addr.get();
+        self.inc_vram_addr();
         use crate::addresses::ppu::*;
         match addr {
             CHROM_START..=CHROM_END => self.read_and_store(self.chrom[addr as usize]),
@@ -102,15 +111,22 @@ impl Ppu {
         }
     }
 
+    pub fn read_status(&mut self) -> u8 {
+        let val = self.status.read();
+        self.status.low(PpuStatusFlag::VerticalBlankStarted);
+        self.addr.reset();
+        self.scroll.reset();
+        val
+    }
+
     pub fn write_to_ctrl(&mut self, value: u8) {
         let prev_gen_nmi = self.ctrl.is_raised(ControlFlags::GenerateNMI);
         self.ctrl.write(value);
         if !prev_gen_nmi & self.ctrl.is_raised(ControlFlags::GenerateNMI)
             && self.status.is_raised(PpuStatusFlag::VerticalBlankStarted)
         {
-            self.nmi_interruption();
+            self.nmi_interruption(true);
         }
-        self.ctrl.write(value)
     }
 
     pub fn write_to_data(&mut self, value: u8) {
@@ -121,7 +137,7 @@ impl Ppu {
             PALETTE_START..=LIMIT => self.palette.write(addr, value),
             _ => panic!("invalid PPU write access to {}", addr),
         }
-        //self.ctrl.vram_add_inc();
+        self.inc_vram_addr();
     }
 
     fn read_and_store(&mut self, val: u8) -> u8 {
@@ -141,8 +157,17 @@ impl Ppu {
         }
     }
 
-    fn nmi_interruption(&mut self) {
-        self.cpu_interrupt.replace(InterruptFlag::NMI);
+    fn nmi_interruption(&mut self, trigger: bool) {
+        let flag = if trigger {
+            InterruptFlag::NMI
+        } else {
+            InterruptFlag::None
+        };
+        self.cpu_interrupt.replace(flag);
+    }
+
+    fn inc_vram_addr(&mut self) {
+        self.addr.inc(self.ctrl.vram_add_inc());
     }
 
     #[cfg(test)]

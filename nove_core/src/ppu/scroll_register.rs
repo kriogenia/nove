@@ -14,6 +14,12 @@ enum Axis {
     Y,
 }
 
+impl ScrollRegister {
+    pub fn reset(&mut self) {
+        self.ptr = Default::default();
+    }
+}
+
 impl RegWrite for ScrollRegister {
     fn write(&mut self, val: u8) {
         self.ptr = match self.ptr {

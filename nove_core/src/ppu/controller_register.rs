@@ -46,10 +46,10 @@ impl ControllerRegister {
     }
 
     pub fn vram_add_inc(&mut self) -> u8 {
-        if self.is_lowered(ControlFlags::VramAddrIncrement) {
-            1 // going across
-        } else {
+        if self.is_raised(ControlFlags::VramAddrIncrement) {
             32 // going down
+        } else {
+            1 // going acrss
         }
     }
 }

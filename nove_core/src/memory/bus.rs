@@ -32,7 +32,7 @@ impl Bus {
     pub fn read_rom(&self, addr: u16) -> u8 {
         let mut addr = (addr - rom::PRG_ROM_START) as usize;
         if self.prg_rom.len() == HALF_ROM_SIZE && addr >= HALF_ROM_SIZE {
-            addr %= 0x4000;
+            addr %= HALF_ROM_SIZE;
         }
         self.prg_rom[addr]
     }
@@ -42,7 +42,7 @@ impl Memory for Bus {
     fn read(&self, addr: u16) -> u8 {
         match addr {
             ram::START..=ram::MIRRORS_END => self.vram[addr as usize & 0b00000111_11111111],
-            ppu::STATUS => self.ppu.borrow().status.read(),
+            ppu::STATUS => self.ppu.borrow_mut().read_status(),
             ppu::OAM_DATA => self.ppu.borrow().oam.read(),
             ppu::DATA => self.ppu.borrow_mut().read_data(),
             ppu::REGISTERS_START..=ppu::REGISTERS_MIRRORS_END => self.read(addr & ppu::DATA),
@@ -74,8 +74,8 @@ impl Memory for Bus {
         }
     }
 
-    fn tick(&mut self, cycles: u8) {
-        for _ in 0..(cycles * PPU_CYCLES_PER_CPU) {
+    fn tick(&mut self, cpu_cycles: u8) {
+        for _ in 0..(cpu_cycles * PPU_CYCLES_PER_CPU) {
             self.ppu.borrow_mut().tick();
         }
     }
