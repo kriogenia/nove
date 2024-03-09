@@ -77,7 +77,7 @@ impl Ppu {
             self.scanline += 1;
 
             if self.scanline == NMI_SCANLINES && self.ctrl.is_raised(ControlFlags::GenerateNMI) {
-                *self.cpu_interrupt.borrow_mut() = InterruptFlag::NMI;
+                self.cpu_interrupt.replace(InterruptFlag::NMI);
             }
 
             if self.scanline >= SCANLINES_PER_FRAME {

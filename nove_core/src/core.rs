@@ -1,5 +1,5 @@
 mod ops;
-mod processor_status;
+pub mod processor_status;
 mod stack_pointer;
 
 use crate::cartridge::Rom;
@@ -322,9 +322,15 @@ impl<M: Memory> NoveCore<M> {
     }
 
     fn handle_interrupt(&mut self) {
-        if *self.interruption.borrow() == InterruptFlag::NMI {
-            // todo handle interrupt
-            *self.interruption.borrow_mut() = InterruptFlag::None
+        let interruption = self.interruption.replace(InterruptFlag::None);
+        if interruption == InterruptFlag::NMI {
+            self.stack_push_u16(self.pc);
+
+            self.stack_push(interruption.mask(self.ps.get_for_push()));
+
+            self.ps.raise(StatusFlag::Interrupt);
+            self.memory.tick(2);
+            self.pc = self.memory.read_u16(interruption.addr());
         }
     }
 
