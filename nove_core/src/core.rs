@@ -119,7 +119,7 @@ impl<M: Memory> NoveCore<M> {
         self.pc += 1;
 
         let opcode = OPCODES_MAP.get(&byte).ok_or(NoveError::WrongOpCode(byte))?;
-        let (addr, _page_crossed) = self.get_addr(&opcode.addressing_mode);
+        let (addr, page_crossed) = self.get_addr(&opcode.addressing_mode);
 
         use Mnemonic::*;
         match opcode.mnemonic {
@@ -246,7 +246,7 @@ impl<M: Memory> NoveCore<M> {
         }
 
         self.update_pc(opcode);
-        self.memory.tick(opcode.cycles as usize);
+        self.memory.tick(opcode.cycles(page_crossed));
         // todo handle variable cycles
         Ok(true)
     }

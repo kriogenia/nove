@@ -11,9 +11,13 @@ pub enum AddressingMode {
     ABS,
     /// Absolute,X
     ///
+    /// Can add 1 cycle if page crossed
+    ///
     /// https://www.nesdev.org/obelisk-6502-guide/addressing.html#ABX
     ABX,
     /// Absolute,Y
+    ///
+    /// Can add 1 cycle if page crossed
     ///
     /// https://www.nesdev.org/obelisk-6502-guide/addressing.html#ABY
     ABY,
@@ -27,6 +31,8 @@ pub enum AddressingMode {
     IDX,
     /// Indirect Indexed
     ///
+    /// Can add 1 cycle if page crossed
+    ///
     /// https://www.nesdev.org/obelisk-6502-guide/addressing.html#IDY
     IDY,
     /// Immediate
@@ -38,6 +44,8 @@ pub enum AddressingMode {
     /// https://www.nesdev.org/obelisk-6502-guide/addressing.html#IMP
     IMP,
     /// Relative
+    ///
+    /// All REL jumps +1 if branch succeeds and +2 if it does to a new page
     ///
     /// https://www.nesdev.org/obelisk-6502-guide/addressing.html#REL
     REL,

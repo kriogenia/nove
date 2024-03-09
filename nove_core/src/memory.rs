@@ -25,5 +25,5 @@ pub trait Memory {
         self.write(addr.wrapping_add(1), hi)
     }
 
-    fn tick(&mut self, _cycles: usize) {}
+    fn tick(&mut self, _cycles: u8) {}
 }

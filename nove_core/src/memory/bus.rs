@@ -11,13 +11,12 @@ use std::rc::Rc;
 const VRAM_SIZE: usize = 2048;
 const HALF_ROM_SIZE: usize = 0x4000;
 
-const PPU_CYCLES_PER_CPU: usize = 3;
+const PPU_CYCLES_PER_CPU: u8 = 3;
 
 pub struct Bus {
     vram: [u8; VRAM_SIZE],
     prg_rom: Program,
     ppu: RefCell<Ppu>,
-    cycles: usize,
 }
 
 impl Bus {
@@ -27,7 +26,6 @@ impl Bus {
             vram: [Default::default(); VRAM_SIZE],
             prg_rom: rom.prg_rom,
             ppu: RefCell::new(ppu),
-            cycles: 0,
         }
     }
 
@@ -76,8 +74,7 @@ impl Memory for Bus {
         }
     }
 
-    fn tick(&mut self, cycles: usize) {
-        self.cycles += cycles;
+    fn tick(&mut self, cycles: u8) {
         for _ in 0..(cycles * PPU_CYCLES_PER_CPU) {
             self.ppu.borrow_mut().tick();
         }

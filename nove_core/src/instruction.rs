@@ -12,7 +12,7 @@ pub struct OpCode {
     pub mnemonic: Mnemonic,
     pub code: u8,
     pub bytes: u8,
-    pub cycles: u8,
+    cycles: u8,
     pub addressing_mode: AddressingMode,
     pub unofficial: bool,
 }
@@ -50,6 +50,15 @@ impl OpCode {
             addressing_mode,
             unofficial: true,
         }
+    }
+
+    pub fn cycles(&self, page_crossed: bool) -> u8 {
+        self.cycles
+            + match (&self.addressing_mode, page_crossed) {
+                (ABX, true) | (ABY, true) if self.cycles == 4 => 1,
+                (IDY, true) if self.cycles == 5 => 1,
+                (_, _) => 0,
+            }
     }
 }
 
@@ -353,4 +362,28 @@ lazy_static! {
     pub static ref OPCODES_MAP: HashMap<u8, &'static OpCode> = {
         CPU_OPCODES.iter().map(|c| (c.code, c)).collect()
     };
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn cycles() {
+        assert_eq!(OpCode::new(NOP, 0x00, 1, 1, IMM).cycles(false), 1);
+
+        assert_eq!(OpCode::new(NOP, 0x00, 1, 4, ABX).cycles(false), 4);
+        assert_eq!(OpCode::new(NOP, 0x00, 1, 4, ABX).cycles(true), 5);
+        assert_eq!(OpCode::new(NOP, 0x00, 1, 5, ABX).cycles(true), 5);
+        assert_eq!(OpCode::new(NOP, 0x00, 1, 7, ABX).cycles(true), 7);
+
+        assert_eq!(OpCode::new(NOP, 0x00, 1, 4, ABY).cycles(false), 4);
+        assert_eq!(OpCode::new(NOP, 0x00, 1, 4, ABY).cycles(true), 5);
+        assert_eq!(OpCode::new(NOP, 0x00, 1, 5, ABY).cycles(true), 5);
+        assert_eq!(OpCode::new(NOP, 0x00, 1, 7, ABY).cycles(true), 7);
+
+        assert_eq!(OpCode::new(NOP, 0x00, 1, 5, IDY).cycles(false), 5);
+        assert_eq!(OpCode::new(NOP, 0x00, 1, 5, IDY).cycles(true), 6);
+        assert_eq!(OpCode::new(NOP, 0x00, 1, 6, IDY).cycles(true), 6);
+    }
 }
