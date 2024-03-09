@@ -8,7 +8,6 @@ use crate::ppu::oam::Oam;
 use crate::ppu::palette_table::PaletteTable;
 use crate::ppu::scroll_register::ScrollRegister;
 use crate::ppu::status_register::{PpuStatusFlag, StatusRegister};
-#[cfg(test)]
 use crate::register::RegWrite;
 use crate::Program;
 use std::cell::RefCell;
@@ -77,7 +76,7 @@ impl Ppu {
             self.scanline += 1;
 
             if self.scanline == NMI_SCANLINES && self.ctrl.is_raised(ControlFlags::GenerateNMI) {
-                self.cpu_interrupt.replace(InterruptFlag::NMI);
+                self.nmi_interruption();
             }
 
             if self.scanline >= SCANLINES_PER_FRAME {
@@ -101,6 +100,17 @@ impl Ppu {
             PALETTE_START..=LIMIT => self.palette.read(addr),
             _ => panic!("invalid PPU read access to {}", self.addr.get()),
         }
+    }
+
+    pub fn write_to_ctrl(&mut self, value: u8) {
+        let prev_gen_nmi = self.ctrl.is_raised(ControlFlags::GenerateNMI);
+        self.ctrl.write(value);
+        if !prev_gen_nmi & self.ctrl.is_raised(ControlFlags::GenerateNMI)
+            && self.status.is_raised(PpuStatusFlag::VerticalBlankStarted)
+        {
+            self.nmi_interruption();
+        }
+        self.ctrl.write(value)
     }
 
     pub fn write_to_data(&mut self, value: u8) {
@@ -129,6 +139,10 @@ impl Ppu {
             (Mirroring::Horizontal, 3) => 2 * NAMETABLE_SIZE,
             _ => 0,
         }
+    }
+
+    fn nmi_interruption(&mut self) {
+        self.cpu_interrupt.replace(InterruptFlag::NMI);
     }
 
     #[cfg(test)]

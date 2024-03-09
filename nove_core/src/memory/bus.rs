@@ -21,8 +21,8 @@ pub struct Bus {
 }
 
 impl Bus {
-    pub fn new(rom: Rom, interruption: Rc<RefCell<InterruptFlag>>) -> Self {
-        let ppu = Ppu::new(rom.chr_rom, rom.screen_mirroring, interruption.clone());
+    pub fn new(rom: Rom, cpu_interrupt: Rc<RefCell<InterruptFlag>>) -> Self {
+        let ppu = Ppu::new(rom.chr_rom, rom.screen_mirroring, cpu_interrupt);
         Self {
             vram: [Default::default(); VRAM_SIZE],
             prg_rom: rom.prg_rom,
@@ -59,7 +59,7 @@ impl Memory for Bus {
     fn write(&mut self, addr: u16, value: u8) {
         match addr {
             ram::START..=ram::MIRRORS_END => self.vram[addr as usize & 0b11111111111] = value,
-            ppu::CTRL => self.ppu.borrow_mut().ctrl.write(value),
+            ppu::CTRL => self.ppu.borrow_mut().write_to_ctrl(value),
             ppu::MASK => self.ppu.borrow_mut().mask.write(value),
             ppu::OAM_ADDR => self.ppu.borrow_mut().oam.addr.write(value),
             ppu::OAM_DATA => self.ppu.borrow_mut().oam.write(value),
