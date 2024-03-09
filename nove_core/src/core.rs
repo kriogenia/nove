@@ -119,7 +119,7 @@ impl<M: Memory> NoveCore<M> {
         self.pc += 1;
 
         let opcode = OPCODES_MAP.get(&byte).ok_or(NoveError::WrongOpCode(byte))?;
-        let addr = self.get_addr(&opcode.addressing_mode);
+        let (addr, _page_crossed) = self.get_addr(&opcode.addressing_mode);
 
         use Mnemonic::*;
         match opcode.mnemonic {
@@ -251,43 +251,30 @@ impl<M: Memory> NoveCore<M> {
         Ok(true)
     }
 
-    pub fn get_addr(&self, mode: &AddressingMode) -> u16 {
+    /// Returns the address that should be used by the instruction based on the mode and a flag
+    /// indicating if a page was crossed
+    pub fn get_addr(&self, mode: &AddressingMode) -> (u16, bool) {
         use AddressingMode::*;
         match mode {
-            IMM => self.pc,
-            REL => self.pc.wrapping_add(self.next_byte() as i8 as u16),
-            ZPG => self.next_byte() as u16,
-            ZPX => self.next_byte().wrapping_add(self.x.get()) as u16,
-            ZPY => self.next_byte().wrapping_add(self.y.get()) as u16,
-            ABS => self.next_word(),
-            ABX => self.next_word().wrapping_add(self.x.get() as u16),
-            ABY => self.next_word().wrapping_add(self.y.get() as u16),
-            IDX => {
-                let addr = self.next_byte().wrapping_add(self.x.get());
-                let lo = self.memory.read(addr as u16);
-                let hi = self.memory.read(addr.wrapping_add(1) as u16);
-                u16::from_le_bytes([lo, hi])
-            }
+            IMM => (self.pc, false),
+            REL => (self.pc.wrapping_add(self.next_byte() as i8 as u16), false),
+            ZPG => (self.next_byte() as u16, false),
+            ZPX => (self.next_byte().wrapping_add(self.x.get()) as u16, false),
+            ZPY => (self.next_byte().wrapping_add(self.y.get()) as u16, false),
+            ABS => (self.next_word(), false),
+            ABX => self.abs_reg(self.x.get()),
+            ABY => self.abs_reg(self.y.get()),
+            IDX => (
+                self.ind_reg_addr(self.next_byte().wrapping_add(self.x.get())),
+                false,
+            ),
             IDY => {
-                let addr = self.next_byte();
-                let lo = self.memory.read(addr as u16);
-                let hi = self.memory.read(addr.wrapping_add(1) as u16);
-                u16::from_le_bytes([lo, hi]).wrapping_add(self.y.get() as u16)
+                let addr = self.ind_reg_addr(self.next_byte());
+                let res = addr.wrapping_add(self.y.get() as u16);
+                (res, page_crossed(addr, res))
             }
             IMP | ACC => Default::default(),
-            IND => {
-                // todo get_addr_ind
-                // 6502 was bugged when reading end-of-page addresses like $03FF, in those cases
-                // instead of reading from $03FF and $0400 it took the values from $03FF and $0300
-                let address = self.next_word();
-                if address & 0x00FF == 0x00FF {
-                    let lo = self.memory.read(address);
-                    let hi = self.memory.read(address & 0xFF00);
-                    u16::from_le_bytes([lo, hi])
-                } else {
-                    self.memory.read_u16(address)
-                }
-            }
+            IND => (self.get_ind_addr(), false),
         }
     }
 
@@ -417,10 +404,43 @@ impl<M: Memory> NoveCore<M> {
         self.pc += opcode.bytes as u16 - 1;
     }
 
+    #[inline]
+    fn abs_reg(&self, add: u8) -> (u16, bool) {
+        let addr = self.next_word();
+        let res = addr.wrapping_add(add as u16);
+        (res, page_crossed(addr, res))
+    }
+
+    #[inline]
+    fn ind_reg_addr(&self, addr: u8) -> u16 {
+        let lo = self.memory.read(addr as u16);
+        let hi = self.memory.read(addr.wrapping_add(1) as u16);
+        u16::from_le_bytes([lo, hi])
+    }
+
+    #[inline]
+    fn get_ind_addr(&self) -> u16 {
+        // 6502 was bugged when reading end-of-page addresses like $03FF, in those cases
+        // instead of reading from $03FF and $0400 it took the values from $03FF and $0300
+        let address = self.next_word();
+        if address & 0x00FF == 0x00FF {
+            let lo = self.memory.read(address);
+            let hi = self.memory.read(address & 0xFF00);
+            u16::from_le_bytes([lo, hi])
+        } else {
+            self.memory.read_u16(address)
+        }
+    }
+
     #[cfg(test)]
     fn stack_peek_u16(&self) -> u16 {
         self.memory.read_u16(self.sp.get() + 1)
     }
+}
+
+#[inline]
+fn page_crossed(left: u16, right: u16) -> bool {
+    left & 0xFF00 != right & 0xFF00
 }
 
 impl NesNoveCore {
@@ -1001,25 +1021,37 @@ mod test {
         core.memory.write_u16(0x0005, 0x0c00);
         core.memory.write_u16(0x0011, 0x0d00);
 
-        assert_eq!(core.get_addr(&AddressingMode::IMM), 0x0105);
-        assert_eq!(core.get_addr(&AddressingMode::REL), 0x0106);
-        assert_eq!(core.get_addr(&AddressingMode::ZPG), 0x0001);
-        assert_eq!(core.get_addr(&AddressingMode::ZPX), 0x0005);
-        assert_eq!(core.get_addr(&AddressingMode::ZPY), 0x0011);
-        assert_eq!(core.get_addr(&AddressingMode::ABS), 0x0a01);
-        assert_eq!(core.get_addr(&AddressingMode::ABX), 0x0a05);
-        assert_eq!(core.get_addr(&AddressingMode::ABY), 0x0a11);
-        assert_eq!(core.get_addr(&AddressingMode::IND), 0x0b00);
-        assert_eq!(core.get_addr(&AddressingMode::IDX), 0x0c00);
-        assert_eq!(core.get_addr(&AddressingMode::IDY), 0x0010);
+        assert_eq!(core.get_addr(&AddressingMode::IMM), (0x0105, false));
+        assert_eq!(core.get_addr(&AddressingMode::REL), (0x0106, false));
+        assert_eq!(core.get_addr(&AddressingMode::ZPG), (0x0001, false));
+        assert_eq!(core.get_addr(&AddressingMode::ZPX), (0x0005, false));
+        assert_eq!(core.get_addr(&AddressingMode::ZPY), (0x0011, false));
+        assert_eq!(core.get_addr(&AddressingMode::ABS), (0x0a01, false));
+        assert_eq!(core.get_addr(&AddressingMode::ABX), (0x0a05, false));
+        assert_eq!(core.get_addr(&AddressingMode::ABY), (0x0a11, false));
+        assert_eq!(core.get_addr(&AddressingMode::IND), (0x0b00, false));
+        assert_eq!(core.get_addr(&AddressingMode::IDX), (0x0c00, false));
+        assert_eq!(core.get_addr(&AddressingMode::IDY), (0x0010, false));
+    }
 
-        // IND bug
+    #[test]
+    fn page_crossed() {
+        let mut core = Core6502::new();
         core.pc = 0x0200;
-        core.memory.write_u16(0x200, 0x03ff);
+        core.x.assign(0x01);
+        core.y.assign(0x02);
+        core.memory.write(0x0000, 0x01);
+        core.memory.write(0x00ff, 0xfe);
+        core.memory.write_u16(0x0200, 0x03ff);
         core.memory.write(0x0300, 0x12);
         core.memory.write(0x03ff, 0x34);
         core.memory.write(0x0400, 0x56);
-        assert_eq!(core.get_addr(&AddressingMode::IND), 0x1234);
+
+        assert_eq!(core.get_addr(&AddressingMode::ABX), (0x0400, true));
+        assert_eq!(core.get_addr(&AddressingMode::ABY), (0x0401, true));
+        assert_eq!(core.get_addr(&AddressingMode::IDY), (0x0200, true));
+        // IND bug -> doesn't cross pages
+        assert_eq!(core.get_addr(&AddressingMode::IND), (0x1234, false));
     }
 
     fn test_branch(rom: Program, jmp: u16) {
