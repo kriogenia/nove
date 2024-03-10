@@ -19,6 +19,15 @@ and one web frontend via WebAssembly (hopefully).
 
 The emulator is not yet ready, but it can be executed in some forms to check the current progress.
 
+### Snake demo
+
+The snake demo is a little snake game developed in assembly for the 6502 chip and it's usually a good way of checking
+the implementation of the original CPU. _This is not a NES game_. An example featuring it can be run in desktop:
+
+```shell
+cargo run --example snake_demo
+```
+
 ### CPU trace
 
 The CPU supports tracing, and it can be enabled with setting the `TRACE` level to the `cpu` target.

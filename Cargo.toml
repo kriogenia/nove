@@ -2,7 +2,6 @@
 members = [
   "nove_core",
   "sdl2",
-  "snake_demo",
 ]
 resolver = "2"
 
@@ -12,7 +11,8 @@ edition = "2021"
 authors = [ "Kriogenia <ricardo@sotoestevez.dev>"]
 
 [workspace.dependencies]
-quicli = "0.4.0"
-rand = "0.8.5"
-sdl2 = "0.36.0"
+log = "0.4"
+quicli = "0.4"
+rand = "0.8"
+sdl2 = "0.36"
 structopt = "0.3"

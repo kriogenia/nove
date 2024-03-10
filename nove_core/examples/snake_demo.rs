@@ -1,4 +1,9 @@
+extern crate nove_core;
+extern crate rand;
+extern crate sdl2;
+
 use nove_core::core::{Core6502, NoveCore};
+use nove_core::interrupt::InterruptFlag;
 use nove_core::memory::cpu_mem::CpuMem;
 use nove_core::memory::Memory;
 use rand::Rng;
@@ -323,19 +328,23 @@ fn main() {
               // game_over:
     ];
 
-    let mut cpu = Core6502::new();
-    cpu.snake_load(game_code);
-    cpu.reset();
+    let mut core = Core6502::new();
+    core.snake_load(game_code);
+    core.reset();
 
     let mut screen_state = [0u8; (WIDTH * RGB_SPACE * HEIGHT) as usize];
     let mut rng = rand::thread_rng();
 
-    cpu.run(move |cpu| {
-        handle_user_input(cpu, &mut event_pump);
+    loop {
+        if let InterruptFlag::BRK = core.tick().unwrap() {
+            return;
+        }
 
-        cpu.memory.write(RAND_ADDR, rng.gen_range(1..16));
+        handle_user_input(&mut core, &mut event_pump);
 
-        if read_screen_state(cpu, &mut screen_state) {
+        core.memory.write(RAND_ADDR, rng.gen_range(1..16));
+
+        if read_screen_state(&core, &mut screen_state) {
             texture
                 .update(None, &screen_state, (WIDTH * RGB_SPACE) as usize)
                 .unwrap();
@@ -344,6 +353,5 @@ fn main() {
         }
 
         std::thread::sleep(Duration::new(0, 70_000));
-    })
-    .unwrap();
+    }
 }
