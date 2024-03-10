@@ -9,14 +9,13 @@ use structopt::StructOpt;
 use nove_core::cartridge::Rom;
 use nove_core::core::NesNoveCore;
 use nove_core::interrupt::InterruptFlag;
+use nove_core::{HEIGHT, WIDTH};
 
 use crate::frame::Frame;
 
 mod frame;
 mod tile_render;
 
-const WIDTH: u32 = 256;
-const HEIGHT: u32 = 240;
 const RGB_SPACE: u32 = 3;
 const SCALE: u32 = 3;
 

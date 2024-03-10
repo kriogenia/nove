@@ -1,4 +1,5 @@
-use crate::{HEIGHT, RGB_SPACE, SCALE, WIDTH};
+use crate::RGB_SPACE;
+use nove_core::{HEIGHT, WIDTH};
 
 pub struct Frame {
     pub data: Vec<u8>,
@@ -7,7 +8,7 @@ pub struct Frame {
 impl Frame {
     pub fn new() -> Self {
         Frame {
-            data: vec![0; (WIDTH * HEIGHT * SCALE) as usize],
+            data: vec![0; (WIDTH * HEIGHT * RGB_SPACE) as usize],
         }
     }
 
