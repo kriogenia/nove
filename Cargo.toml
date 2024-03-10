@@ -2,7 +2,7 @@
 members = [
   "nove_core",
   "sdl2",
-  "snake_demo", "tracing",
+  "snake_demo",
 ]
 resolver = "2"
 

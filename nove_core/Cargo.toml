@@ -4,5 +4,10 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-thiserror = "1.0.56"
 lazy_static = "1.4.0"
+log = "0.4.21"# todo move version to super cargo
+thiserror = "1.0.56"
+
+[dev-dependencies]
+env_logger = "0.11.3"   # todo move version to super cargo
+log2 = "0.1.11"

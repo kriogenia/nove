@@ -1,6 +1,7 @@
 mod ops;
 pub mod processor_status;
 mod stack_pointer;
+mod trace;
 
 use crate::cartridge::Rom;
 use crate::core::ops::{Direction, Displacement};
@@ -19,6 +20,7 @@ use std::cell::RefCell;
 use std::fmt::{Debug, Formatter};
 use std::ops::{AddAssign, BitAndAssign, BitOrAssign, BitXorAssign, SubAssign};
 use std::rc::Rc;
+use trace::CpuTrace;
 
 pub type Core6502 = NoveCore<CpuMem>;
 pub type NesNoveCore = NoveCore<Bus>;
@@ -116,6 +118,8 @@ impl<M: Memory> NoveCore<M> {
     }
 
     pub fn tick(&mut self) -> Result<InterruptFlag, NoveError> {
+        self.trace();
+
         let interrupt = self.handle_interrupt();
 
         let byte = self.memory.read(self.pc);
