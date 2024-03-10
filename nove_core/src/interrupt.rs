@@ -5,6 +5,7 @@ pub enum InterruptFlag {
     #[default]
     None,
     NMI,
+    BRK, // todo handle
 }
 
 impl InterruptFlag {

@@ -1,19 +1,11 @@
-use std::error::Error;
-use std::fmt::{Debug, Display};
-
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::pixels::PixelFormatEnum;
 use structopt::StructOpt;
 
 use nove_core::cartridge::Rom;
-use nove_core::core::NesNoveCore;
-use nove_core::interrupt::InterruptFlag;
 
 use crate::frame::Frame;
-
-mod frame;
-mod tile_render;
 
 const WIDTH: u32 = 256;
 const HEIGHT: u32 = 240;
@@ -133,7 +125,7 @@ fn show_tile_bank(rom: &Rom, bank: usize) -> Frame {
     frame
 }
 
-fn main() -> Result<(), Box<dyn Error>> {
+fn main() {
     let args = Args::from_args();
 
     let sdl_context = sdl2::init().expect("failed to load sdl2");
@@ -164,25 +156,21 @@ fn main() -> Result<(), Box<dyn Error>> {
     let content = std::fs::read(args.file).expect("failed to read rom file");
     let rom = Rom::new(&content).unwrap();
 
-    let mut core = NesNoveCore::new(rom);
-    core.reset();
-
+    let right_bank = show_tile_bank(&rom, 0);
+    texture
+        .update(None, &right_bank.data, (WIDTH * SCALE) as usize)
+        .unwrap();
+    canvas.copy(&texture, None, None).unwrap();
     canvas.present();
+
     loop {
-        let interrupt = core.tick()?;
-        if interrupt == InterruptFlag::BRK {
-            return Ok(());
-        }
-        if interrupt == InterruptFlag::NMI {
-            // render
-        }
         for event in event_pump.poll_iter() {
             match event {
                 Event::Quit { .. }
                 | Event::KeyDown {
                     keycode: Some(Keycode::Escape),
                     ..
-                } => return Ok(()),
+                } => std::process::exit(0),
                 _ => { /* do nothing */ }
             }
         }

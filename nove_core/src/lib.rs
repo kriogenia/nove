@@ -4,7 +4,7 @@ pub mod core;
 mod exception;
 mod flag_register;
 pub mod instruction;
-mod interrupt;
+pub mod interrupt;
 pub mod memory;
 mod ppu;
 mod register;

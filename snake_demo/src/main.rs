@@ -320,7 +320,6 @@ fn main() {
         0xca, // dex
         0xd0, 0xfb, // bne spin_loop
         0x60, // rts (loop:7)
-
               // game_over:
     ];
 

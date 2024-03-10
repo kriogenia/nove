@@ -106,14 +106,18 @@ impl<M: Memory> NoveCore<M> {
     where
         F: FnMut(&mut Self),
     {
-        while self.tick()? {
+        loop {
+            match self.tick()? {
+                InterruptFlag::NMI => println!("NMI interrupt triggered"),
+                InterruptFlag::BRK => return Ok(()),
+                _ => {}
+            }
             callback(self);
         }
-        Ok(())
     }
 
-    pub fn tick(&mut self) -> Result<bool, NoveError> {
-        self.handle_interrupt();
+    pub fn tick(&mut self) -> Result<InterruptFlag, NoveError> {
+        let interrupt = self.handle_interrupt();
 
         let byte = self.memory.read(self.pc);
         self.pc += 1;
@@ -123,7 +127,7 @@ impl<M: Memory> NoveCore<M> {
 
         use Mnemonic::*;
         match opcode.mnemonic {
-            BRK => return Ok(false),
+            BRK => return Ok(InterruptFlag::BRK),
             ADC => {
                 let sum = self.adc(self.memory.read(addr));
                 op_and_assign!(self, a.assign, sum);
@@ -247,8 +251,7 @@ impl<M: Memory> NoveCore<M> {
 
         self.update_pc(opcode);
         self.memory.tick(opcode.cycles(page_crossed));
-        // todo handle variable cycles
-        Ok(true)
+        Ok(interrupt)
     }
 
     /// Returns the address that should be used by the instruction based on the mode and a flag
@@ -311,7 +314,7 @@ impl<M: Memory> NoveCore<M> {
         self.memory.read_u16(self.sp.get().wrapping_sub(1))
     }
 
-    fn handle_interrupt(&mut self) {
+    fn handle_interrupt(&mut self) -> InterruptFlag {
         let interruption = self.interruption.replace(InterruptFlag::None);
         if interruption == InterruptFlag::NMI {
             self.stack_push_u16(self.pc);
@@ -321,6 +324,9 @@ impl<M: Memory> NoveCore<M> {
             self.ps.raise(StatusFlag::Interrupt);
             self.memory.tick(2);
             self.pc = self.memory.read_u16(interruption.addr());
+            interruption
+        } else {
+            InterruptFlag::None
         }
     }
 
@@ -482,7 +488,7 @@ impl Core6502 {
 
     #[cfg(test)]
     fn run(&mut self) -> Result<(), NoveError> {
-        while let Ok(true) = self.tick() {}
+        while let Ok(_) = self.tick() {}
         Ok(())
     }
 
