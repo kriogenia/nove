@@ -280,6 +280,7 @@ mod test {
     fn assert_write(ppu: &mut Ppu, hi: u8, lo: u8, val: u8) {
         ppu.set_addr(hi, lo);
         ppu.write_to_data(val);
+        ppu.set_addr(hi, lo);
         assert_ne!(ppu.read_data(), val);
         assert_eq!(ppu.read_data(), val);
     }

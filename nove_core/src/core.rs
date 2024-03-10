@@ -101,7 +101,6 @@ impl<M: Memory> NoveCore<M> {
         self.ps = ProcessorStatus::new();
     }
 
-    #[cfg(not(test))]
     pub fn run<F>(&mut self, mut callback: F) -> Result<(), NoveError>
     where
         F: FnMut(&mut Self),
@@ -487,17 +486,11 @@ impl Core6502 {
     }
 
     #[cfg(test)]
-    fn run(&mut self) -> Result<(), NoveError> {
-        while let Ok(_) = self.tick() {}
-        Ok(())
-    }
-
-    #[cfg(test)]
     fn load_and_run(&mut self, rom: Program) {
         self.load(rom);
         self.reset();
         self.ps = Default::default();
-        self.run().expect("error while running the program")
+        self.run(|_| {}).expect("error while running the program")
     }
 }
 
