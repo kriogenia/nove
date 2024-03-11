@@ -97,13 +97,9 @@ impl<M: Memory> CpuTrace for NoveCore<M> {
             .map(|z| format!("{:02x}", z))
             .collect::<Vec<String>>()
             .join(" ");
-        let unofficial = if op.unofficial { "*" } else { " " }.to_string();
-        let asm_str = format!(
-            "{pc:04x}  {hex_str:8} {unofficial}{:>4?} {tmp}",
-            op.mnemonic
-        )
-        .trim()
-        .to_string();
+        let asm_str = format!("{pc:04x}  {hex_str:8} {} {tmp}", op.print_mnemonic(),)
+            .trim()
+            .to_string();
 
         let msg = format!(
             "{:47} A:{:02x} X:{:02x} Y:{:02x} P:{:02x} SP:{:02x}",

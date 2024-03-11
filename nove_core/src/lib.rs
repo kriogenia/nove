@@ -1,10 +1,11 @@
-pub mod addresses;
+pub(crate) mod addresses;
 pub mod cartridge;
 pub mod core;
 mod exception;
+// todo move into register
 mod flag_register;
 mod frame;
-pub mod instruction;
+pub(crate) mod instruction;
 pub mod interrupt;
 pub mod memory;
 mod ppu;

@@ -12,9 +12,9 @@ pub struct OpCode {
     pub mnemonic: Mnemonic,
     pub code: u8,
     pub bytes: u8,
-    cycles: u8,
     pub addressing_mode: AddressingMode,
-    pub unofficial: bool,
+    cycles: u8,
+    unofficial: bool,
 }
 
 impl OpCode {
@@ -59,6 +59,14 @@ impl OpCode {
                 (IDY, true) if self.cycles == 5 => 1,
                 (_, _) => 0,
             }
+    }
+
+    pub fn print_mnemonic(&self) -> String {
+        format!(
+            "{}{:>4?}",
+            if self.unofficial { "*" } else { " " },
+            self.mnemonic
+        )
     }
 }
 
