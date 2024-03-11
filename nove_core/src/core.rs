@@ -100,7 +100,7 @@ impl<M: Memory> NoveCore<M> {
         self.a = Default::default();
         self.x = Default::default();
         self.y = Default::default();
-        self.ps = ProcessorStatus::new();
+        self.ps.init();
     }
 
     pub fn run<F>(&mut self, mut callback: F) -> Result<(), NoveError>

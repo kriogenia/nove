@@ -2,6 +2,7 @@ use crate::{HEIGHT, WIDTH};
 
 const BUFFER_SIZE: usize = (WIDTH * HEIGHT) as usize;
 
+/// Stores the index of the color (value between 0 and 51)
 pub struct Frame {
     pub buffer: [u8; BUFFER_SIZE],
 }

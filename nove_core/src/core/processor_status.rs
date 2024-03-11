@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 
 use crate::flag_register::FlagRegister;
 
-const INIT: u8 = 0b100100;
+const INIT: u8 = 0b0010_0100;
 pub(super) const OVERFLOW_MASK: u8 = 0b1000_0000;
 
 /// N V _ B D I Z C
@@ -28,7 +28,11 @@ impl From<StatusFlag> for u8 {
 
 impl ProcessorStatus {
     pub fn new() -> Self {
-        Self(INIT, PhantomData)
+        Default::default()
+    }
+
+    pub fn init(&mut self) {
+        self.0 = INIT
     }
 
     /// Returns the status of the CPU as a byte with the B flag up.
@@ -62,7 +66,7 @@ mod test {
 
     #[test]
     fn processor_status() {
-        let mut ps = ProcessorStatus::default();
+        let mut ps = ProcessorStatus::new();
         ps.set_bit(StatusFlag::Carry, true);
         ps.set_bit(StatusFlag::Overflow, true);
         assert_eq!(ps.0, 0b0100_0001);
