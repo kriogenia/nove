@@ -7,6 +7,8 @@ authors.workspace = true
 [dependencies]
 nove_core = { path = "../nove_core" }
 #rand.workspace = true
+env_logger.workspace = true
+log.workspace = true
 sdl2.workspace = true
 quicli.workspace = true
 structopt.workspace = true

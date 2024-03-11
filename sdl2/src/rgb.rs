@@ -34,10 +34,10 @@ impl From<Frame> for RgbFrame {
 
 fn to_rgb(val: &u8) -> Vec<u8> {
     match val {
-        0 => vec![0x00, 0xff, 0xff],
-        1 => vec![0xff, 0xff, 0x00],
-        2 => vec![0xff, 0x00, 0xff],
-        3 => vec![0xff, 0xff, 0xff],
+        0 => vec![0x00, 0x3D, 0xA6],
+        1 => vec![0xD4, 0x80, 0xFF],
+        2 => vec![0xFF, 0x9C, 0x12],
+        3 => vec![0x2B, 0xF0, 0x35],
         _ => panic!("nes only supports for possible colors per pixel"),
     }
 }

@@ -12,7 +12,9 @@ use crate::ppu::tile_reader::TileReader;
 use crate::register::{RegRead, RegWrite};
 use crate::{Program, HEIGHT, WIDTH};
 pub use frame::Frame;
+use log::debug;
 use std::cell::RefCell;
+use std::collections::HashSet;
 use std::rc::Rc;
 
 mod address_register;
@@ -112,15 +114,21 @@ impl Ppu {
     pub fn render(&self) -> Frame {
         let mut frame = Frame::new();
         let bank_addr = self.ctrl.get_bit(ControlFlags::BGPatternAddr) as u16 * TILE_BANK_SIZE;
+        debug!("tile_bank_address={bank_addr}");
 
+        let mut tileset = HashSet::new();
         for i in 0..TILES_PER_FRAME {
             let tile_idx = self.vram[i as usize] as u16;
+            tileset.insert(tile_idx);
             let tile_addr = (bank_addr + tile_idx * TILE_BYTES_SIZE as u16) as usize;
             let tile = &self.chr_rom[tile_addr..tile_addr + TILE_BYTES_SIZE as usize];
 
             let tile_values: Vec<u8> = TileReader::new(tile).collect();
             frame.set_tile(i % TILES_PER_ROW, i / TILES_PER_ROW, &tile_values);
         }
+        let tiles: String = tileset.iter().map(|x| format!("{x} ")).collect();
+        println!("{tiles}");
+
         frame
     }
 

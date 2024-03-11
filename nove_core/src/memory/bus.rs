@@ -5,6 +5,7 @@ use crate::memory::Memory;
 use crate::ppu::Ppu;
 use crate::register::{RegRead, RegWrite};
 use crate::Program;
+use log::info;
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -48,7 +49,8 @@ impl Memory for Bus {
             ppu::REGISTERS_START..=ppu::REGISTERS_MIRRORS_END => self.read(addr & ppu::DATA),
             rom::PRG_ROM_START..=rom::PRG_ROM_END => self.read_rom(addr),
             ppu::CTRL | ppu::MASK | ppu::OAM_ADDR | ppu::SCROLL | ppu::ADDR | ppu::OAM_DMA => {
-                panic!("invalid attempt to read from write-only PPU address {addr:x}");
+                info!("invalid attempt to read from write-only PPU address {addr:x}");
+                0
             }
             _ => 0,
         }
@@ -70,7 +72,9 @@ impl Memory for Bus {
             ppu::STATUS | rom::PRG_ROM_START..=rom::PRG_ROM_END => {
                 panic!("invalid attempt to write to read-only PPU address {addr:x}");
             }
-            _ => {}
+            _ => {
+                info!("attempt to write on non-write PP address, {addr:x}")
+            }
         }
     }
 
