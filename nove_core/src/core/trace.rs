@@ -21,7 +21,7 @@ impl<M: Memory> CpuTrace for NoveCore<M> {
         use instruction::addressing_mode::AddressingMode::*;
 
         let pc = self.pc;
-        let op = *instruction::OPCODES_MAP
+        let op = instruction::OPCODES_MAP
             .get(&self.next_byte())
             .unwrap_or_else(|| panic!("unknown opcode: {:#04x}", &self.next_byte()));
 

@@ -63,7 +63,8 @@ impl OpCode {
 }
 
 lazy_static! {
-    pub static ref CPU_OPCODES: Vec<OpCode> = vec![
+    // TODO convert to map like: 0x6d -> OpCode::new(ADC, 3, 4, ABS)
+    pub static ref OPCODES_MAP: HashMap<u8, OpCode> = vec![
         OpCode::new(ADC, 0x6d, 3, 4, ABS),
         OpCode::new(ADC, 0x7d, 3, 4, ABX), // +1 cycle if page crossed
         OpCode::new(ADC, 0x79, 3, 4, ABY), // +1 cycle if page crossed
@@ -356,12 +357,7 @@ lazy_static! {
         OpCode::new(TXS, 0x9a, 1, 2, IMP),
 
         OpCode::new(TYA, 0x98, 1, 2, IMP),
-    ];
-
-
-    pub static ref OPCODES_MAP: HashMap<u8, &'static OpCode> = {
-        CPU_OPCODES.iter().map(|c| (c.code, c)).collect()
-    };
+    ].into_iter().map(|c| (c.code, c)).collect();
 }
 
 #[cfg(test)]

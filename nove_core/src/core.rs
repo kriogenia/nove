@@ -94,6 +94,7 @@ macro_rules! update_mem {
 }
 
 impl<M: Memory> NoveCore<M> {
+    /// TODO doc
     pub fn reset(&mut self) {
         self.pc = self.memory.read_u16(addresses::PC_START);
         self.sp = Default::default();
@@ -103,28 +104,13 @@ impl<M: Memory> NoveCore<M> {
         self.ps.init();
     }
 
-    pub fn run<F>(&mut self, mut callback: F) -> Result<(), NoveError>
-    where
-        F: FnMut(&mut Self),
-    {
-        loop {
-            match self.tick()? {
-                InterruptFlag::NMI => println!("NMI interrupt triggered"),
-                InterruptFlag::BRK => return Ok(()),
-                _ => {}
-            }
-            callback(self);
-        }
-    }
-
+    /// TODO doc
     pub fn tick(&mut self) -> Result<InterruptFlag, NoveError> {
         self.trace();
 
         let interrupt = self.handle_interrupt();
 
-        let byte = self.memory.read(self.pc);
-        self.pc += 1;
-
+        let byte = self.read_pc();
         let opcode = OPCODES_MAP.get(&byte).ok_or(NoveError::WrongOpCode(byte))?;
         let (addr, page_crossed) = self.get_addr(&opcode.addressing_mode);
 
@@ -293,6 +279,12 @@ impl<M: Memory> NoveCore<M> {
 
     pub fn next_word(&self) -> u16 {
         self.memory.read_u16(self.pc)
+    }
+
+    fn read_pc(&mut self) -> u8 {
+        let byte = self.next_byte();
+        self.pc += 1;
+        byte
     }
 
     fn stack_push(&mut self, content: u8) {
@@ -494,7 +486,13 @@ impl Core6502 {
         self.load(rom);
         self.reset();
         self.ps = Default::default();
-        self.run(|_| {}).expect("error while running the program")
+        loop {
+            match self.tick().unwrap() {
+                InterruptFlag::NMI => println!("NMI interrupt triggered"),
+                InterruptFlag::BRK => return,
+                _ => {}
+            }
+        }
     }
 }
 
