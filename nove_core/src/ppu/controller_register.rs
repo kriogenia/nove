@@ -1,5 +1,6 @@
 use crate::flag_register::FlagRegister;
 use crate::register::RegWrite;
+use log::debug;
 use std::fmt::{Debug, Formatter};
 
 /*
@@ -56,12 +57,13 @@ impl ControllerRegister {
 
 impl RegWrite for ControllerRegister {
     fn write(&mut self, val: u8) {
-        self.set(val)
+        self.set(val);
+        debug!("{self:?}");
     }
 }
 
 impl Debug for ControllerRegister {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        self.print(f, "VPHBSINN")
+        self.print(f, "ctrl")
     }
 }

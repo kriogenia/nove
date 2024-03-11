@@ -5,7 +5,7 @@ use crate::memory::Memory;
 use crate::ppu::Ppu;
 use crate::register::{RegRead, RegWrite};
 use crate::Program;
-use log::info;
+use log::{debug, info};
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -57,8 +57,9 @@ impl Memory for Bus {
     }
 
     fn write(&mut self, addr: u16, value: u8) {
+        debug!("write: {addr:#04x}={value}");
         match addr {
-            ram::START..=ram::MIRRORS_END => self.vram[addr as usize & 0b11111111111] = value,
+            ram::START..=ram::MIRRORS_END => self.vram[addr as usize & 0b0111_1111_1111] = value,
             ppu::CTRL => self.ppu.borrow_mut().write_to_ctrl(value),
             ppu::MASK => self.ppu.borrow_mut().mask.write(value),
             ppu::OAM_ADDR => self.ppu.borrow_mut().oam.addr.write(value),
@@ -73,7 +74,7 @@ impl Memory for Bus {
                 panic!("invalid attempt to write to read-only PPU address {addr:x}");
             }
             _ => {
-                info!("attempt to write on non-write PP address, {addr:x}")
+                info!("attempt to write on non-write PPU address, {addr:x}")
             }
         }
     }

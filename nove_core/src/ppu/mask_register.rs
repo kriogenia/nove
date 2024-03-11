@@ -45,6 +45,6 @@ impl RegWrite for MaskRegister {
 
 impl Debug for MaskRegister {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        self.print(f, "BGRsbMmG")
+        self.print(f, "mask")
     }
 }

@@ -42,8 +42,7 @@ impl<F: Into<u8>> FlagRegister<F> {
         !self.is_raised(flag)
     }
 
-    pub(crate) fn print(&self, f: &mut Formatter<'_>, cheatsheet: &str) -> std::fmt::Result {
-        writeln!(f, "\n\t\t  {cheatsheet}")?;
-        writeln!(f, "\t\t{:#010b}", self.0)
+    pub(crate) fn print(&self, f: &mut Formatter<'_>, key: &str) -> std::fmt::Result {
+        write!(f, "{key}={:#010b}", self.0)
     }
 }
