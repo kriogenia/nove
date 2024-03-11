@@ -25,6 +25,8 @@ use trace::CpuTrace;
 pub type Core6502 = NoveCore<CpuMem>;
 pub type NesNoveCore = NoveCore<Bus>;
 
+const PAGE_MASK: u16 = 0xff00;
+
 #[derive(Default)]
 pub struct NoveCore<M> {
     /// Program Counter
@@ -269,15 +271,15 @@ impl<M: Memory> NoveCore<M> {
                 (res, page_crossed(addr, res))
             }
             IMP | ACC => Default::default(),
-            IND => (self.get_ind_addr(), false),
+            IND => (self.get_ind_addr(self.next_word()), false),
         }
     }
 
-    pub fn next_byte(&self) -> u8 {
+    fn next_byte(&self) -> u8 {
         self.memory.read(self.pc)
     }
 
-    pub fn next_word(&self) -> u16 {
+    fn next_word(&self) -> u16 {
         self.memory.read_u16(self.pc)
     }
 
@@ -313,16 +315,13 @@ impl<M: Memory> NoveCore<M> {
         let interruption = self.interruption.replace(InterruptFlag::None);
         if interruption == InterruptFlag::NMI {
             self.stack_push_u16(self.pc);
-
             self.stack_push(interruption.mask(self.ps.get_for_push()));
 
             self.ps.raise(StatusFlag::Interrupt);
             self.memory.tick(2);
             self.pc = self.memory.read_u16(interruption.addr());
-            interruption
-        } else {
-            InterruptFlag::None
         }
+        interruption
     }
 
     fn adc(&mut self, m: u8) -> u8 {
@@ -427,16 +426,15 @@ impl<M: Memory> NoveCore<M> {
     }
 
     #[inline]
-    fn get_ind_addr(&self) -> u16 {
+    fn get_ind_addr(&self, addr: u16) -> u16 {
         // 6502 was bugged when reading end-of-page addresses like $03FF, in those cases
         // instead of reading from $03FF and $0400 it took the values from $03FF and $0300
-        let address = self.next_word();
-        if address & 0x00FF == 0x00FF {
-            let lo = self.memory.read(address);
-            let hi = self.memory.read(address & 0xFF00);
+        if addr & 0x00FF == 0x00FF {
+            let lo = self.memory.read(addr);
+            let hi = self.memory.read(addr & PAGE_MASK);
             u16::from_le_bytes([lo, hi])
         } else {
-            self.memory.read_u16(address)
+            self.memory.read_u16(addr)
         }
     }
 
@@ -448,7 +446,7 @@ impl<M: Memory> NoveCore<M> {
 
 #[inline]
 fn page_crossed(left: u16, right: u16) -> bool {
-    left & 0xFF00 != right & 0xFF00
+    left & PAGE_MASK != right & PAGE_MASK
 }
 
 impl NesNoveCore {

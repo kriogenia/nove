@@ -48,13 +48,7 @@ impl<M: Memory> CpuTrace for NoveCore<M> {
                     hex_dump.push(self.memory.read(pc + 2));
 
                     let addr = self.memory.read_u16(pc + 1);
-                    let jmp_addr = if addr & 0x00FF == 0x00FF {
-                        let lo = self.memory.read(addr);
-                        let hi = self.memory.read(addr & 0xFF00);
-                        u16::from_le_bytes([lo, hi])
-                    } else {
-                        self.memory.read_u16(addr)
-                    };
+                    let jmp_addr = self.get_ind_addr(addr);
                     format!("(${addr:04x}) = {jmp_addr:04x}")
                 }
                 _ => "".to_string(),
