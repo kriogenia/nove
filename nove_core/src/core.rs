@@ -14,6 +14,7 @@ use crate::interrupt::InterruptFlag;
 use crate::memory::bus::Bus;
 use crate::memory::cpu_mem::CpuMem;
 use crate::memory::Memory;
+pub use crate::ppu::Frame;
 use crate::register::Register;
 use crate::{addresses, Program};
 use std::cell::RefCell;
@@ -245,6 +246,7 @@ impl<M: Memory> NoveCore<M> {
         Ok(interrupt)
     }
 
+    // todo check if need for pub
     /// Returns the address that should be used by the instruction based on the mode and a flag
     /// indicating if a page was crossed
     pub fn get_addr(&self, mode: &AddressingMode) -> (u16, bool) {
@@ -462,6 +464,10 @@ impl NesNoveCore {
             memory: Bus::new(rom, interruption.clone()),
             interruption,
         }
+    }
+
+    pub fn render(&self) -> Frame {
+        self.memory.ppu.borrow().render()
     }
 }
 

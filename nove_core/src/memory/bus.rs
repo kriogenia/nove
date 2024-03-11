@@ -16,7 +16,7 @@ const PPU_CYCLES_PER_CPU: u8 = 3;
 pub struct Bus {
     vram: [u8; VRAM_SIZE],
     prg_rom: Program,
-    ppu: RefCell<Ppu>,
+    pub(crate) ppu: RefCell<Ppu>,
 }
 
 impl Bus {

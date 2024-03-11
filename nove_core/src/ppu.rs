@@ -8,28 +8,40 @@ use crate::ppu::oam::Oam;
 use crate::ppu::palette_table::PaletteTable;
 use crate::ppu::scroll_register::ScrollRegister;
 use crate::ppu::status_register::{PpuStatusFlag, StatusRegister};
+use crate::ppu::tile_reader::TileReader;
 use crate::register::{RegRead, RegWrite};
-use crate::Program;
+use crate::{Program, HEIGHT, WIDTH};
+pub use frame::Frame;
 use std::cell::RefCell;
 use std::rc::Rc;
 
 mod address_register;
 mod controller_register;
+mod frame;
 mod mask_register;
 mod oam;
 mod palette_table;
 mod scroll_register;
 mod status_register;
+mod tile_reader;
 
 const VRAM_SIZE: usize = 2048; // 2 KiB
 const NAMETABLE_SIZE: u16 = 1024; // 1KiB
+const TILE_BANK_SIZE: u16 = 4096; // 4 KiB
 
 const SCANLINE_CYCLES: usize = 341;
 const NMI_SCANLINES: u16 = 241;
 const SCANLINES_PER_FRAME: u16 = 262;
 
+const TILE_WIDTH: u32 = 8;
+const TILE_HEIGHT: u32 = 8;
+const TILE_COLOR_SPACE: u32 = 2; // 2 bits to codify color
+const TILE_BYTES_SIZE: u32 = (TILE_WIDTH * TILE_HEIGHT * TILE_COLOR_SPACE) / 8; // 128 bits, 16 B
+const TILES_PER_ROW: u32 = WIDTH / TILE_WIDTH;
+const TILES_PER_FRAME: u32 = TILES_PER_ROW * HEIGHT / TILE_HEIGHT;
+
 pub struct Ppu {
-    chrom: Program,
+    chr_rom: Program,
     pub ctrl: ControllerRegister, // 0x2000
     pub mask: MaskRegister,       // 0x2001
     pub status: StatusRegister,   // 0x2002
@@ -47,12 +59,12 @@ pub struct Ppu {
 
 impl Ppu {
     pub fn new(
-        chrom: Program,
+        chr_rom: Program,
         mirroring: Mirroring,
         cpu_interrupt: Rc<RefCell<InterruptFlag>>,
     ) -> Self {
         Self {
-            chrom,
+            chr_rom,
             ctrl: Default::default(),
             mask: Default::default(),
             status: Default::default(),
@@ -97,12 +109,27 @@ impl Ppu {
         return false;
     }
 
+    pub fn render(&self) -> Frame {
+        let mut frame = Frame::new();
+        let bank_addr = self.ctrl.get_bit(ControlFlags::BGPatternAddr) as u16 * TILE_BANK_SIZE;
+
+        for i in 0..TILES_PER_FRAME {
+            let tile_idx = self.vram[i as usize] as u16;
+            let tile_addr = (bank_addr + tile_idx * TILE_BYTES_SIZE as u16) as usize;
+            let tile = &self.chr_rom[tile_addr..tile_addr + TILE_BYTES_SIZE as usize];
+
+            let tile_values: Vec<u8> = TileReader::new(tile).collect();
+            frame.set_tile(i % TILES_PER_ROW, i / TILES_PER_ROW, &tile_values);
+        }
+        frame
+    }
+
     pub fn read_data(&mut self) -> u8 {
         let addr = self.addr.get();
         self.inc_vram_addr();
         use crate::addresses::ppu::*;
         match addr {
-            CHROM_START..=CHROM_END => self.read_and_store(self.chrom[addr as usize]),
+            CHROM_START..=CHROM_END => self.read_and_store(self.chr_rom[addr as usize]),
             VRAM_START..=VRAM_END => {
                 self.read_and_store(self.vram[self.mirror_vram(addr) as usize])
             }

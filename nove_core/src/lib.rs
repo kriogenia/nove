@@ -4,7 +4,6 @@ pub mod core;
 mod exception;
 // todo move into register
 mod flag_register;
-mod frame;
 pub(crate) mod instruction;
 pub mod interrupt;
 pub mod memory;

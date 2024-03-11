@@ -11,9 +11,9 @@ use nove_core::core::NesNoveCore;
 use nove_core::interrupt::InterruptFlag;
 use nove_core::{HEIGHT, WIDTH};
 
-use crate::frame::Frame;
+use crate::rgb::RgbFrame;
 
-mod frame;
+mod rgb;
 mod tile_render;
 
 const RGB_SPACE: u32 = 3;
@@ -94,44 +94,6 @@ pub static SYSTEM_PALLETE: [(u8, u8, u8); 64] = [
     (0x11, 0x11, 0x11),
 ];
 
-fn show_tile_bank(rom: &Rom, bank: usize) -> Frame {
-    assert!(bank <= 1);
-
-    let mut frame = Frame::new();
-    let mut tile_y = 0;
-    let mut tile_x = 0;
-    let bank = bank * 0x1000;
-
-    for tile in 0..TILES_PER_BANK {
-        if tile != 0 && tile % 20 == 0 {
-            tile_y += 10;
-            tile_x = 0;
-        }
-        let tile = &rom.chr_rom[(bank + tile * 16)..=(bank + tile * 16 + 15)];
-
-        for y in 0..=7 {
-            let mut upper = tile[y];
-            let mut lower = tile[y + 8];
-
-            for x in (0..=7).rev() {
-                let value = (1 & upper) << 1 | (1 & lower);
-                upper = upper >> 1;
-                lower = lower >> 1;
-                let rgb = match value {
-                    0 => SYSTEM_PALLETE[0x01],
-                    1 => SYSTEM_PALLETE[0x23],
-                    2 => SYSTEM_PALLETE[0x27],
-                    3 => SYSTEM_PALLETE[0x30],
-                    _ => panic!("can't be"),
-                };
-                frame.set_pixel(tile_x + x, tile_y + y as u32, rgb)
-            }
-        }
-        tile_x += 10;
-    }
-    frame
-}
-
 fn main() -> Result<(), Box<dyn Error>> {
     let args = Args::from_args();
 
@@ -166,15 +128,19 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut core = NesNoveCore::new(rom);
     core.reset();
 
-    canvas.present();
     loop {
         let interrupt = core.tick()?;
         if interrupt == InterruptFlag::BRK {
             return Ok(());
         }
         if interrupt == InterruptFlag::NMI {
-            // render
+            let frame = core.render();
+            let rgb_frame = RgbFrame::from(frame);
+            texture.update(None, &rgb_frame.data, 256 * 3).unwrap();
+            canvas.copy(&texture, None, None).unwrap();
+            canvas.present();
         }
+        // todo move into NMI
         for event in event_pump.poll_iter() {
             match event {
                 Event::Quit { .. }

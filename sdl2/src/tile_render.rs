@@ -5,7 +5,7 @@ use structopt::StructOpt;
 
 use nove_core::cartridge::Rom;
 
-use crate::frame::Frame;
+use crate::rgb::RgbFrame;
 
 const WIDTH: u32 = 256;
 const HEIGHT: u32 = 240;
@@ -87,10 +87,10 @@ pub static SYSTEM_PALLETE: [(u8, u8, u8); 64] = [
     (0x11, 0x11, 0x11),
 ];
 
-fn show_tile_bank(rom: &Rom, bank: usize) -> Frame {
+fn show_tile_bank(rom: &Rom, bank: usize) -> RgbFrame {
     assert!(bank <= 1);
 
-    let mut frame = Frame::new();
+    let mut frame = RgbFrame::new();
     let mut tile_y = 0;
     let mut tile_x = 0;
     let bank = bank * 0x1000;

@@ -1,5 +1,6 @@
 use crate::ppu::{TILE_HEIGHT, TILE_WIDTH};
 
+/// Handles the reading of a tile to extract the color value from up to bottom and left to right
 pub struct TileReader<'a> {
     tile: &'a [u8],
     x: usize,
@@ -25,21 +26,22 @@ impl<'a> Iterator for TileReader<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.x == TILE_WIDTH as usize {
+            self.x = 0;
+            self.y += 1;
+
             if self.y == TILE_HEIGHT as usize {
                 return None;
             }
 
-            self.x = 0;
-            self.y += 1;
             self.upper = self.tile[self.y];
             self.lower = self.tile[self.y + TILE_HEIGHT as usize];
         }
 
-        let val = (self.upper & 0b1) << 1 | (self.lower & 0b1);
+        let val = (self.upper & 0b1000_0000) >> 6 | (self.lower & 0b1000_0000) >> 7;
 
         self.x += 1;
-        self.upper >>= 1;
-        self.lower >>= 1;
+        self.upper <<= 1;
+        self.lower <<= 1;
         Some(val)
     }
 }
@@ -72,20 +74,19 @@ mod test {
         ];
 
         let expected: Vec<u8> = vec![
-            0b00, 0b01, 0b00, 0b01, 0b00, 0b01, 0b00, 0b01, //
-            0b10, 0b00, 0b11, 0b00, 0b10, 0b01, 0b10, 0b00, //
-            0b10, 0b00, 0b00, 0b11, 0b00, 0b00, 0b10, 0b01, //
-            0b10, 0b00, 0b00, 0b00, 0b11, 0b00, 0b00, 0b00, //
-            0b10, 0b00, 0b00, 0b00, 0b00, 0b11, 0b00, 0b00, //
-            0b10, 0b00, 0b00, 0b00, 0b00, 0b00, 0b11, 0b00, //
-            0b10, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b11, //
-            0b11, 0b11, 0b11, 0b11, 0b10, 0b10, 0b10, 0b10, //
+            0b01, 0b00, 0b01, 0b00, 0b01, 0b00, 0b01, 0b00, //
+            0b00, 0b10, 0b01, 0b10, 0b00, 0b11, 0b00, 0b10, //
+            0b01, 0b10, 0b00, 0b00, 0b11, 0b00, 0b00, 0b10, //
+            0b00, 0b00, 0b00, 0b11, 0b00, 0b00, 0b00, 0b10, //
+            0b00, 0b00, 0b11, 0b00, 0b00, 0b00, 0b00, 0b10, //
+            0b00, 0b11, 0b00, 0b00, 0b00, 0b00, 0b00, 0b10, //
+            0b11, 0b00, 0b00, 0b00, 0b00, 0b00, 0b00, 0b10, //
+            0b10, 0b10, 0b10, 0b10, 0b11, 0b11, 0b11, 0b11, //
         ];
 
         let mut tile_reader = TileReader::new(&tile);
         for expected in expected.into_iter() {
-            dbg!(expected);
-            assert_eq!(dbg!(tile_reader.next()).unwrap(), expected);
+            assert_eq!(tile_reader.next().unwrap(), expected);
         }
     }
 }
